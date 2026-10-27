@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Arcanum — Игра</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(201, 169, 106, 0.06), transparent 35%),
+                #08090d;
+            color: var(--text);
+            font-family: Inter, sans-serif;
+            min-height: 100vh;
+        }
+
+        .game-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+
+        .game-header {
+            height: 68px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            background: rgba(8, 9, 13, 0.96);
+            flex-shrink: 0;
+        }
+
+        .game-logo {
+            font-family: Cinzel, serif;
+            font-size: 22px;
+            letter-spacing: 4px;
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .campaign-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .campaign-title small {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 3px;
+        }
+
+        .campaign-title h1 {
+            margin: 0;
+            font-family: Cinzel, serif;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-button {
+            width: 38px;
+            height: 38px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .icon-button:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* MAIN */
+
+        .game-layout {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 270px minmax(0, 1fr) 285px;
+            min-height: 0;
+        }
+
+        /* LEFT */
+
+        .character-panel {
+            border-right: 1px solid var(--border);
+            background: rgba(16, 18, 25, 0.72);
+            padding: 24px 20px;
+            overflow-y: auto;
+        }
+
+        .character-avatar {
+            width: 78px;
+            height: 78px;
+            margin: 0 auto 14px;
+            border: 1px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Cinzel, serif;
+            font-size: 27px;
+            color: var(--gold);
+            background:
+                radial-gradient(circle, rgba(201,169,106,0.12), transparent 70%);
+        }
+
+        .character-name {
+            text-align: center;
+            font-family: Cinzel, serif;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .character-class {
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+
+        .panel-section {
+            border-top: 1px solid var(--border);
+            padding-top: 18px;
+            margin-top: 18px;
+        }
+
+        .panel-title {
+            font-family: Cinzel, serif;
+            color: var(--gold);
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 13px;
+        }
+
+        .level-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .level-value {
+            color: var(--gold-light);
+        }
+
+        .hp-container {
+            margin-bottom: 20px;
+        }
+
+        .hp-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 7px;
+            color: var(--muted);
+        }
+
+        .hp-bar {
+            height: 8px;
+            background: #242630;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .hp-fill {
+            width: 100%;
+            height: 100%;
+            background: #9c4141;
+            border-radius: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px;
+        }
+
+        .stat {
+            border: 1px solid rgba(201, 169, 106, 0.12);
+            background: rgba(255, 255, 255, 0.025);
+            padding: 9px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .stat span:first-child {
+            color: var(--muted);
+        }
+
+        .stat span:last-child {
+            color: var(--gold-light);
+            font-weight: 600;
+        }
+
+        /* CENTER */
+
+        .story-panel {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            background:
+                radial-gradient(circle at 50% 20%, rgba(201,169,106,0.035), transparent 45%);
+        }
+
+        .story-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 34px 8%;
+        }
+
+        .scene-intro {
+            text-align: center;
+            max-width: 720px;
+            margin: 0 auto 34px;
+        }
+
+        .scene-intro .symbol {
+            color: var(--gold);
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .scene-intro h2 {
+            font-family: Cinzel, serif;
+            font-size: 23px;
+            font-weight: 600;
+            margin: 0 0 9px;
+        }
+
+        .scene-intro p {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .message {
+            max-width: 780px;
+            margin: 0 auto 22px;
+        }
+
+        .message-label {
+            color: var(--gold);
+            font-family: Cinzel, serif;
+            font-size: 12px;
+            margin-bottom: 7px;
+            letter-spacing: 1px;
+        }
+
+        .message-text {
+            color: #d7d3cc;
+            font-size: 14px;
+            line-height: 1.75;
+        }
+
+        .message.player {
+            border-left: 2px solid rgba(201, 169, 106, 0.35);
+            padding-left: 16px;
+        }
+
+        .message.player .message-label {
+            color: #aaa;
+        }
+
+        .input-area {
+            border-top: 1px solid var(--border);
+            padding: 18px 8% 20px;
+            background: rgba(8, 9, 13, 0.96);
+        }
+
+        .action-form {
+            max-width: 780px;
+            margin: 0 auto;
+        }
+
+        .action-label {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-input {
+            flex: 1;
+            min-width: 0;
+            height: 50px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #101219;
+            color: var(--text);
+            padding: 0 15px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .action-input:focus {
+            border-color: rgba(201, 169, 106, 0.6);
+        }
+
+        .send-button {
+            height: 50px;
+            padding: 0 22px;
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            background: var(--gold);
+            color: #15120d;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .send-button:hover {
+            background: var(--gold-light);
+        }
+
+        /* RIGHT */
+
+        .state-panel {
+            border-left: 1px solid var(--border);
+            background: rgba(16, 18, 25, 0.72);
+            padding: 24px 20px;
+            overflow-y: auto;
+        }
+
+        .state-card {
+            border: 1px solid rgba(201, 169, 106, 0.13);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.018);
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .state-card-title {
+            font-size: 12px;
+            color: var(--gold-light);
+            margin-bottom: 7px;
+            font-weight: 600;
+        }
+
+        .state-card-text {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--muted);
+        }
+
+        .inventory-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 12px;
+        }
+
+        .inventory-item:last-child {
+            border-bottom: none;
+        }
+
+        .inventory-item span:last-child {
+            color: var(--muted);
+        }
+
+        .empty-state {
+            color: #66666c;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 1050px) {
+            .game-layout {
+                grid-template-columns: 220px minmax(0, 1fr);
+            }
+
+            .state-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .game-header {
+                padding: 0 15px;
+            }
+
+            .game-logo {
+                font-size: 17px;
+                letter-spacing: 2px;
+            }
+
+            .campaign-title {
+                display: none;
+            }
+
+            .game-layout {
+                display: block;
+            }
+
+            .character-panel {
+                display: none;
+            }
+
+            .story-content {
+                padding: 25px 18px;
+            }
+
+            .input-area {
+                padding: 14px;
+            }
+
+            .action-row {
+                flex-direction: column;
+            }
+
+            .send-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="game-page">
+
+    <header class="game-header">
+
+        <div class="game-logo">
+            ARCANUM
+        </div>
+
+        <div class="campaign-title">
+            <small>Кампания</small>
+            <h1 id="campaignTitle">Загрузка...</h1>
+        </div>
+
+        <div class="header-actions">
+            <button class="icon-button" onclick="goDashboard()" title="Кампании">
+                ☰
+            </button>
+
+            <button class="icon-button" onclick="saveGame()" title="Сохранить">
+                💾
+            </button>
+
+            <button class="icon-button" onclick="alert('Настройки появятся позже')" title="Настройки">
+                ⚙
+            </button>
+        </div>
+
+    </header>
+
+
+    <main class="game-layout">
+
+        <!-- ПЕРСОНАЖ -->
+
+        <aside class="character-panel">
+
+            <div class="character-avatar" id="characterAvatar">
+                ?
+            </div>
+
+            <div class="character-name" id="characterName">
+                Загрузка...
+            </div>
+
+            <div class="character-class" id="characterClass">
+                Загрузка...
+            </div>
+
+
+            <div class="panel-section">
+
+                <div class="panel-title">
+                    Персонаж
+                </div>
+
+                <div class="level-line">
+                    <span>Уровень</span>
+                    <span class="level-value" id="characterLevel">1</span>
+                </div>
+
+                <div class="hp-container">
+
+                    <div class="hp-label">
+                        <span>Здоровье</span>
+                        <span id="hpText">12 / 12</span>
+                    </div>
+
+                    <div class="hp-bar">
+                        <div class="hp-fill" id="hpFill"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel-section">
+
+                <div class="panel-title">
+                    Характеристики
+                </div>
+
+                <div class="stats-grid">
+
+                    <div class="stat">
+                        <span>СИЛ</span>
+                        <span id="str">10</span>
+                    </div>
+
+                    <div class="stat">
+                        <span>ЛОВ</span>
+                        <span id="dex">10</span>
+                    </div>
+
+                    <div class="stat">
+                        <span>ТЕЛ</span>
+                        <span id="con">10</span>
+                    </div>
+
+                    <div class="stat">
+                        <span>ИНТ</span>
+                        <span id="int">10</span>
+                    </div>
+
+                    <div class="stat">
+                        <span>МДР</span>
+                        <span id="wis">10</span>
+                    </div>
+
+                    <div class="stat">
+                        <span>ХАР</span>
+                        <span id="cha">10</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel-section">
+
+                <div class="panel-title">
+                    Предыстория
+                </div>
+
+                <div class="state-card-text" id="background">
+                    —
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- ИСТОРИЯ -->
+
+        <section class="story-panel">
+
+            <div class="story-content" id="storyContent">
+
+                <div class="scene-intro">
+
+                    <div class="symbol">
+                        ✦
+                    </div>
+
+                    <h2>Начало приключения</h2>
+
+                    <p id="sceneDescription">
+                        История готовится...
+                    </p>
+
+                </div>
+
+
+                <div class="message">
+
+                    <div class="message-label">
+                        МАСТЕР
+                    </div>
+
+                    <div class="message-text" id="initialMessage">
+                        Загрузка приключения...
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="input-area">
+
+                <form class="action-form" id="actionForm">
+
+                    <label class="action-label">
+                        Что вы делаете?
+                    </label>
+
+                    <div class="action-row">
+
+                        <input
+                            type="text"
+                            class="action-input"
+                            id="actionInput"
+                            placeholder="Опишите действие вашего персонажа..."
+                            autocomplete="off"
+                        >
+
+                        <button type="submit" class="send-button">
+                            Отправить
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+        <!-- СОСТОЯНИЕ -->
+
+        <aside class="state-panel">
+
+            <div class="panel-section" style="margin-top: 0; border-top: none;">
+
+                <div class="panel-title">
+                    Состояние
+                </div>
+
+
+                <div class="state-card">
+
+                    <div class="state-card-title">
+                        📍 Местоположение
+                    </div>
+
+                    <div class="state-card-text" id="location">
+                        Неизвестно
+                    </div>
+
+                </div>
+
+
+                <div class="state-card">
+
+                    <div class="state-card-title">
+                        🎯 Цель
+                    </div>
+
+                    <div class="state-card-text" id="goal">
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="state-card">
+
+                    <div class="state-card-title">
+                        🌙 Время
+                    </div>
+
+                    <div class="state-card-text">
+                        Начало путешествия
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel-section">
+
+                <div class="panel-title">
+                    Инвентарь
+                </div>
+
+                <div id="inventory">
+
+                    <div class="inventory-item">
+                        <span>Пусто</span>
+                        <span>—</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel-section">
+
+                <div class="panel-title">
+                    Журнал
+                </div>
+
+                <div class="empty-state" id="journal">
+                    Важные события будут появляться здесь.
+                </div>
+
+            </div>
+
+        </aside>
+
+    </main>
+
+</div>
+
+
+<script>
+
+    let campaign = null;
+    let character = null;
+
+
+    /* =========================
+       ЗАГРУЗКА ДАННЫХ
+    ========================= */
+
+    function loadGameData() {
+
+        const campaignData = localStorage.getItem("arcanum_campaign");
+        const characterData = localStorage.getItem("arcanum_character");
+
+        if (campaignData) {
+            campaign = JSON.parse(campaignData);
+        }
+
+        if (characterData) {
+            character = JSON.parse(characterData);
+        }
+
+
+        if (!campaign) {
+
+            document.getElementById("campaignTitle").textContent =
+                "Нет кампании";
+
+            return;
+        }
+
+
+        renderCampaign();
+        renderCharacter();
+        renderOpeningScene();
+    }
+
+
+    /* =========================
+       КАМПАНИЯ
+    ========================= */
+
+    function renderCampaign() {
+
+        document.getElementById("campaignTitle").textContent =
+            campaign.name || "Без названия";
+
+    }
+
+
+    /* =========================
+       ПЕРСОНАЖ
+    ========================= */
+
+    function renderCharacter() {
+
+        if (!character) {
+            return;
+        }
+
+
+        const name = character.name || "Безымянный";
+
+
+        document.getElementById("characterName").textContent =
+            name;
+
+        document.getElementById("characterAvatar").textContent =
+            name.charAt(0).toUpperCase();
+
+
+        document.getElementById("characterLevel").textContent =
+            character.level || 1;
+
+
+        document.getElementById("characterClass").textContent =
+            `${character.race || "Неизвестная раса"} • ${character.class || "Неизвестный класс"}`;
+
+
+        if (character.stats) {
+
+            document.getElementById("str").textContent =
+                character.stats.str || 10;
+
+            document.getElementById("dex").textContent =
+                character.stats.dex || 10;
+
+            document.getElementById("con").textContent =
+                character.stats.con || 10;
+
+            document.getElementById("int").textContent =
+                character.stats.int || 10;
+
+            document.getElementById("wis").textContent =
+                character.stats.wis || 10;
+
+            document.getElementById("cha").textContent =
+                character.stats.cha || 10;
+
+        }
+
+
+        document.getElementById("background").textContent =
+            character.background || "Неизвестно";
+
+
+        document.getElementById("goal").textContent =
+            character.goals || "Цель пока неизвестна.";
+
+    }
+
+
+    /* =========================
+       НАЧАЛО ИСТОРИИ
+    ========================= */
+
+    function renderOpeningScene() {
+
+        if (!campaign || !character) {
+
+            document.getElementById("initialMessage").textContent =
+                "Для начала приключения необходимо создать кампанию и персонажа.";
+
+            return;
+        }
+
+
+        const characterName =
+            character.name || "путник";
+
+
+        const campaignName =
+            campaign.name || "неизвестной кампании";
+
+
+        document.getElementById("sceneDescription").textContent =
+            `Кампания «${campaignName}» начинается.`;
+
+
+        document.getElementById("initialMessage").textContent =
+            `${characterName}, твоё приключение начинается здесь. ` +
+            `Перед тобой лежит неизвестная дорога, а впереди ждут тайны, ` +
+            `опасности и решения, которые изменят ход этой истории. ` +
+            `Пока ты ещё не знаешь, куда приведёт тебя этот путь.`;
+
+    }
+
+
+    /* =========================
+       ДЕЙСТВИЕ ИГРОКА
+    ========================= */
+
+    document.getElementById("actionForm").addEventListener("submit", function(event) {
+
+        event.preventDefault();
+
+
+        const input =
+            document.getElementById("actionInput");
+
+        const action =
+            input.value.trim();
+
+
+        if (!action) {
+            return;
+        }
+
+
+        addPlayerMessage(action);
+
+        input.value = "";
+
+
+        setTimeout(() => {
+
+            addDMMessage(
+                generateDemoResponse(action)
+            );
+
+        }, 500);
+
+    });
+
+
+    /* =========================
+       СООБЩЕНИЕ ИГРОКА
+    ========================= */
+
+    function addPlayerMessage(text) {
+
+        const container =
+            document.getElementById("storyContent");
+
+
+        const message =
+            document.createElement("div");
+
+        message.className =
+            "message player";
+
+
+        message.innerHTML = `
+            <div class="message-label">
+                ${escapeHtml(character?.name || "ИГРОК")}
+            </div>
+
+            <div class="message-text">
+                ${escapeHtml(text)}
+            </div>
+        `;
+
+
+        container.appendChild(message);
+
+        scrollStoryToBottom();
+    }
+
+
+    /* =========================
+       СООБЩЕНИЕ МАСТЕРА
+    ========================= */
+
+    function addDMMessage(text) {
+
+        const container =
+            document.getElementById("storyContent");
+
+
+        const message =
+            document.createElement("div");
+
+        message.className =
+            "message";
+
+
+        message.innerHTML = `
+            <div class="message-label">
+                МАСТЕР
+            </div>
+
+            <div class="message-text">
+                ${escapeHtml(text)}
+            </div>
+        `;
+
+
+        container.appendChild(message);
+
+        scrollStoryToBottom();
+    }
+
+
+    /* =========================
+       ДЕМО-ОТВЕТ
+    ========================= */
+
+    function generateDemoResponse(action) {
+
+        const lower =
+            action.toLowerCase();
+
+
+        if (
+            lower.includes("осмотр") ||
+            lower.includes("смотрю") ||
+            lower.includes("исслед")
+        ) {
+
+            return "Ты внимательно осматриваешь окружающее пространство. " +
+                "Пока ничего не угрожает тебе напрямую, однако среди деталей " +
+                "окружения явно есть что-то, что заслуживает внимания.";
+
+        }
+
+
+        if (
+            lower.includes("идти") ||
+            lower.includes("подхожу") ||
+            lower.includes("направляюсь")
+        ) {
+
+            return "Ты осторожно двигаешься вперёд. Мир вокруг становится " +
+                "тише, а впереди постепенно проявляется новый путь.";
+
+        }
+
+
+        if (
+            lower.includes("атак") ||
+            lower.includes("бью") ||
+            lower.includes("удар")
+        ) {
+
+            return "Ты готовишься к атаке. Здесь должен был бы начаться " +
+                "настоящий игровой бросок и расчёт боевых правил.";
+
+        }
+
+
+        return "Твоё действие принято. В настоящей версии Arcanum " +
+            "Мастер проанализирует действие, состояние мира и правила, " +
+            "после чего продолжит историю.";
+
+    }
+
+
+    /* =========================
+       СОХРАНЕНИЕ
+    ========================= */
+
+    function saveGame() {
+
+        const gameState = {
+
+            campaign: campaign,
+
+            character: character,
+
+            savedAt: new Date().toISOString()
+
+        };
+
+
+        localStorage.setItem(
+            "arcanum_game_state",
+            JSON.stringify(gameState)
+        );
+
+
+        alert("Игра сохранена");
+
+    }
+
+
+    /* =========================
+       DASHBOARD
+    ========================= */
+
+    function goDashboard() {
+
+        window.location.href =
+            "dashboard.html";
+
+    }
+
+
+    /* =========================
+       БЕЗОПАСНЫЙ HTML
+    ========================= */
+
+    function escapeHtml(text) {
+
+        const div =
+            document.createElement("div");
+
+        div.textContent =
+            text;
+
+        return div.innerHTML;
+
+    }
+
+
+    /* =========================
+       ПРОКРУТКА ИСТОРИИ
+    ========================= */
+
+    function scrollStoryToBottom() {
+
+        const container =
+            document.getElementById("storyContent");
+
+
+        container.scrollTo({
+
+            top: container.scrollHeight,
+
+            behavior: "smooth"
+
+        });
+
+    }
+
+
+    /* =========================
+       START
+    ========================= */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        loadGameData
+    );
+
+</script>
+
+</body>
+</html>
