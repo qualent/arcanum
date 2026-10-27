@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Регистрация — Arcanum</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 460px;
+        }
+
+        .auth-logo {
+            display: block;
+            text-align: center;
+            font-family: "Cinzel", serif;
+            font-size: 28px;
+            letter-spacing: 5px;
+            color: var(--gold-light);
+            text-decoration: none;
+            margin-bottom: 45px;
+        }
+
+        .auth-logo span {
+            margin-right: 8px;
+        }
+
+        .auth-card {
+            background: rgba(17, 19, 26, 0.92);
+            border: 1px solid var(--border);
+            padding: 45px;
+            box-shadow: 0 20px 70px rgba(0, 0, 0, 0.45);
+        }
+
+        .auth-label {
+            text-align: center;
+            color: var(--gold);
+            font-size: 12px;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+        }
+
+        .auth-title {
+            text-align: center;
+            font-family: "Cinzel", serif;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .auth-description {
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 35px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .auth-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .auth-field label {
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .auth-field input {
+            width: 100%;
+            box-sizing: border-box;
+            background: #0b0d12;
+            border: 1px solid rgba(201, 169, 106, 0.2);
+            color: var(--text);
+            padding: 15px;
+            font-family: "Inter", sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .auth-field input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(201, 169, 106, 0.08);
+        }
+
+        .auth-button {
+            margin-top: 10px;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+        }
+
+        .auth-footer {
+            margin-top: 28px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .auth-footer a {
+            color: var(--gold-light);
+            text-decoration: none;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .back-home {
+            display: block;
+            text-align: center;
+            margin-top: 25px;
+            color: var(--muted);
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .back-home:hover {
+            color: var(--text);
+        }
+
+        @media (max-width: 600px) {
+            .auth-card {
+                padding: 30px 22px;
+            }
+
+            .auth-title {
+                font-size: 27px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="auth-page">
+
+    <div class="auth-container">
+
+        <a href="../index.html" class="auth-logo">
+            <span>✦</span> ARCANUM
+        </a>
+
+        <div class="auth-card">
+
+            <div class="auth-label">
+                НОВОЕ ПРИКЛЮЧЕНИЕ
+            </div>
+
+            <h1 class="auth-title">
+                Создай аккаунт
+            </h1>
+
+            <p class="auth-description">
+                Создай героя и отправляйся в свой первый мир.
+            </p>
+
+            <form class="auth-form">
+
+                <div class="auth-field">
+                    <label for="username">
+                        Имя игрока
+                    </label>
+
+                    <input
+                        type="text"
+                        id="username"
+                        placeholder="Как тебя называть?"
+                        required
+                    >
+                </div>
+
+                <div class="auth-field">
+                    <label for="email">
+                        Email
+                    </label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="you@example.com"
+                        required
+                    >
+                </div>
+
+                <div class="auth-field">
+                    <label for="password">
+                        Пароль
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Минимум 6 символов"
+                        minlength="6"
+                        required
+                    >
+                </div>
+
+                <div class="auth-field">
+                    <label for="password-confirm">
+                        Повтори пароль
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password-confirm"
+                        placeholder="Повтори пароль"
+                        minlength="6"
+                        required
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="button button-primary auth-button"
+                >
+                    Создать аккаунт
+                    <span>→</span>
+                </button>
+
+            </form>
+
+            <div class="auth-footer">
+                Уже есть аккаунт?
+                <a href="login.html">
+                    Войти
+                </a>
+            </div>
+
+        </div>
+
+        <a href="../index.html" class="back-home">
+            ← Вернуться на главную
+        </a>
+
+    </div>
+
+</main>
+
+</body>
+</html>
