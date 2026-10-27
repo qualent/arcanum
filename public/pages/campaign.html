@@ -1,0 +1,799 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Новая кампания — Arcanum</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        body {
+            min-height: 100vh;
+        }
+
+        .campaign-page {
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .campaign-header {
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6%;
+            border-bottom: 1px solid var(--border);
+            background: rgba(8, 9, 13, 0.92);
+        }
+
+        .campaign-logo {
+            color: var(--gold-light);
+            text-decoration: none;
+            font-family: "Cinzel", serif;
+            font-size: 22px;
+            letter-spacing: 4px;
+        }
+
+        .campaign-logo span {
+            margin-right: 7px;
+        }
+
+        .back-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .back-link:hover {
+            color: var(--text);
+        }
+
+        .campaign-content {
+            width: 90%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding-top: 65px;
+        }
+
+        .page-heading {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .page-label {
+            color: var(--gold);
+            font-size: 11px;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+        }
+
+        .page-title {
+            font-family: "Cinzel", serif;
+            font-size: 42px;
+            font-weight: 500;
+            margin: 0 0 12px;
+        }
+
+        .page-description {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .campaign-form {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .form-section {
+            background: rgba(17, 19, 26, 0.85);
+            border: 1px solid var(--border);
+            padding: 32px;
+        }
+
+        .section-title {
+            font-family: "Cinzel", serif;
+            color: var(--gold-light);
+            font-size: 19px;
+            margin: 0 0 25px;
+        }
+
+        .section-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: -15px;
+            margin-bottom: 25px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .form-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-field label {
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .form-field small {
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px;
+            background: #0b0d12;
+            border: 1px solid rgba(201, 169, 106, 0.2);
+            color: var(--text);
+            font-family: "Inter", sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(201, 169, 106, 0.07);
+        }
+
+        .form-field textarea {
+            min-height: 150px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .form-field select {
+            cursor: pointer;
+        }
+
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .range-container input {
+            flex: 1;
+            accent-color: var(--gold);
+        }
+
+        .range-value {
+            min-width: 90px;
+            text-align: right;
+            color: var(--gold-light);
+            font-size: 13px;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            position: relative;
+        }
+
+        .checkbox-item input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .checkbox-item label {
+            display: block;
+            padding: 16px;
+            border: 1px solid rgba(201, 169, 106, 0.15);
+            background: rgba(8, 9, 13, 0.5);
+            color: var(--muted);
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 13px;
+        }
+
+        .checkbox-item label:hover {
+            border-color: rgba(201, 169, 106, 0.35);
+            color: var(--text);
+        }
+
+        .checkbox-item input:checked + label {
+            border-color: var(--gold);
+            color: var(--gold-light);
+            background: rgba(201, 169, 106, 0.07);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .create-button {
+            min-width: 280px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .form-note {
+            text-align: center;
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 700px) {
+            .campaign-header {
+                padding: 0 20px;
+            }
+
+            .campaign-content {
+                width: calc(100% - 30px);
+                padding-top: 45px;
+            }
+
+            .page-title {
+                font-size: 32px;
+            }
+
+            .form-section {
+                padding: 22px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-field.full {
+                grid-column: auto;
+            }
+
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .create-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="campaign-page">
+
+    <header class="campaign-header">
+
+        <a href="../index.html" class="campaign-logo">
+            <span>✦</span> ARCANUM
+        </a>
+
+        <a href="dashboard.html" class="back-link">
+            ← Мои кампании
+        </a>
+
+    </header>
+
+
+    <main class="campaign-content">
+
+        <div class="page-heading">
+
+            <div class="page-label">
+                НОВОЕ ПРИКЛЮЧЕНИЕ
+            </div>
+
+            <h1 class="page-title">
+                Создай свой мир
+            </h1>
+
+            <p class="page-description">
+                Расскажи, какое приключение ты хочешь получить.
+                Эти настройки станут основой для будущего AI-мастера.
+            </p>
+
+        </div>
+
+
+        <form class="campaign-form" id="campaignForm">
+
+
+            <!-- ОСНОВА -->
+
+            <section class="form-section">
+
+                <h2 class="section-title">
+                    Основа приключения
+                </h2>
+
+                <div class="form-grid">
+
+                    <div class="form-field full">
+
+                        <label for="campaignName">
+                            Название кампании
+                        </label>
+
+                        <input
+                            type="text"
+                            id="campaignName"
+                            placeholder="Например: Пепел забытых богов"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="setting">
+                            Сеттинг
+                        </label>
+
+                        <select id="setting">
+
+                            <option value="classic-fantasy">
+                                Классическое фэнтези
+                            </option>
+
+                            <option value="dark-fantasy">
+                                Тёмное фэнтези
+                            </option>
+
+                            <option value="high-fantasy">
+                                Высокое фэнтези
+                            </option>
+
+                            <option value="low-fantasy">
+                                Низкое фэнтези
+                            </option>
+
+                            <option value="steampunk">
+                                Стимпанк
+                            </option>
+
+                            <option value="post-apocalypse">
+                                Постапокалипсис
+                            </option>
+
+                            <option value="custom">
+                                Свой сеттинг
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="genre">
+                            Основной жанр
+                        </label>
+
+                        <select id="genre">
+
+                            <option value="adventure">
+                                Приключение
+                            </option>
+
+                            <option value="epic">
+                                Эпическое приключение
+                            </option>
+
+                            <option value="mystery">
+                                Детектив / тайна
+                            </option>
+
+                            <option value="horror">
+                                Хоррор
+                            </option>
+
+                            <option value="politics">
+                                Политические интриги
+                            </option>
+
+                            <option value="exploration">
+                                Исследование мира
+                            </option>
+
+                            <option value="survival">
+                                Выживание
+                            </option>
+
+                            <option value="war">
+                                Война
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- СТИЛЬ -->
+
+            <section class="form-section">
+
+                <h2 class="section-title">
+                    Стиль приключения
+                </h2>
+
+                <div class="form-grid">
+
+                    <div class="form-field">
+
+                        <label for="tone">
+                            Тон повествования
+                        </label>
+
+                        <select id="tone">
+
+                            <option value="balanced">
+                                Сбалансированный
+                            </option>
+
+                            <option value="dark">
+                                Мрачный
+                            </option>
+
+                            <option value="very-dark">
+                                Очень мрачный
+                            </option>
+
+                            <option value="light">
+                                Лёгкий
+                            </option>
+
+                            <option value="humorous">
+                                С юмором
+                            </option>
+
+                            <option value="serious">
+                                Серьёзный
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="difficulty">
+                            Сложность
+                        </label>
+
+                        <select id="difficulty">
+
+                            <option value="easy">
+                                Лёгкая
+                            </option>
+
+                            <option value="normal" selected>
+                                Нормальная
+                            </option>
+
+                            <option value="hard">
+                                Сложная
+                            </option>
+
+                            <option value="deadly">
+                                Безжалостная
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="rules">
+                            Соблюдение правил
+                        </label>
+
+                        <select id="rules">
+
+                            <option value="story">
+                                Больше свободы ради истории
+                            </option>
+
+                            <option value="balanced" selected>
+                                Баланс правил и свободы
+                            </option>
+
+                            <option value="strict">
+                                Максимально строго
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="length">
+                            Размер приключения
+                        </label>
+
+                        <select id="length">
+
+                            <option value="short">
+                                Короткое
+                            </option>
+
+                            <option value="medium" selected>
+                                Среднее
+                            </option>
+
+                            <option value="long">
+                                Длинная кампания
+                            </option>
+
+                            <option value="endless">
+                                Без определённого конца
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ФОКУС -->
+
+            <section class="form-section">
+
+                <h2 class="section-title">
+                    На чём сделать акцент?
+                </h2>
+
+                <p class="section-subtitle">
+                    Можно выбрать несколько вариантов.
+                </p>
+
+
+                <div class="checkbox-grid">
+
+                    <div class="checkbox-item">
+
+                        <input
+                            type="checkbox"
+                            id="combat"
+                            value="combat"
+                            checked
+                        >
+
+                        <label for="combat">
+                            ⚔ Боевые столкновения
+                        </label>
+
+                    </div>
+
+
+                    <div class="checkbox-item">
+
+                        <input
+                            type="checkbox"
+                            id="exploration"
+                            value="exploration"
+                            checked
+                        >
+
+                        <label for="exploration">
+                            ◇ Исследование мира
+                        </label>
+
+                    </div>
+
+
+                    <div class="checkbox-item">
+
+                        <input
+                            type="checkbox"
+                            id="story"
+                            value="story"
+                            checked
+                        >
+
+                        <label for="story">
+                            ✧ Сюжет и история
+                        </label>
+
+                    </div>
+
+
+                    <div class="checkbox-item">
+
+                        <input
+                            type="checkbox"
+                            id="characters"
+                            value="characters"
+                            checked
+                        >
+
+                        <label for="characters">
+                            ◈ NPC и отношения
+                        </label>
+
+                    </div>
+
+
+                    <div class="checkbox-item">
+
+                        <input
+                            type="checkbox"
+                            id="loot"
+                            value="loot"
+                        >
+
+                        <label for="loot">
+                            ✦ Лут и развитие
+                        </label>
+
+                    </div>
+
+
+                    <div class="checkbox-item">
+
+                        <input
+                            type="checkbox"
+                            id="puzzles"
+                            value="puzzles"
+                        >
+
+                        <label for="puzzles">
+                            ? Загадки и головоломки
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ДОПОЛНИТЕЛЬНО -->
+
+            <section class="form-section">
+
+                <h2 class="section-title">
+                    Твои пожелания
+                </h2>
+
+                <p class="section-subtitle">
+                    Здесь можно описать практически всё, что ты хочешь увидеть в приключении.
+                </p>
+
+                <div class="form-field">
+
+                    <label for="preferences">
+                        Описание
+                    </label>
+
+                    <textarea
+                        id="preferences"
+                        placeholder="Например: хочу мрачное путешествие по разрушенному миру, много исследования древних руин, сильных противников и неожиданные последствия решений. Не хочу слишком много политических интриг..."
+                    ></textarea>
+
+                    <small>
+                        Чем подробнее описание, тем больше информации получит будущий AI-мастер.
+                    </small>
+
+                </div>
+
+            </section>
+
+
+            <!-- СОЗДАНИЕ -->
+
+            <div class="form-actions">
+
+                <button
+                    type="submit"
+                    class="button button-primary create-button"
+                >
+                    Создать приключение
+                    <span>→</span>
+                </button>
+
+            </div>
+
+            <p class="form-note">
+                На следующем этапе ты создашь персонажа.
+            </p>
+
+
+        </form>
+
+    </main>
+
+</div>
+
+
+<script>
+
+    const form = document.getElementById("campaignForm");
+
+    form.addEventListener("submit", function(event) {
+
+        event.preventDefault();
+
+        const focus = [];
+
+        document.querySelectorAll(
+            '.checkbox-item input:checked'
+        ).forEach(function(item) {
+            focus.push(item.value);
+        });
+
+
+        const campaign = {
+
+            name: document.getElementById("campaignName").value,
+
+            setting: document.getElementById("setting").value,
+
+            genre: document.getElementById("genre").value,
+
+            tone: document.getElementById("tone").value,
+
+            difficulty: document.getElementById("difficulty").value,
+
+            rules: document.getElementById("rules").value,
+
+            length: document.getElementById("length").value,
+
+            focus: focus,
+
+            preferences: document.getElementById("preferences").value
+
+        };
+
+
+        localStorage.setItem(
+            "arcanum_campaign",
+            JSON.stringify(campaign)
+        );
+
+
+        window.location.href = "character.html";
+
+    });
+
+</script>
+
+</body>
+</html>
+```
