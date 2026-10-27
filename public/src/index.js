@@ -1,20 +1,8 @@
 export default {
     async fetch(request, env) {
-
         const url = new URL(request.url);
 
-        if (
-            url.pathname === "/api/game/action" &&
-            request.method === "POST"
-        ) {
-            return handleGameAction(request, env);
-        }
-
-
-        if (
-            url.pathname === "/api/health" &&
-            request.method === "GET"
-        ) {
+        if (url.pathname === "/api/health" && request.method === "GET") {
             return jsonResponse({
                 success: true,
                 service: "Arcanum API",
@@ -22,6 +10,19 @@ export default {
             });
         }
 
+        if (url.pathname === "/api/game/action" && request.method === "POST") {
+            return handleGameAction(request, env);
+        }
+
+        if (url.pathname.startsWith("/api/")) {
+            return jsonResponse(
+                {
+                    success: false,
+                    error: "API endpoint not found"
+                },
+                404
+            );
+        }
 
         return env.ASSETS.fetch(request);
     }
@@ -29,15 +30,10 @@ export default {
 
 
 async function handleGameAction(request, env) {
-
     try {
+        const authHeader = request.headers.get("Authorization");
 
-        const authorization =
-            request.headers.get("Authorization");
-
-
-        if (!authorization) {
-
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return jsonResponse(
                 {
                     success: false,
@@ -47,99 +43,39 @@ async function handleGameAction(request, env) {
             );
         }
 
+        const token = authHeader.substring(7);
 
-        const accessToken =
-            authorization.replace(
-                "Bearer ",
-                ""
-            );
-
-
-        if (!accessToken) {
-
-            return jsonResponse(
-                {
-                    success: false,
-                    error: "Invalid authorization"
-                },
-                401
-            );
-        }
-
-
-        const user =
-            await getSupabaseUser(
-                env,
-                accessToken
-            );
-
+        const user = await getSupabaseUser(env, token);
 
         if (!user) {
-
             return jsonResponse(
                 {
                     success: false,
-                    error: "Invalid session"
+                    error: "Invalid authentication token"
                 },
                 401
             );
         }
 
+        const body = await request.json();
 
-        const body =
-            await request.json();
+        const campaignId = body.campaign_id;
+        const characterId = body.character_id;
+        const action = typeof body.action === "string"
+            ? body.action.trim()
+            : "";
 
-
-        const campaignId =
-            body.campaign_id;
-
-
-        const characterId =
-            body.character_id;
-
-
-        const action =
-            String(body.action || "").trim();
-
-
-        if (!campaignId) {
-
+        if (!campaignId || !characterId || !action) {
             return jsonResponse(
                 {
                     success: false,
-                    error: "campaign_id is required"
+                    error: "campaign_id, character_id and action are required"
                 },
                 400
             );
         }
-
-
-        if (!characterId) {
-
-            return jsonResponse(
-                {
-                    success: false,
-                    error: "character_id is required"
-                },
-                400
-            );
-        }
-
-
-        if (!action) {
-
-            return jsonResponse(
-                {
-                    success: false,
-                    error: "action is required"
-                },
-                400
-            );
-        }
-
 
         if (action.length > 5000) {
-
             return jsonResponse(
                 {
                     success: false,
@@ -149,17 +85,12 @@ async function handleGameAction(request, env) {
             );
         }
 
+        const characterResult = await supabaseRequest(
+            env,
+            `/rest/v1/characters?select=*&id=eq.${encodeURIComponent(characterId)}&campaign_id=eq.${encodeURIComponent(campaignId)}&user_id=eq.${encodeURIComponent(user.id)}`
+        );
 
-        const character =
-            await supabaseRequest(
-                env,
-                accessToken,
-                `/rest/v1/characters?select=*&id=eq.${encodeURIComponent(characterId)}&campaign_id=eq.${encodeURIComponent(campaignId)}&user_id=eq.${encodeURIComponent(user.id)}`
-            );
-
-
-        if (!character || character.length === 0) {
-
+        if (!characterResult.ok || !characterResult.data.length) {
             return jsonResponse(
                 {
                     success: false,
@@ -169,175 +100,177 @@ async function handleGameAction(request, env) {
             );
         }
 
+        const character = characterResult.data[0];
 
-        const gameStates =
-            await supabaseRequest(
-                env,
-                accessToken,
-                `/rest/v1/game_states?select=*&character_id=eq.${encodeURIComponent(characterId)}&campaign_id=eq.${encodeURIComponent(campaignId)}&user_id=eq.${encodeURIComponent(user.id)}`
-            );
+        const stateResult = await supabaseRequest(
+            env,
+            `/rest/v1/game_states?select=*&character_id=eq.${encodeURIComponent(characterId)}&campaign_id=eq.${encodeURIComponent(campaignId)}&user_id=eq.${encodeURIComponent(user.id)}`
+        );
 
-
-        if (!gameStates || gameStates.length === 0) {
-
+        if (!stateResult.ok) {
             return jsonResponse(
                 {
                     success: false,
-                    error: "Game state not found"
+                    error: "Could not load game state"
                 },
-                404
+                500
             );
         }
 
+        let gameState;
 
-        const state =
-            gameStates[0];
-
-
-        await supabaseRequest(
-            env,
-            accessToken,
-            "/rest/v1/game_messages",
-            {
-                method: "POST",
-
-                headers: {
-                    "Prefer": "return=minimal"
-                },
-
-                body: {
-                    user_id:
-                        user.id,
-
-                    campaign_id:
-                        campaignId,
-
-                    character_id:
-                        characterId,
-
-                    role:
-                        "player",
-
-                    content:
-                        action
-                }
-            }
-        );
-
-
-        const roll =
-            Math.floor(
-                Math.random() * 20
-            ) + 1;
-
-
-        let resultText;
-
-
-        if (roll === 20) {
-
-            resultText =
-                `Критический успех! Ты пытаешься: ${action}`;
-
-        } else if (roll === 1) {
-
-            resultText =
-                `Критическая неудача. Твоё действие "${action}" оборачивается неожиданной проблемой.`;
-
-        } else if (roll >= 15) {
-
-            resultText =
-                `Успех. Ты предпринимаешь действие: ${action}`;
-
-        } else if (roll >= 8) {
-
-            resultText =
-                `Частичный успех. Ты пытаешься: ${action}, но ситуация оказывается сложнее ожидаемого.`;
-
+        if (stateResult.data.length > 0) {
+            gameState = stateResult.data[0];
         } else {
+            const maxHp = 10 + Math.max(0, Math.floor((character.constitution - 10) / 2));
 
-            resultText =
-                `Неудача. Попытка "${action}" не даёт ожидаемого результата.`;
+            const newState = {
+                user_id: user.id,
+                campaign_id: campaignId,
+                character_id: characterId,
+                current_hp: maxHp,
+                max_hp: maxHp,
+                location: "Неизвестно",
+                game_day: 1,
+                game_time: "Утро",
+                experience: 0,
+                gold: 0
+            };
 
+            const createStateResult = await supabaseRequest(
+                env,
+                "/rest/v1/game_states",
+                {
+                    method: "POST",
+                    headers: {
+                        "Prefer": "return=representation"
+                    },
+                    body: JSON.stringify(newState)
+                }
+            );
+
+            if (!createStateResult.ok || !createStateResult.data.length) {
+                return jsonResponse(
+                    {
+                        success: false,
+                        error: "Could not create game state"
+                    },
+                    500
+                );
+            }
+
+            gameState = createStateResult.data[0];
         }
 
+        const playerMessage = {
+            user_id: user.id,
+            campaign_id: campaignId,
+            character_id: characterId,
+            role: "player",
+            content: action
+        };
 
-        await supabaseRequest(
+        const playerMessageResult = await supabaseRequest(
             env,
-            accessToken,
             "/rest/v1/game_messages",
             {
                 method: "POST",
-
                 headers: {
-                    "Prefer": "return=minimal"
+                    "Prefer": "return=representation"
                 },
-
-                body: {
-                    user_id:
-                        user.id,
-
-                    campaign_id:
-                        campaignId,
-
-                    character_id:
-                        characterId,
-
-                    role:
-                        "dm",
-
-                    content:
-                        resultText
-                }
+                body: JSON.stringify(playerMessage)
             }
         );
 
+        if (!playerMessageResult.ok) {
+            return jsonResponse(
+                {
+                    success: false,
+                    error: "Could not save player action"
+                },
+                500
+            );
+        }
+
+        const roll = Math.floor(Math.random() * 20) + 1;
+
+        let resultType;
+        let resultText;
+
+        if (roll === 20) {
+            resultType = "critical_success";
+            resultText = "Критический успех! Твоё действие удаётся значительно лучше, чем ожидалось.";
+        } else if (roll === 1) {
+            resultType = "critical_failure";
+            resultText = "Критический провал! Происходит неприятный неожиданный поворот.";
+        } else if (roll >= 15) {
+            resultType = "success";
+            resultText = "Успех. Твоё действие удаётся.";
+        } else if (roll >= 8) {
+            resultType = "partial_success";
+            resultText = "Частичный успех. Тебе удаётся добиться цели, но возникает осложнение.";
+        } else {
+            resultType = "failure";
+            resultText = "Провал. Твоё действие не достигает цели.";
+        }
+
+        const dmContent =
+            `${resultText}\n\n` +
+            `Бросок d20: ${roll}`;
+
+        const dmMessage = {
+            user_id: user.id,
+            campaign_id: campaignId,
+            character_id: characterId,
+            role: "assistant",
+            content: dmContent
+        };
+
+        const dmMessageResult = await supabaseRequest(
+            env,
+            "/rest/v1/game_messages",
+            {
+                method: "POST",
+                headers: {
+                    "Prefer": "return=representation"
+                },
+                body: JSON.stringify(dmMessage)
+            }
+        );
+
+        if (!dmMessageResult.ok) {
+            return jsonResponse(
+                {
+                    success: false,
+                    error: "Could not save game result"
+                },
+                500
+            );
+        }
 
         return jsonResponse({
             success: true,
-
-            roll,
-
-            result:
-                resultText,
-
-            state: {
-                current_hp:
-                    state.current_hp,
-
-                max_hp:
-                    state.max_hp,
-
-                location:
-                    state.location,
-
-                game_day:
-                    state.game_day,
-
-                game_time:
-                    state.game_time,
-
-                experience:
-                    state.experience,
-
-                gold:
-                    state.gold
+            result: {
+                type: resultType,
+                roll: roll,
+                text: dmContent
+            },
+            state: gameState,
+            character: {
+                id: character.id,
+                name: character.name,
+                level: character.level,
+                class: character.class,
+                race: character.race
             }
         });
-
-
     } catch (error) {
-
         console.error(error);
-
 
         return jsonResponse(
             {
                 success: false,
-
-                error:
-                    error.message ||
-                    "Internal server error"
+                error: "Internal server error"
             },
             500
         );
@@ -345,127 +278,65 @@ async function handleGameAction(request, env) {
 }
 
 
-async function getSupabaseUser(
-    env,
-    accessToken
-) {
-
-    const response =
-        await fetch(
-            `${env.SUPABASE_URL}/auth/v1/user`,
-            {
-                method: "GET",
-
-                headers: {
-                    "apikey":
-                        env.SUPABASE_ANON_KEY,
-
-                    "Authorization":
-                        `Bearer ${accessToken}`
-                }
+async function getSupabaseUser(env, token) {
+    const response = await fetch(
+        `${env.SUPABASE_URL}/auth/v1/user`,
+        {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "apikey": env.SUPABASE_ANON_KEY
             }
-        );
-
+        }
+    );
 
     if (!response.ok) {
-
         return null;
     }
-
 
     return response.json();
 }
 
 
-async function supabaseRequest(
-    env,
-    accessToken,
-    path,
-    options = {}
-) {
+async function supabaseRequest(env, path, options = {}) {
+    const response = await fetch(
+        `${env.SUPABASE_URL}${path}`,
+        {
+            method: options.method || "GET",
+            headers: {
+                "apikey": env.SUPABASE_ANON_KEY,
+                "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}`,
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            },
+            body: options.body
+        }
+    );
 
-    const headers = {
+    let data = null;
 
-        "apikey":
-            env.SUPABASE_ANON_KEY,
+    try {
+        data = await response.json();
+    } catch {
+        data = null;
+    }
 
-        "Authorization":
-            `Bearer ${accessToken}`,
-
-        "Content-Type":
-            "application/json",
-
-        ...(options.headers || {})
+    return {
+        ok: response.ok,
+        status: response.status,
+        data
     };
-
-
-    const requestOptions = {
-
-        method:
-            options.method || "GET",
-
-        headers
-    };
-
-
-    if (options.body !== undefined) {
-
-        requestOptions.body =
-            JSON.stringify(
-                options.body
-            );
-    }
-
-
-    const response =
-        await fetch(
-            `${env.SUPABASE_URL}${path}`,
-            requestOptions
-        );
-
-
-    if (!response.ok) {
-
-        const errorText =
-            await response.text();
-
-
-        throw new Error(
-            `Supabase error ${response.status}: ${errorText}`
-        );
-    }
-
-
-    const text =
-        await response.text();
-
-
-    if (!text) {
-
-        return null;
-    }
-
-
-    return JSON.parse(text);
 }
 
 
-function jsonResponse(
-    data,
-    status = 200
-) {
-
+function jsonResponse(data, status = 200) {
     return new Response(
         JSON.stringify(data),
         {
             status,
-
             headers: {
-                "Content-Type":
-                    "application/json",
-
-                "Cache-Control":
-                    "no-store"
+                "Content-Type": "application/json; charset=utf-8",
+                "Access-Control-Allow-Origin": "*"
             }
         }
     );
