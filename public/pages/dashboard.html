@@ -1,0 +1,646 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Кампании — Arcanum</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        body {
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .dashboard-header {
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6%;
+            border-bottom: 1px solid var(--border);
+            background: rgba(8, 9, 13, 0.9);
+        }
+
+        .dashboard-logo {
+            color: var(--gold-light);
+            text-decoration: none;
+            font-family: "Cinzel", serif;
+            font-size: 22px;
+            letter-spacing: 4px;
+        }
+
+        .dashboard-logo span {
+            margin-right: 7px;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-name {
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold-light);
+            font-family: "Cinzel", serif;
+            background: var(--card);
+        }
+
+        .logout {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .logout:hover {
+            color: var(--text);
+        }
+
+        .dashboard-content {
+            width: 90%;
+            max-width: 1250px;
+            margin: 0 auto;
+            padding-top: 70px;
+        }
+
+        .dashboard-top {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 30px;
+            margin-bottom: 45px;
+        }
+
+        .dashboard-label {
+            color: var(--gold);
+            font-size: 11px;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+        }
+
+        .dashboard-title {
+            font-family: "Cinzel", serif;
+            font-size: 42px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .dashboard-subtitle {
+            color: var(--muted);
+            margin-top: 10px;
+            font-size: 15px;
+        }
+
+        .new-campaign {
+            flex-shrink: 0;
+        }
+
+        .campaigns-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 22px;
+        }
+
+        .campaign-card {
+            position: relative;
+            min-height: 300px;
+            padding: 28px;
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(201, 169, 106, 0.08),
+                    rgba(17, 19, 26, 0.95) 45%
+                );
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: 0.25s;
+            overflow: hidden;
+        }
+
+        .campaign-card::before {
+            content: "";
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(201, 169, 106, 0.06);
+            filter: blur(35px);
+            right: -80px;
+            top: -80px;
+        }
+
+        .campaign-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(201, 169, 106, 0.45);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .campaign-icon {
+            position: relative;
+            font-size: 28px;
+            color: var(--gold-light);
+            margin-bottom: 25px;
+        }
+
+        .campaign-status {
+            position: absolute;
+            right: 0;
+            top: 0;
+            color: var(--gold);
+            font-size: 9px;
+            letter-spacing: 2px;
+        }
+
+        .campaign-title {
+            position: relative;
+            font-family: "Cinzel", serif;
+            font-size: 22px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .campaign-description {
+            position: relative;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+            flex: 1;
+        }
+
+        .campaign-info {
+            position: relative;
+            display: flex;
+            gap: 20px;
+            margin-top: 25px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(201, 169, 106, 0.1);
+        }
+
+        .campaign-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .campaign-info-label {
+            color: var(--muted);
+            font-size: 9px;
+            letter-spacing: 1px;
+        }
+
+        .campaign-info-value {
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        .campaign-button {
+            position: relative;
+            display: block;
+            margin-top: 22px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+            color: var(--gold-light);
+            text-decoration: none;
+            font-size: 11px;
+            letter-spacing: 1px;
+            transition: 0.2s;
+        }
+
+        .campaign-button:hover {
+            background: rgba(201, 169, 106, 0.08);
+            border-color: var(--gold);
+        }
+
+        .create-card {
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border: 1px dashed rgba(201, 169, 106, 0.25);
+            background: rgba(17, 19, 26, 0.35);
+            text-decoration: none;
+            transition: 0.25s;
+        }
+
+        .create-card:hover {
+            border-color: var(--gold);
+            background: rgba(201, 169, 106, 0.04);
+        }
+
+        .create-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .create-icon {
+            width: 58px;
+            height: 58px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold-light);
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .create-title {
+            color: var(--text);
+            font-family: "Cinzel", serif;
+            font-size: 17px;
+            margin-bottom: 8px;
+        }
+
+        .create-description {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .empty-note {
+            margin-top: 60px;
+            padding: 25px;
+            border-left: 1px solid var(--gold);
+            background: rgba(201, 169, 106, 0.03);
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        @media (max-width: 950px) {
+            .campaigns-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .dashboard-header {
+                padding: 0 20px;
+            }
+
+            .user-name {
+                display: none;
+            }
+
+            .dashboard-content {
+                width: calc(100% - 40px);
+                padding-top: 45px;
+            }
+
+            .dashboard-top {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .dashboard-title {
+                font-size: 32px;
+            }
+
+            .new-campaign {
+                width: 100%;
+            }
+
+            .campaigns-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <header class="dashboard-header">
+
+        <a href="../index.html" class="dashboard-logo">
+            <span>✦</span> ARCANUM
+        </a>
+
+        <div class="user-area">
+
+            <span class="user-name">
+                Данил
+            </span>
+
+            <div class="user-avatar">
+                Д
+            </div>
+
+            <a href="../index.html" class="logout">
+                Выйти
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <main class="dashboard-content">
+
+        <div class="dashboard-top">
+
+            <div>
+                <div class="dashboard-label">
+                    ЛИЧНЫЙ КАБИНЕТ
+                </div>
+
+                <h1 class="dashboard-title">
+                    Твои приключения
+                </h1>
+
+                <p class="dashboard-subtitle">
+                    Продолжи старую историю или начни новую.
+                </p>
+            </div>
+
+            <a
+                href="campaign.html"
+                class="button button-primary new-campaign"
+            >
+                Новая кампания
+                <span>+</span>
+            </a>
+
+        </div>
+
+
+        <section class="campaigns-grid">
+
+
+            <article class="campaign-card">
+
+                <div class="campaign-icon">
+                    ◈
+
+                    <span class="campaign-status">
+                        В ПРОЦЕССЕ
+                    </span>
+                </div>
+
+                <h2 class="campaign-title">
+                    Затерянные земли
+                </h2>
+
+                <p class="campaign-description">
+                    Древнее королевство, забытая магия и
+                    тайна, которую не должен был узнать ни один
+                    смертный.
+                </p>
+
+                <div class="campaign-info">
+
+                    <div class="campaign-info-item">
+                        <span class="campaign-info-label">
+                            ГЕРОЙ
+                        </span>
+
+                        <span class="campaign-info-value">
+                            Элиан
+                        </span>
+                    </div>
+
+                    <div class="campaign-info-item">
+                        <span class="campaign-info-label">
+                            УРОВЕНЬ
+                        </span>
+
+                        <span class="campaign-info-value">
+                            7
+                        </span>
+                    </div>
+
+                    <div class="campaign-info-item">
+                        <span class="campaign-info-label">
+                            СЕССИЯ
+                        </span>
+
+                        <span class="campaign-info-value">
+                            #12
+                        </span>
+                    </div>
+
+                </div>
+
+                <a href="game.html" class="campaign-button">
+                    ПРОДОЛЖИТЬ ПРИКЛЮЧЕНИЕ →
+                </a>
+
+            </article>
+
+
+            <article class="campaign-card">
+
+                <div class="campaign-icon">
+                    ✧
+
+                    <span class="campaign-status">
+                        В ПРОЦЕССЕ
+                    </span>
+                </div>
+
+                <h2 class="campaign-title">
+                    Пепел богов
+                </h2>
+
+                <p class="campaign-description">
+                    Мир после падения богов. Маленькая деревня,
+                    странный артефакт и первые признаки
+                    возвращения древней силы.
+                </p>
+
+                <div class="campaign-info">
+
+                    <div class="campaign-info-item">
+                        <span class="campaign-info-label">
+                            ГЕРОЙ
+                        </span>
+
+                        <span class="campaign-info-value">
+                            Каэль
+                        </span>
+                    </div>
+
+                    <div class="campaign-info-item">
+                        <span class="campaign-info-label">
+                            УРОВЕНЬ
+                        </span>
+
+                        <span class="campaign-info-value">
+                            3
+                        </span>
+                    </div>
+
+                    <div class="campaign-info-item">
+                        <span class="campaign-info-label">
+                            СЕССИЯ
+                        </span>
+
+                        <span class="campaign-info-value">
+                            #4
+                        </span>
+                    </div>
+
+                </div>
+
+                <a href="game.html" class="campaign-button">
+                    ПРОДОЛЖИТЬ ПРИКЛЮЧЕНИЕ →
+                </a>
+
+            </article>
+
+
+            <a href="campaign.html" class="create-card">
+
+                <div class="create-content">
+
+                    <div class="create-icon">
+                        +
+                    </div>
+
+                    <div class="create-title">
+                        Новая кампания
+                    </div>
+
+                    <div class="create-description">
+                        Создай новый мир и историю
+                    </div>
+
+                </div>
+
+            </a>
+
+
+        </section>
+
+
+        <div class="empty-note">
+            <strong>Здесь будут храниться твои истории.</strong><br>
+            Каждая кампания имеет отдельного персонажа,
+            сюжет, состояние мира, инвентарь и историю решений.
+            После подключения базы данных эти данные будут
+            сохраняться автоматически.
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+</html>
+```
+
+### Что теперь должно быть
+
+Структура:
+
+```text
+public/
+├── index.html
+├── css/
+│   └── style.css
+├── js/
+│   ├── app.js
+│   └── config.js
+│
+├── pages/
+│   ├── login.html       ← уже есть
+│   ├── register.html    ← уже есть
+│   ├── dashboard.html   ← сейчас добавили
+│   ├── campaign.html    ← следующий
+│   └── game.html        ← потом
+│
+└── assets/
+    └── images/
+```
+
+Теперь важный момент: **кнопка "Войти" пока должна вести на dashboard**, чтобы можно было нормально пройти интерфейс.
+
+В `login.html` временно замени кнопку:
+
+```html
+<button
+    type="submit"
+    class="button button-primary auth-button"
+>
+    Войти
+    <span>→</span>
+</button>
+```
+
+на:
+
+```html
+<a
+    href="dashboard.html"
+    class="button button-primary auth-button"
+    style="text-align: center; text-decoration: none;"
+>
+    Войти
+    <span>→</span>
+</a>
+```
+
+А регистрацию пока тоже можем вести туда же после заполнения.
+
+---
+
+## Что дальше
+
+После dashboard следующая **самая важная страница — `campaign.html`**.
+
+Там уже будет настоящий конструктор приключения:
+
+```text
+┌──────────────────────────────────────────────┐
+│              СОЗДАНИЕ КАМПАНИИ               │
+│                                              │
+│ Название                                     │
+│ [_______________________________]            │
+│                                              │
+│ Сеттинг                                      │
+│ [ Классическое фэнтези              ▼ ]      │
+│                                              │
+│ Жанр                                         │
+│ [ Эпическое приключение             ▼ ]      │
+│                                              │
+│ Тон                                          │
+│ [ Мрачный ─────●──────── Весёлый ]           │
+│                                              │
+│ Сложность                                    │
+│ [ Нормальная                         ▼ ]      │
+│                                              │
+│ О чём должна быть история?                   │
+│ ┌──────────────────────────────────────────┐ │
+│ │                                          │ │
+│ │                                          │ │
+│ └──────────────────────────────────────────┘ │
+│                                              │
+│              [ СОЗДАТЬ МИР → ]              │
+└──────────────────────────────────────────────┘
+```
+
+И вот **после неё уже сделаем создание персонажа**, а затем игровой экран. Потом подключим Supabase и заменим тестовые данные настоящими.
+
+Если хочешь, могу напоминать тебе возвращаться к следующему этапу разработки, чтобы не потерять проект.
