@@ -1,1 +1,1361 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>Создание персонажа — Arcanum</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+
+        body {
+            min-height: 100vh;
+        }
+
+        .character-page {
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .character-header {
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6%;
+            border-bottom: 1px solid var(--border);
+            background: rgba(8, 9, 13, 0.92);
+        }
+
+        .character-logo {
+            color: var(--gold-light);
+            text-decoration: none;
+            font-family: "Cinzel", serif;
+            font-size: 22px;
+            letter-spacing: 4px;
+        }
+
+        .character-logo span {
+            margin-right: 7px;
+        }
+
+        .back-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .back-link:hover {
+            color: var(--text);
+        }
+
+        .character-content {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding-top: 60px;
+        }
+
+        .page-heading {
+            text-align: center;
+            margin-bottom: 45px;
+        }
+
+        .page-label {
+            color: var(--gold);
+            font-size: 11px;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+        }
+
+        .page-title {
+            font-family: "Cinzel", serif;
+            font-size: 42px;
+            font-weight: 500;
+            margin: 0 0 12px;
+        }
+
+        .page-description {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .character-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .form-section {
+            background: rgba(17, 19, 26, 0.85);
+            border: 1px solid var(--border);
+            padding: 32px;
+        }
+
+        .section-title {
+            font-family: "Cinzel", serif;
+            color: var(--gold-light);
+            font-size: 19px;
+            margin: 0 0 25px;
+        }
+
+        .section-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: -15px;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .form-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-field label {
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .form-field small {
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px;
+            background: #0b0d12;
+            border: 1px solid rgba(201, 169, 106, 0.2);
+            color: var(--text);
+            font-family: "Inter", sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(201, 169, 106, 0.07);
+        }
+
+        .form-field textarea {
+            min-height: 130px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .form-field select {
+            cursor: pointer;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 16px 8px;
+            background: #0b0d12;
+            border: 1px solid rgba(201, 169, 106, 0.15);
+        }
+
+        .stat-name {
+            color: var(--muted);
+            font-size: 10px;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: var(--gold-light);
+            font-family: "Cinzel", serif;
+            font-size: 24px;
+            outline: none;
+        }
+
+        .stat-value::-webkit-inner-spin-button,
+        .stat-value::-webkit-outer-spin-button {
+            opacity: 0.5;
+        }
+
+        .stat-modifier {
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .alignment-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .alignment-item {
+            position: relative;
+        }
+
+        .alignment-item input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .alignment-item label {
+            display: block;
+            padding: 14px;
+            text-align: center;
+            border: 1px solid rgba(201, 169, 106, 0.15);
+            background: rgba(8, 9, 13, 0.5);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .alignment-item label:hover {
+            color: var(--text);
+            border-color: rgba(201, 169, 106, 0.35);
+        }
+
+        .alignment-item input:checked + label {
+            color: var(--gold-light);
+            border-color: var(--gold);
+            background: rgba(201, 169, 106, 0.07);
+        }
+
+        .character-preview {
+            padding: 25px;
+            border: 1px solid rgba(201, 169, 106, 0.15);
+            background:
+                radial-gradient(
+                    circle at center,
+                    rgba(201, 169, 106, 0.06),
+                    transparent 60%
+                );
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .preview-symbol {
+            font-size: 42px;
+            color: var(--gold-light);
+            margin-bottom: 12px;
+        }
+
+        .preview-name {
+            font-family: "Cinzel", serif;
+            color: var(--text);
+            font-size: 25px;
+            margin-bottom: 7px;
+        }
+
+        .preview-class {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .create-button {
+            min-width: 300px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .form-note {
+            text-align: center;
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 800px) {
+
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .alignment-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 650px) {
+
+            .character-header {
+                padding: 0 20px;
+            }
+
+            .character-content {
+                width: calc(100% - 30px);
+                padding-top: 45px;
+            }
+
+            .page-title {
+                font-size: 32px;
+            }
+
+            .form-section {
+                padding: 22px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-field.full {
+                grid-column: auto;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .alignment-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .create-button {
+                width: 100%;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="character-page">
+
+
+    <header class="character-header">
+
+        <a href="../index.html" class="character-logo">
+            <span>✦</span> ARCANUM
+        </a>
+
+        <a href="campaign.html" class="back-link">
+            ← Настройки кампании
+        </a>
+
+    </header>
+
+
+    <main class="character-content">
+
+
+        <div class="page-heading">
+
+            <div class="page-label">
+                ШАГ 02
+            </div>
+
+            <h1 class="page-title">
+                Создай своего героя
+            </h1>
+
+            <p class="page-description">
+                Именно этим персонажем ты отправишься в созданный мир.
+                Все характеристики и решения будут сохраняться в кампании.
+            </p>
+
+        </div>
+
+
+        <form class="character-form" id="characterForm">
+
+
+            <!-- ОСНОВА ПЕРСОНАЖА -->
+
+            <section class="form-section">
+
+                <h2 class="section-title">
+                    Кто ты?
+                </h2>
+
+                <div class="form-grid">
+
+
+                    <div class="form-field full">
+
+                        <label for="characterName">
+                            Имя персонажа
+                        </label>
+
+                        <input
+                            type="text"
+                            id="characterName"
+                            placeholder="Например: Каэль"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="race">
+                            Раса
+                        </label>
+
+                        <select id="race">
+
+                            <option value="human">
+                                Человек
+                            </option>
+
+                            <option value="elf">
+                                Эльф
+                            </option>
+
+                            <option value="half-elf">
+                                Полуэльф
+                            </option>
+
+                            <option value="dwarf">
+                                Дварф
+                            </option>
+
+                            <option value="halfling">
+                                Полурослик
+                            </option>
+
+                            <option value="tiefling">
+                                Тифлинг
+                            </option>
+
+                            <option value="dragonborn">
+                                Драконорождённый
+                            </option>
+
+                            <option value="half-orc">
+                                Полуорк
+                            </option>
+
+                            <option value="custom">
+                                Своя раса
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="class">
+                            Класс
+                        </label>
+
+                        <select id="class">
+
+                            <option value="fighter">
+                                Воин
+                            </option>
+
+                            <option value="barbarian">
+                                Варвар
+                            </option>
+
+                            <option value="rogue">
+                                Плут
+                            </option>
+
+                            <option value="ranger">
+                                Следопыт
+                            </option>
+
+                            <option value="paladin">
+                                Паладин
+                            </option>
+
+                            <option value="cleric">
+                                Жрец
+                            </option>
+
+                            <option value="wizard">
+                                Волшебник
+                            </option>
+
+                            <option value="sorcerer">
+                                Чародей
+                            </option>
+
+                            <option value="warlock">
+                                Колдун
+                            </option>
+
+                            <option value="druid">
+                                Друид
+                            </option>
+
+                            <option value="monk">
+                                Монах
+                            </option>
+
+                            <option value="bard">
+                                Бард
+                            </option>
+
+                            <option value="custom">
+                                Свой класс
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="level">
+                            Начальный уровень
+                        </label>
+
+                        <select id="level">
+
+                            <option value="1">
+                                1 уровень
+                            </option>
+
+                            <option value="3">
+                                3 уровень
+                            </option>
+
+                            <option value="5">
+                                5 уровень
+                            </option>
+
+                            <option value="10">
+                                10 уровень
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="background">
+                            Предыстория
+                        </label>
+
+                        <select id="background">
+
+                            <option value="adventurer">
+                                Авантюрист
+                            </option>
+
+                            <option value="soldier">
+                                Солдат
+                            </option>
+
+                            <option value="criminal">
+                                Преступник
+                            </option>
+
+                            <option value="scholar">
+                                Учёный
+                            </option>
+
+                            <option value="noble">
+                                Дворянин
+                            </option>
+
+                            <option value="outcast">
+                                Изгой
+                            </option>
+
+                            <option value="wanderer">
+                                Странник
+                            </option>
+
+                            <option value="custom">
+                                Своя предыстория
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ХАРАКТЕРИСТИКИ -->
+
+            <section class="form-section">
+
+                <h2 class="section-title">
+                    Характеристики
+                </h2>
+
+                <p class="section-subtitle">
+                    Пока значения задаются вручную. Позже добавим автоматическую генерацию,
+                    броски кубиков и полноценную систему D&D.
+                </p>
+
+
+                <div class="stats-grid">
+
+
+                    <div class="stat">
+
+                        <div class="stat-name">
+                            СИЛА
+                        </div>
+
+                        <input
+                            class="stat-value"
+                            type="number"
+                            id="strength"
+                            value="10"
+                            min="1"
+                            max="30"
+                        >
+
+                        <div
+                            class="stat-modifier"
+                            id="strengthMod"
+                        >
+                            +0
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat">
+
+                        <div class="stat-name">
+                            ЛОВКОСТЬ
+                        </div>
+
+                        <input
+                            class="stat-value"
+                            type="number"
+                            id="dexterity"
+                            value="10"
+                            min="1"
+                            max="30"
+                        >
+
+                        <div
+                            class="stat-modifier"
+                            id="dexterityMod"
+                        >
+                            +0
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat">
+
+                        <div class="stat-name">
+                            ТЕЛОСЛОЖЕНИЕ
+                        </div>
+
+                        <input
+                            class="stat-value"
+                            type="number"
+                            id="constitution"
+                            value="10"
+                            min="1"
+                            max="30"
+                        >
+
+                        <div
+                            class="stat-modifier"
+                            id="constitutionMod"
+                        >
+                            +0
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat">
+
+                        <div class="stat-name">
+                            ИНТЕЛЛЕКТ
+                        </div>
+
+                        <input
+                            class="stat-value"
+                            type="number"
+                            id="intelligence"
+                            value="10"
+                            min="1"
+                            max="30"
+                        >
+
+                        <div
+                            class="stat-modifier"
+                            id="intelligenceMod"
+                        >
+                            +0
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat">
+
+                        <div class="stat-name">
+                            МУДРОСТЬ
+                        </div>
+
+                        <input
+                            class="stat-value"
+                            type="number"
+                            id="wisdom"
+                            value="10"
+                            min="1"
+                            max="30"
+                        >
+
+                        <div
+                            class="stat-modifier"
+                            id="wisdomMod"
+                        >
+                            +0
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat">
+
+                        <div class="stat-name">
+                            ХАРИЗМА
+                        </div>
+
+                        <input
+                            class="stat-value"
+                            type="number"
+                            id="charisma"
+                            value="10"
+                            min="1"
+                            max="30"
+                        >
+
+                        <div
+                            class="stat-modifier"
+                            id="charismaMod"
+                        >
+                            +0
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- МИРОВОЗЗРЕНИЕ -->
+
+            <section class="form-section">
+
+                <h2 class="section-title">
+                    Мировоззрение
+                </h2>
+
+                <p class="section-subtitle">
+                    Выбери то, что ближе всего твоему персонажу.
+                </p>
+
+
+                <div class="alignment-grid">
+
+
+                    <div class="alignment-item">
+
+                        <input
+                            type="radio"
+                            name="alignment"
+                            id="lawful-good"
+                            value="lawful-good"
+                        >
+
+                        <label for="lawful-good">
+                            Законно-добрый
+                        </label>
+
+                    </div>
+
+
+                    <div class="alignment-item">
+
+                        <input
+                            type="radio"
+                            name="alignment"
+                            id="neutral-good"
+                            value="neutral-good"
+                            checked
+                        >
+
+                        <label for="neutral-good">
+                            Нейтрально-добрый
+                        </label>
+
+                    </div>
+
+
+                    <div class="alignment-item">
+
+                        <input
+                            type="radio"
+                            name="alignment"
+                            id="chaotic-good"
+                            value="chaotic-good"
+                        >
+
+                        <label for="chaotic-good">
+                            Хаотично-добрый
+                        </label>
+
+                    </div>
+
+
+                    <div class="alignment-item">
+
+                        <input
+                            type="radio"
+                            name="alignment"
+                            id="lawful-neutral"
+                            value="lawful-neutral"
+                        >
+
+                        <label for="lawful-neutral">
+                            Законопослушный
+                        </label>
+
+                    </div>
+
+
+                    <div class="alignment-item">
+
+                        <input
+                            type="radio"
+                            name="alignment"
+                            id="true-neutral"
+                            value="true-neutral"
+                        >
+
+                        <label for="true-neutral">
+                            Нейтральный
+                        </label>
+
+                    </div>
+
+
+                    <div class="alignment-item">
+
+                        <input
+                            type="radio"
+                            name="alignment"
+                            id="chaotic-neutral"
+                            value="chaotic-neutral"
+                        >
+
+                        <label for="chaotic-neutral">
+                            Хаотичный
+                        </label>
+
+                    </div>
+
+
+                    <div class="alignment-item">
+
+                        <input
+                            type="radio"
+                            name="alignment"
+                            id="lawful-evil"
+                            value="lawful-evil"
+                        >
+
+                        <label for="lawful-evil">
+                            Законно-злой
+                        </label>
+
+                    </div>
+
+
+                    <div class="alignment-item">
+
+                        <input
+                            type="radio"
+                            name="alignment"
+                            id="neutral-evil"
+                            value="neutral-evil"
+                        >
+
+                        <label for="neutral-evil">
+                            Нейтрально-злой
+                        </label>
+
+                    </div>
+
+
+                    <div class="alignment-item">
+
+                        <input
+                            type="radio"
+                            name="alignment"
+                            id="chaotic-evil"
+                            value="chaotic-evil"
+                        >
+
+                        <label for="chaotic-evil">
+                            Хаотично-злой
+                        </label>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- ИСТОРИЯ -->
+
+            <section class="form-section">
+
+                <h2 class="section-title">
+                    История героя
+                </h2>
+
+                <p class="section-subtitle">
+                    Можно оставить пустым — позже AI сможет помочь придумать детали.
+                </p>
+
+
+                <div class="form-grid">
+
+
+                    <div class="form-field full">
+
+                        <label for="history">
+                            Прошлое персонажа
+                        </label>
+
+                        <textarea
+                            id="history"
+                            placeholder="Откуда он родом? Что произошло с ним раньше? Почему он отправился в приключение?"
+                        ></textarea>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="personality">
+                            Характер
+                        </label>
+
+                        <textarea
+                            id="personality"
+                            placeholder="Например: спокойный, подозрительный, любит риск..."
+                        ></textarea>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="appearance">
+                            Внешность
+                        </label>
+
+                        <textarea
+                            id="appearance"
+                            placeholder="Рост, одежда, оружие, особенности внешности..."
+                        ></textarea>
+
+                    </div>
+
+
+                    <div class="form-field full">
+
+                        <label for="goals">
+                            Цели персонажа
+                        </label>
+
+                        <textarea
+                            id="goals"
+                            placeholder="Чего он хочет добиться? Что его мотивирует?"
+                        ></textarea>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- ДОПОЛНИТЕЛЬНО -->
+
+            <section class="form-section">
+
+                <h2 class="section-title">
+                    Дополнительные пожелания
+                </h2>
+
+                <div class="form-field">
+
+                    <label for="characterPreferences">
+                        Что важно учесть?
+                    </label>
+
+                    <textarea
+                        id="characterPreferences"
+                        placeholder="Например: хочу, чтобы персонаж постепенно раскрывал тёмную сторону своей силы..."
+                    ></textarea>
+
+                </div>
+
+            </section>
+
+
+            <!-- ПРЕДПРОСМОТР -->
+
+            <section class="form-section">
+
+                <h2 class="section-title">
+                    Твой герой
+                </h2>
+
+                <div class="character-preview">
+
+                    <div class="preview-symbol">
+                        ✦
+                    </div>
+
+                    <div
+                        class="preview-name"
+                        id="previewName"
+                    >
+                        Безымянный герой
+                    </div>
+
+                    <div
+                        class="preview-class"
+                        id="previewClass"
+                    >
+                        Человек · Воин
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <div class="form-actions">
+
+                <button
+                    type="submit"
+                    class="button button-primary create-button"
+                >
+                    Начать приключение
+                    <span>→</span>
+                </button>
+
+            </div>
+
+            <p class="form-note">
+                После этого откроется игровой мир.
+            </p>
+
+
+        </form>
+
+    </main>
+
+</div>
+
+
+<script>
+
+    function getModifier(value) {
+
+        return Math.floor((value - 10) / 2);
+
+    }
+
+
+    function updateModifier(statId, modifierId) {
+
+        const value =
+            Number(document.getElementById(statId).value);
+
+        const modifier =
+            getModifier(value);
+
+        const text =
+            modifier >= 0
+                ? "+" + modifier
+                : modifier;
+
+        document.getElementById(modifierId).textContent = text;
+
+    }
+
+
+    const stats = [
+        ["strength", "strengthMod"],
+        ["dexterity", "dexterityMod"],
+        ["constitution", "constitutionMod"],
+        ["intelligence", "intelligenceMod"],
+        ["wisdom", "wisdomMod"],
+        ["charisma", "charismaMod"]
+    ];
+
+
+    stats.forEach(function(stat) {
+
+        const input =
+            document.getElementById(stat[0]);
+
+        input.addEventListener("input", function() {
+
+            updateModifier(
+                stat[0],
+                stat[1]
+            );
+
+        });
+
+    });
+
+
+    const characterName =
+        document.getElementById("characterName");
+
+    const characterClass =
+        document.getElementById("class");
+
+    const previewName =
+        document.getElementById("previewName");
+
+    const previewClass =
+        document.getElementById("previewClass");
+
+
+    function updatePreview() {
+
+        if (characterName.value.trim() === "") {
+
+            previewName.textContent =
+                "Безымянный герой";
+
+        } else {
+
+            previewName.textContent =
+                characterName.value;
+
+        }
+
+
+        const selected =
+            characterClass.options[
+                characterClass.selectedIndex
+            ];
+
+        previewClass.textContent =
+            "Человек · " + selected.textContent;
+
+    }
+
+
+    characterName.addEventListener(
+        "input",
+        updatePreview
+    );
+
+
+    characterClass.addEventListener(
+        "change",
+        updatePreview
+    );
+
+
+    const form =
+        document.getElementById("characterForm");
+
+
+    form.addEventListener(
+        "submit",
+        function(event) {
+
+            event.preventDefault();
+
+
+            const selectedAlignment =
+                document.querySelector(
+                    'input[name="alignment"]:checked'
+                );
+
+
+            const character = {
+
+                name:
+                    document.getElementById(
+                        "characterName"
+                    ).value,
+
+                race:
+                    document.getElementById(
+                        "race"
+                    ).value,
+
+                class:
+                    document.getElementById(
+                        "class"
+                    ).value,
+
+                level:
+                    Number(
+                        document.getElementById(
+                            "level"
+                        ).value
+                    ),
+
+                background:
+                    document.getElementById(
+                        "background"
+                    ).value,
+
+                stats: {
+
+                    strength:
+                        Number(
+                            document.getElementById(
+                                "strength"
+                            ).value
+                        ),
+
+                    dexterity:
+                        Number(
+                            document.getElementById(
+                                "dexterity"
+                            ).value
+                        ),
+
+                    constitution:
+                        Number(
+                            document.getElementById(
+                                "constitution"
+                            ).value
+                        ),
+
+                    intelligence:
+                        Number(
+                            document.getElementById(
+                                "intelligence"
+                            ).value
+                        ),
+
+                    wisdom:
+                        Number(
+                            document.getElementById(
+                                "wisdom"
+                            ).value
+                        ),
+
+                    charisma:
+                        Number(
+                            document.getElementById(
+                                "charisma"
+                            ).value
+                        )
+
+                },
+
+                alignment:
+                    selectedAlignment.value,
+
+                history:
+                    document.getElementById(
+                        "history"
+                    ).value,
+
+                personality:
+                    document.getElementById(
+                        "personality"
+                    ).value,
+
+                appearance:
+                    document.getElementById(
+                        "appearance"
+                    ).value,
+
+                goals:
+                    document.getElementById(
+                        "goals"
+                    ).value,
+
+                preferences:
+                    document.getElementById(
+                        "characterPreferences"
+                    ).value
+
+            };
+
+
+            localStorage.setItem(
+                "arcanum_character",
+                JSON.stringify(character)
+            );
+
+
+            window.location.href =
+                "game.html";
+
+        }
+    );
+
+</script>
+
+</body>
+</html>
+```
