@@ -4,230 +4,274 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Вход — Arcanum</title>
+    <title>Arcanum — Вход</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="../css/style.css">
-
-    <style>
-        .auth-page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-        }
-
-        .auth-container {
-            width: 100%;
-            max-width: 460px;
-        }
-
-        .auth-logo {
-            display: block;
-            text-align: center;
-            font-family: "Cinzel", serif;
-            font-size: 28px;
-            letter-spacing: 5px;
-            color: var(--gold-light);
-            text-decoration: none;
-            margin-bottom: 45px;
-        }
-
-        .auth-logo span {
-            margin-right: 8px;
-        }
-
-        .auth-card {
-            background: rgba(17, 19, 26, 0.92);
-            border: 1px solid var(--border);
-            padding: 45px;
-            box-shadow: 0 20px 70px rgba(0, 0, 0, 0.45);
-        }
-
-        .auth-label {
-            text-align: center;
-            color: var(--gold);
-            font-size: 12px;
-            letter-spacing: 3px;
-            margin-bottom: 15px;
-        }
-
-        .auth-title {
-            text-align: center;
-            font-family: "Cinzel", serif;
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-
-        .auth-description {
-            text-align: center;
-            color: var(--muted);
-            font-size: 14px;
-            margin-bottom: 35px;
-        }
-
-        .auth-form {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
-
-        .auth-field {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .auth-field label {
-            color: var(--text);
-            font-size: 13px;
-        }
-
-        .auth-field input {
-            width: 100%;
-            box-sizing: border-box;
-            background: #0b0d12;
-            border: 1px solid rgba(201, 169, 106, 0.2);
-            color: var(--text);
-            padding: 15px;
-            font-family: "Inter", sans-serif;
-            font-size: 14px;
-            outline: none;
-            transition: 0.2s;
-        }
-
-        .auth-field input:focus {
-            border-color: var(--gold);
-            box-shadow: 0 0 20px rgba(201, 169, 106, 0.08);
-        }
-
-        .auth-button {
-            margin-top: 10px;
-            width: 100%;
-            border: none;
-            cursor: pointer;
-        }
-
-        .auth-footer {
-            margin-top: 28px;
-            text-align: center;
-            color: var(--muted);
-            font-size: 14px;
-        }
-
-        .auth-footer a {
-            color: var(--gold-light);
-            text-decoration: none;
-        }
-
-        .auth-footer a:hover {
-            text-decoration: underline;
-        }
-
-        .back-home {
-            display: block;
-            text-align: center;
-            margin-top: 25px;
-            color: var(--muted);
-            font-size: 13px;
-            text-decoration: none;
-        }
-
-        .back-home:hover {
-            color: var(--text);
-        }
-
-        @media (max-width: 600px) {
-            .auth-card {
-                padding: 30px 22px;
-            }
-
-            .auth-title {
-                font-size: 27px;
-            }
-        }
-    </style>
 </head>
 
 <body>
 
-<main class="auth-page">
+<div class="auth-page">
 
-    <div class="auth-container">
+    <div class="auth-card">
 
-        <a href="../index.html" class="auth-logo">
-            <span>✦</span> ARCANUM
-        </a>
+        <div class="auth-logo">
+            ARCANUM
+        </div>
 
-        <div class="auth-card">
+        <div class="auth-subtitle">
+            Вход в аккаунт
+        </div>
 
-            <div class="auth-label">
-                ВОЗВРАЩЕНИЕ
-            </div>
 
-            <h1 class="auth-title">
-                С возвращением
-            </h1>
+        <form id="loginForm">
 
-            <p class="auth-description">
-                Войди в аккаунт и продолжи своё приключение.
-            </p>
+            <div class="form-group">
 
-            <form class="auth-form">
+                <label for="email">
+                    Email
+                </label>
 
-                <div class="auth-field">
-                    <label for="email">
-                        Email
-                    </label>
-
-                    <input
-                        type="email"
-                        id="email"
-                        placeholder="you@example.com"
-                        required
-                    >
-                </div>
-
-                <div class="auth-field">
-                    <label for="password">
-                        Пароль
-                    </label>
-
-                    <input
-                        type="password"
-                        id="password"
-                        placeholder="••••••••"
-                        required
-                    >
-                </div>
-
-                <a
-                    href="dashboard.html"
-                    class="button button-primary auth-button"
-                    style="text-align: center; text-decoration: none;"
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="you@example.com"
+                    required
                 >
-                    Войти
-                    <span>→</span>
-                </a>
 
-            </form>
-
-            <div class="auth-footer">
-                Нет аккаунта?
-                <a href="register.html">
-                    Создать аккаунт
-                </a>
             </div>
+
+
+            <div class="form-group">
+
+                <label for="password">
+                    Пароль
+                </label>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Введите пароль"
+                    required
+                >
+
+            </div>
+
+
+            <div
+                id="errorMessage"
+                style="
+                    display: none;
+                    color: #d86b6b;
+                    font-size: 13px;
+                    margin-bottom: 15px;
+                    line-height: 1.5;
+                "
+            ></div>
+
+
+            <div
+                id="successMessage"
+                style="
+                    display: none;
+                    color: #8fcf9b;
+                    font-size: 13px;
+                    margin-bottom: 15px;
+                    line-height: 1.5;
+                "
+            ></div>
+
+
+            <button
+                type="submit"
+                class="button button-primary auth-button"
+                id="loginButton"
+            >
+                Войти
+                <span>→</span>
+            </button>
+
+        </form>
+
+
+        <div class="auth-footer">
+
+            Нет аккаунта?
+
+            <a href="register.html">
+                Создать аккаунт
+            </a>
 
         </div>
 
-        <a href="../index.html" class="back-home">
-            ← Вернуться на главную
-        </a>
-
     </div>
 
-</main>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="../js/config.js"></script>
+
+
+<script>
+
+    const supabaseClient = window.supabase.createClient(
+        CONFIG.SUPABASE_URL,
+        CONFIG.SUPABASE_ANON_KEY
+    );
+
+
+    const form =
+        document.getElementById("loginForm");
+
+    const emailInput =
+        document.getElementById("email");
+
+    const passwordInput =
+        document.getElementById("password");
+
+    const errorMessage =
+        document.getElementById("errorMessage");
+
+    const successMessage =
+        document.getElementById("successMessage");
+
+    const loginButton =
+        document.getElementById("loginButton");
+
+
+    function showError(message) {
+
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+
+        successMessage.style.display = "none";
+
+    }
+
+
+    function showSuccess(message) {
+
+        successMessage.textContent = message;
+        successMessage.style.display = "block";
+
+        errorMessage.style.display = "none";
+
+    }
+
+
+    form.addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+
+        const email =
+            emailInput.value.trim();
+
+        const password =
+            passwordInput.value;
+
+
+        errorMessage.style.display = "none";
+        successMessage.style.display = "none";
+
+
+        loginButton.disabled = true;
+
+        loginButton.innerHTML =
+            "Вход...";
+
+
+        try {
+
+            const { data, error } =
+                await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+
+            if (error) {
+                throw error;
+            }
+
+
+            if (!data.session) {
+
+                throw new Error(
+                    "Не удалось создать сессию."
+                );
+
+            }
+
+
+            showSuccess(
+                "Вход выполнен. Открываем Arcanum..."
+            );
+
+
+            setTimeout(() => {
+
+                window.location.href =
+                    "dashboard.html";
+
+            }, 500);
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+
+            let message =
+                "Не удалось войти.";
+
+
+            if (
+                error.message &&
+                error.message.toLowerCase().includes("invalid login credentials")
+            ) {
+
+                message =
+                    "Неверный email или пароль.";
+
+            }
+            else if (
+                error.message &&
+                error.message.toLowerCase().includes("email not confirmed")
+            ) {
+
+                message =
+                    "Сначала подтвердите email через письмо от Supabase.";
+
+            }
+            else if (error.message) {
+
+                message =
+                    error.message;
+
+            }
+
+
+            showError(message);
+
+
+            loginButton.disabled = false;
+
+            loginButton.innerHTML =
+                "Войти <span>→</span>";
+
+        }
+
+    });
+
+</script>
 
 </body>
 </html>
