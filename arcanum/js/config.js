@@ -1,0 +1,6 @@
+const CONFIG = {
+    SUPABASE_URL: "",
+    SUPABASE_ANON_KEY: "",
+
+    API_URL: ""
+};
