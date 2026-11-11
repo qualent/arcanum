@@ -1,24 +1,41 @@
 
 /* =========================================
-   ARCANUM — HEADER
+   ARCANUM — ЕДИНЫЙ СТИЛЬ ШАПКИ
 ========================================= */
 
-body > .header {
+:root {
+    --header-height: 76px;
+    --header-bg: rgba(8, 9, 13, 0.94);
+    --header-border: rgba(201, 169, 106, 0.22);
+    --header-gold: #c9a96a;
+    --header-gold-light: #e4c88a;
+    --header-text: #eee9df;
+    --header-muted: #aaa7a0;
+}
+
+/* Общая основа всех шапок */
+
+body > .header,
+body > .site-header,
+body.game-page > .game-header {
     position: relative;
-    z-index: 100;
+    z-index: 50;
 
     width: 100%;
-    height: 78px;
+    height: var(--header-height);
 
-    background: rgba(8, 9, 13, 0.94);
-    border-bottom: 1px solid rgba(201, 169, 106, 0.2);
+    border-bottom: 1px solid var(--header-border);
+
+    background: var(--header-bg);
 
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
 }
 
-body > .header .header-inner {
-    width: min(1180px, calc(100% - 48px));
+/* Общий контейнер */
+
+.header-inner {
+    width: min(1180px, calc(100% - 40px));
     height: 100%;
 
     margin: 0 auto;
@@ -26,23 +43,25 @@ body > .header .header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 30px;
+
+    gap: 24px;
 }
 
 /* Логотип */
 
-body > .header .logo {
+.logo,
+.game-logo {
     display: inline-flex;
     align-items: center;
 
     flex-shrink: 0;
 
-    color: #e4c88a;
+    color: var(--header-gold-light);
 
     font-family: "Cinzel", serif;
-    font-size: 25px;
+    font-size: 23px;
     font-weight: 800;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.18em;
 
     text-decoration: none;
 
@@ -51,24 +70,25 @@ body > .header .logo {
         text-shadow 0.2s ease;
 }
 
-body > .header .logo:hover {
-    color: #f3dba8;
-    text-shadow: 0 0 20px rgba(201, 169, 106, 0.3);
+.logo:hover,
+.game-logo:hover {
+    color: #f5dfad;
+    text-shadow: 0 0 18px rgba(201, 169, 106, 0.25);
 }
 
-/* Навигация */
+/* Навигация главной страницы */
 
-body > .header .nav {
+.nav {
+    height: 100%;
+
     display: flex;
     align-items: center;
     justify-content: flex-end;
 
-    gap: 36px;
-
-    height: 100%;
+    gap: 34px;
 }
 
-body > .header .nav > a:not(.nav-button) {
+.nav a:not(.nav-button) {
     position: relative;
 
     display: inline-flex;
@@ -76,7 +96,7 @@ body > .header .nav > a:not(.nav-button) {
 
     height: 100%;
 
-    color: #aaa7a0;
+    color: var(--header-muted);
 
     font-family: "Inter", sans-serif;
     font-size: 13px;
@@ -88,149 +108,393 @@ body > .header .nav > a:not(.nav-button) {
     transition: color 0.2s ease;
 }
 
-body > .header .nav > a:not(.nav-button)::after {
+.nav a:not(.nav-button)::after {
     content: "";
 
     position: absolute;
-    bottom: 20px;
+    bottom: 19px;
     left: 0;
 
     width: 0;
     height: 1px;
 
-    background: #c9a96a;
+    background: var(--header-gold);
 
     transition: width 0.2s ease;
 }
 
-body > .header .nav > a:not(.nav-button):hover {
-    color: #e4c88a;
+.nav a:not(.nav-button):hover {
+    color: var(--header-gold-light);
 }
 
-body > .header .nav > a:not(.nav-button):hover::after {
+.nav a:not(.nav-button):hover::after {
     width: 100%;
 }
 
-/* Кнопка входа */
+/* Общий стиль кнопок в шапке */
 
-body > .header .nav .nav-button {
+.nav-button,
+.logout-button,
+.header-back,
+.nav-link,
+.game-header-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    min-width: 112px;
-    height: 40px;
+    min-height: 38px;
 
-    padding: 0 22px;
+    padding: 0 17px;
 
-    border: 1px solid #c9a96a;
+    border: 1px solid rgba(201, 169, 106, 0.32);
     border-radius: 5px;
 
-    background: rgba(201, 169, 106, 0.08);
+    background: rgba(201, 169, 106, 0.045);
 
-    color: #e4c88a;
+    color: var(--header-gold-light);
 
     font-family: "Inter", sans-serif;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
 
     text-decoration: none;
     white-space: nowrap;
 
     transition:
-        background 0.2s ease,
         color 0.2s ease,
-        box-shadow 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
         transform 0.2s ease;
 }
 
-body > .header .nav .nav-button:hover {
-    background: #c9a96a;
-    color: #08090d;
+.nav-button:hover,
+.logout-button:hover,
+.header-back:hover,
+.nav-link:hover,
+.game-header-button:hover {
+    border-color: var(--header-gold);
 
-    box-shadow: 0 0 22px rgba(201, 169, 106, 0.18);
+    background: rgba(201, 169, 106, 0.13);
+
+    color: #f5dfad;
 
     transform: translateY(-1px);
 }
 
+/* Кнопка входа */
+
+.nav .nav-button {
+    min-width: 105px;
+    min-height: 40px;
+
+    border-color: var(--header-gold);
+
+    background: var(--header-gold);
+
+    color: #0b0c10;
+
+    font-weight: 700;
+}
+
+.nav .nav-button:hover {
+    border-color: var(--header-gold-light);
+
+    background: var(--header-gold-light);
+
+    color: #08090d;
+}
+
+/* Ссылки назад */
+
+.header-back,
+.nav-link {
+    color: var(--header-muted);
+}
+
+/* Кабинет: пользователь и выход */
+
+.user-area {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 15px;
+
+    min-width: 0;
+}
+
+.user-info {
+    min-width: 0;
+}
+
+.user-name {
+    max-width: 260px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: var(--header-text);
+
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.user-avatar {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border: 1px solid rgba(201, 169, 106, 0.4);
+    border-radius: 50%;
+
+    background: rgba(201, 169, 106, 0.1);
+
+    color: var(--header-gold-light);
+
+    font-family: "Cinzel", serif;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.logout-button {
+    min-height: 36px;
+
+    cursor: pointer;
+}
+
+/* Игровая шапка */
+
+body.game-page > .game-header {
+    display: grid;
+
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+
+    align-items: center;
+
+    padding: 0 28px;
+
+    height: var(--header-height);
+}
+
+.game-header-left,
+.game-header-right {
+    display: flex;
+    align-items: center;
+
+    gap: 24px;
+
+    min-width: 0;
+}
+
+.game-header-right {
+    justify-content: flex-end;
+}
+
+.game-header-center {
+    text-align: center;
+}
+
+.game-campaign {
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+
+    min-width: 0;
+}
+
+.game-campaign .game-label {
+    margin: 0;
+
+    color: var(--header-gold);
+
+    font-size: 9px;
+    letter-spacing: 0.17em;
+}
+
+.game-campaign strong {
+    max-width: 280px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: var(--header-text);
+
+    font-family: "Cinzel", serif;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.game-header-button {
+    min-height: 36px;
+
+    cursor: pointer;
+}
+
+.save-status {
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+}
+
+/* Игра: отступ после шапки */
+
+@media (min-width: 851px) {
+    body.game-page > .game-layout {
+        height: calc(100vh - var(--header-height));
+    }
+}
+
 /* Планшеты */
 
-@media (max-width: 760px) {
-    body > .header {
-        height: 70px;
+@media (max-width: 850px) {
+    .header-inner {
+        width: calc(100% - 30px);
     }
 
-    body > .header .header-inner {
-        width: calc(100% - 32px);
-        gap: 16px;
-    }
-
-    body > .header .logo {
-        font-size: 21px;
-        letter-spacing: 0.13em;
-    }
-
-    body > .header .nav {
+    .nav {
         gap: 18px;
     }
 
-    body > .header .nav > a:not(.nav-button) {
+    .nav a:not(.nav-button) {
         font-size: 12px;
     }
 
-    body > .header .nav .nav-button {
-        min-width: 88px;
-        height: 36px;
-        padding: 0 15px;
+    body.game-page > .game-header {
+        height: 70px;
+
+        grid-template-columns: minmax(0, 1fr) auto;
+
+        padding: 10px 16px;
+    }
+
+    .game-header-left {
+        gap: 15px;
+    }
+
+    .game-header-right {
+        gap: 10px;
+    }
+
+    .game-header-center {
+        display: none;
     }
 }
 
 /* Телефоны */
 
-@media (max-width: 520px) {
-    body > .header {
+@media (max-width: 560px) {
+    body > .header,
+    body > .site-header {
         height: auto;
         min-height: 70px;
     }
 
-    body > .header .header-inner {
+    body > .header .header-inner,
+    body > .site-header .header-inner {
         min-height: 70px;
 
         flex-wrap: wrap;
         justify-content: center;
 
         padding: 12px 0;
+
         gap: 12px;
     }
 
-    body > .header .logo {
-        width: 100%;
-        justify-content: center;
-
-        font-size: 22px;
+    .logo {
+        font-size: 21px;
     }
 
-    body > .header .nav {
-        justify-content: center;
+    .nav {
+        height: auto;
+
         flex-wrap: wrap;
+        justify-content: center;
 
-        gap: 12px 20px;
+        gap: 8px 17px;
     }
 
-    body > .header .nav > a:not(.nav-button) {
+    .nav a:not(.nav-button) {
         height: 32px;
         font-size: 11px;
     }
 
-    body > .header .nav > a:not(.nav-button)::after {
+    .nav a:not(.nav-button)::after {
         bottom: 0;
     }
 
-    body > .header .nav .nav-button {
-        height: 32px;
-        min-width: 76px;
+    .nav .nav-button {
+        min-height: 32px;
+        min-width: 75px;
 
-        padding: 0 13px;
+        padding: 0 12px;
+
+        font-size: 11px;
+    }
+
+    .user-area {
+        gap: 8px;
+    }
+
+    .user-name {
+        max-width: 115px;
+        font-size: 11px;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .logout-button {
+        min-height: 32px;
+        padding: 0 10px;
+        font-size: 11px;
+    }
+
+    .header-back,
+    .nav-link {
+        min-height: 32px;
+        padding: 0 11px;
+        font-size: 11px;
+    }
+
+    body.game-page > .game-header {
+        min-height: 68px;
+        height: auto;
+
+        padding: 10px 12px;
+    }
+
+    .game-logo {
+        font-size: 18px;
+        letter-spacing: 0.12em;
+    }
+
+    .game-header-left {
+        gap: 10px;
+    }
+
+    .game-campaign strong {
+        max-width: 125px;
+        font-size: 11px;
+    }
+
+    .game-header-right {
+        gap: 6px;
+    }
+
+    .game-header-button {
+        min-height: 32px;
+        padding: 0 9px;
         font-size: 11px;
     }
 }
