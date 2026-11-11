@@ -144,6 +144,16 @@ async function handleCharacterInitialize(request, env) {
             "&campaign_id=eq." + encodeURIComponent(body.campaign_id) + "&user_id=eq." + encodeURIComponent(user.id) + "&limit=1", {}, token);
         if (!stateResult.ok) throw new Error("Не удалось проверить состояние персонажа.");
         let gameState = stateResult.data && stateResult.data[0];
+        if (gameState && Number(gameState.max_hp) !== maxHp) {
+            const adjustedHp = Math.max(0, Math.min(maxHp, Number(gameState.current_hp) || 0));
+            const updated = await supabaseAdminRequest(env,
+                "/rest/v1/game_states?id=eq." + encodeURIComponent(gameState.id) + "&user_id=eq." + encodeURIComponent(user.id), {
+                    method: "PATCH", headers: { "Prefer": "return=representation" },
+                    body: JSON.stringify({ max_hp: maxHp, current_hp: adjustedHp, updated_at: new Date().toISOString() })
+                }, token);
+            if (!updated.ok || !updated.data || !updated.data.length) throw new Error("Не удалось пересчитать максимальное здоровье персонажа.");
+            gameState = updated.data[0];
+        }
         if (!gameState) {
             gameState = await insertRow(env, token, "game_states", {
                 user_id: user.id, campaign_id: body.campaign_id, character_id: character.id,
