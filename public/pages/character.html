@@ -298,6 +298,16 @@
                 <h3>Дополнительный язык</h3>
                 <div class="form-group"><label for="extraLanguage">Выбери дополнительный язык</label><select id="extraLanguage"><option value="" selected disabled>Выбери язык</option><option value="Дварфийский">Дварфийский</option><option value="Эльфийский">Эльфийский</option><option value="Великаний">Великаний</option><option value="Гномий">Гномий</option><option value="Гоблинский">Гоблинский</option><option value="Полуросликов">Полуросликов</option><option value="Орочий">Орочий</option><option value="Инфернальный">Инфернальный</option><option value="Драконий">Драконий</option><option value="Небесный">Небесный</option><option value="Бездны">Бездны</option><option value="Подземный">Подземный</option></select></div>
             </div>
+            <div class="builder-subsection" id="subraceField" hidden>
+                <h3>Подраса</h3>
+                <div class="form-group"><label for="subrace">Выбери подрасу</label><select id="subrace"></select></div>
+                <p id="subraceInfo" class="builder-note"></p>
+            </div>
+            <div class="builder-subsection" id="dragonAncestryField" hidden>
+                <h3>Драконье наследие</h3>
+                <div class="form-group"><label for="dragonAncestry">Тип дракона-предка</label><select id="dragonAncestry"></select></div>
+                <p id="dragonAncestryInfo" class="builder-note"></p>
+            </div>
             <div class="builder-subsection" id="halfElfChoices" hidden>
                 <h3>Наследие полуэльфа</h3>
                 <p>Выбери две разные характеристики (кроме Харизмы), которые получат +1, и два навыка.</p>
@@ -574,6 +584,35 @@ const spellData={
 "Чародей":{ability:"charisma",cantrips:4,spells:2,cantripList:["Огненный снаряд","Волшебная рука","Фокусы","Луч холода","Малая иллюзия","Свет","Шоковое прикосновение"],spellList:["Волшебная стрела","Щит","Доспехи мага","Горящие руки","Усыпление","Очарование личности","Громовая волна"]},
 "Колдун":{ability:"charisma",cantrips:2,spells:2,cantripList:["Мистический заряд","Волшебная рука","Малая иллюзия","Фокусы","Холодное прикосновение","Ядовитые брызги"],spellList:["Порча","Доспехи Агатиса","Адское возмездие","Руки Хадара","Очарование личности","Ведьмин снаряд"]}
 };
+const subraceData={
+"Эльф":[["Высший эльф",{intelligence:1},"Интеллект +1; владение длинным и коротким мечом, длинным и коротким луком; один заговор из списка волшебника.",30],["Лесной эльф",{wisdom:1},"Мудрость +1; скорость 35 футов; владение длинным и коротким мечом, длинным и коротким луком; Маска дикой природы.",35],["Тёмный эльф (дроу)",{charisma:1},"Харизма +1; тёмное зрение 120 футов; магия дроу и чувствительность к солнечному свету.",30]],
+"Дварф":[["Холмовой дварф",{wisdom:1},"Мудрость +1; дварфийская стойкость: максимум HP увеличивается ещё на 1 за каждый уровень.",25],["Горный дварф",{strength:2},"Сила +2; владение лёгкими и средними доспехами.",25]],
+"Полурослик":[["Легконогий",{charisma:1},"Харизма +1; природная скрытность: можешь скрываться за существами большего размера.",25],["Коренастый",{constitution:1},"Телосложение +1; устойчивость коренастого: преимущество против яда и сопротивление урону ядом.",25]]
+};
+const dragonAncestries={
+"Чёрный":"Кислота; сопротивление кислоте; линия 5×30 футов.",
+"Синий":"Молния; сопротивление молнии; линия 5×30 футов.",
+"Латунный":"Огонь; сопротивление огню; линия 5×30 футов.",
+"Бронзовый":"Молния; сопротивление молнии; линия 5×30 футов.",
+"Медный":"Кислота; сопротивление кислоте; линия 5×30 футов.",
+"Золотой":"Огонь; сопротивление огню; конус 15 футов.",
+"Зелёный":"Яд; сопротивление яду; конус 15 футов.",
+"Красный":"Огонь; сопротивление огню; конус 15 футов.",
+"Серебряный":"Холод; сопротивление холоду; конус 15 футов.",
+"Белый":"Холод; сопротивление холоду; конус 15 футов."
+};
+function renderRaceChoices(){
+ const options=subraceData[raceSelect.value],field=document.getElementById("subraceField"),select=document.getElementById("subrace");
+ field.hidden=!options;select.required=Boolean(options);
+ if(options){select.innerHTML='<option value="" selected disabled>Выбери подрасу</option>'+options.map((x,i)=>'<option value="'+i+'">'+x[0]+'</option>').join("");document.getElementById("subraceInfo").textContent="Подраса добавляет дополнительные бонусы и особенности.";}
+ else{select.replaceChildren();document.getElementById("subraceInfo").textContent="";}
+ const dragonField=document.getElementById("dragonAncestryField"),dragonSelect=document.getElementById("dragonAncestry");
+ dragonField.hidden=raceSelect.value!=="Драконорождённый";dragonSelect.required=!dragonField.hidden;
+ if(!dragonField.hidden){dragonSelect.innerHTML='<option value="" selected disabled>Выбери дракона</option>'+Object.keys(dragonAncestries).map(x=>'<option value="'+x+'">'+x+'</option>').join("");document.getElementById("dragonAncestryInfo").textContent="Наследие определяет тип урона дыхания и сопротивление.";}
+ else{dragonSelect.replaceChildren();document.getElementById("dragonAncestryInfo").textContent="";}
+}
+document.getElementById("subrace").addEventListener("change",()=>{const options=subraceData[raceSelect.value];if(options)document.getElementById("subraceInfo").textContent=options[Number(document.getElementById("subrace").value)][1];});
+document.getElementById("dragonAncestry").addEventListener("change",()=>{document.getElementById("dragonAncestryInfo").textContent=dragonAncestries[document.getElementById("dragonAncestry").value]||"";});
 const raceMeta={"Человек":{languages:"Общий",speed:30,size:"Средний"},"Эльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Полуэльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Дварф":{languages:"Общий и дварфийский",speed:25,size:"Средний"},"Полурослик":{languages:"Общий и язык полуросликов",speed:25,size:"Маленький"},"Тифлинг":{languages:"Общий и инфернальный",speed:30,size:"Средний"},"Драконорождённый":{languages:"Общий и драконий",speed:30,size:"Средний"},"Полуорк":{languages:"Общий и орочий",speed:30,size:"Средний"}};
 function renderSubclassChoices(){
  const options=subclassData[classSelect.value],field=document.getElementById("subclassField"),select=document.getElementById("subclass");
@@ -638,7 +677,7 @@ document.getElementById("standardArrayButton").addEventListener("click",()=>{
  [15,14,13,12,10,8].forEach((v,i)=>document.getElementById(statNames[i]).value=v);
  updateModifiers();document.getElementById("abilityScoreStatus").textContent="Массив распределён. Можешь менять числа местами, сохраняя набор.";
 });
-raceSelect.addEventListener("change",updateDescriptions);
+raceSelect.addEventListener("change",()=>{updateDescriptions();renderRaceChoices();});
 backgroundSelect.addEventListener("change",updateDescriptions);
 classSelect.addEventListener("change",()=>{updateDescriptions();renderSkillChoices();renderSubclassChoices();renderSpellChoices();});
 document.getElementById("feat").addEventListener("change",()=>document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent);
@@ -659,7 +698,7 @@ async function suggestCharacter(){
   document.getElementById("level").value="1";document.getElementById("alignment").value=c.alignment||"Истинно нейтральный";
   statNames.forEach(k=>document.getElementById(k).value=c.stats[k]);
   ["history","personality","appearance","goals"].forEach(k=>document.getElementById(k).value=c[k]||"");
-  updateDescriptions();renderSkillChoices();renderSubclassChoices();renderSpellChoices();
+  updateDescriptions();renderRaceChoices();renderSkillChoices();renderSubclassChoices();renderSpellChoices();
   (c.class_skill_choices||[]).forEach(skill=>{const input=Array.from(document.querySelectorAll('input[name="classSkill"]')).find(el=>el.value===skill);if(input)input.checked=true;});
   updateSkillStatus();updateModifiers();
   document.getElementById("abilityScoreStatus").textContent="ИИ распределил стандартный массив 15, 14, 13, 12, 10, 8. Проверь распределение.";
@@ -768,7 +807,7 @@ form.addEventListener("submit",async event=>{
   window.location.href="game.html";
  }catch(error){console.error(error);errorMessage.textContent=error.message||"Не удалось создать персонажа.";createButton.disabled=false;createButton.textContent="Создать персонажа";}
 });
-checkUserAndCampaign();updateModifiers();updateDescriptions();renderSkillChoices();renderSubclassChoices();renderSpellChoices();
+checkUserAndCampaign();updateModifiers();updateDescriptions();renderRaceChoices();renderSkillChoices();renderSubclassChoices();renderSpellChoices();
 </script>
 
 </body>
