@@ -45,8 +45,15 @@ async function handleCharacterSuggestion(request, env) {
             "Распредели стандартный массив характеристик 15,14,13,12,10,8: каждое число ровно один раз. Это базовые значения до расовых бонусов.",
             "Выбери допустимые навыки класса: Воин — Акробатика, Анализ, Атлетика, Восприятие, Выживание, История, Запугивание, Проницательность, Уход за животными; Варвар — Атлетика, Выживание, Запугивание, Природа, Восприятие, Уход за животными; Плут — Акробатика, Атлетика, Восприятие, Выступление, Запугивание, Ловкость рук, Обман, Проницательность, Расследование, Скрытность, Убеждение; Волшебник — Анализ, История, Магия, Медицина, Проницательность, Религия; Колдун — История, Запугивание, Магия, Обман, Природа, Расследование, Религия; остальные классы выбери разумно из официальных навыков класса. Выбери ровно нужное число навыков: Бард 3, Плут 4, Следопыт 3, остальные 2. Не выбирай навыки, которые уже даёт предыстория.",
             "Фоновые навыки: Авантюрист — Атлетика и Выживание; Солдат — Атлетика и Запугивание; Преступник — Обман и Скрытность; Учёный/Мудрец — Магия и История; Дворянин — История и Убеждение; Изгнанник/Отшельник — Медицина и Выживание; Странник/Моряк — Атлетика и Восприятие; Послушник — Проницательность и Религия; Шарлатан — Обман и Ловкость рук; Народный герой — Уход за животными и Выживание; Гильдейский ремесленник — Проницательность и Убеждение; Артист — Акробатика и Выступление.",
-            "Не придумывай подклассы, заклинания, предметы, черты или игровые бонусы. feat должен быть пустой строкой. Характеристики и навыки должны соответствовать правилам.",
-            "JSON схема: {name,race,class,background,level,alignment,stats:{strength,dexterity,constitution,intelligence,wisdom,charisma},class_skill_choices:[...],history,personality,appearance,goals}.",
+            "Заполни весь лист, а не только основу. subrace: для Человека — Обычный человек или Вариантный человек; для Эльфа — Высший эльф, Лесной эльф или Тёмный эльф (дроу); для Дварфа — Холмовой дварф или Горный дварф; для Полурослика — Легконогий или Коренастый; для остальных — пустая строка.",
+            "Если раса Драконорождённый, выбери dragon_ancestry из: Чёрный, Синий, Латунный, Бронзовый, Медный, Золотой, Зелёный, Красный, Серебряный, Белый. Для Высшего эльфа выбери racial_cantrip из списка заговоров волшебника.",
+            "Для Полуэльфа выбери два разных racial_ability_choices из strength,dexterity,constitution,intelligence,wisdom, два разных racial_skill_choices и extra_language. Для Вариантного человека выбери два разных racial_ability_choices, один racial_skill_choices, extra_language и feat. Для обычного человека feat и дополнительный язык не выбирай.",
+            "Допустимые черты вариантного человека: Бдительный, Крепкий, Боевой заклинатель. Для остальных рас feat — пустая строка.",
+            "Для Жреца выбери subclass: Домен Знания, Домен Жизни, Домен Света, Домен Природы, Домен Бури, Домен Обмана или Домен Войны. Для Колдуна: Архифея, Исчадие или Великий Древний. Для Чародея: Драконья кровь или Дикая магия. Остальным классам subclass оставь пустым.",
+            "Для Воина выбери fighting_style: Стрельба, Защита, Дуэлянт или Сражение большим оружием. Для Плута выбери ровно две expertise из навыков класса/предыстории и Воровских инструментов. Остальным оставь пустые массивы.",
+            "Для заклинателей выбери допустимые cantrips и spells из списков: Бард — заговоры Злая насмешка, Волшебная рука, Малая иллюзия, Фокусы, Свет; заклинания Лечащее слово, Диссонирующий шёпот, Волшебный огонь, Громовая волна, Очарование личности, Усыпление, Лечение ран, Героизм. Жрец — заговоры Священное пламя, Наставление, Свет, Сохранение умирающего, Тауматургия; заклинания Благословение, Лечение ран, Направляющий снаряд, Лечащее слово, Щит веры, Убежище, Приказ, Обнаружение магии, Защита от зла и добра. Друид — заговоры Искусство друидов, Наставление, Сотворение пламени, Дубинка, Терновый кнут; заклинания Опутывание, Волшебный огонь, Доброягода, Лечащее слово, Длинный шаг, Разговор с животными, Громовая волна, Лечение ран. Волшебник — заговоры Огненный снаряд, Волшебная рука, Фокусы, Луч холода, Малая иллюзия, Свет, Шоковое прикосновение; заклинания Волшебная стрела, Щит, Доспехи мага, Обнаружение магии, Поиск фамильяра, Горящие руки, Усыпление, Громовая волна, Очарование личности, Опознание, Падение пёрышком. Чародей использует те же заговоры, заклинания: Волшебная стрела, Щит, Доспехи мага, Горящие руки, Усыпление, Очарование личности, Громовая волна. Колдун — заговоры Мистический заряд, Волшебная рука, Малая иллюзия, Фокусы, Холодное прикосновение, Ядовитые брызги; заклинания Порча, Доспехи Агатиса, Адское возмездие, Руки Хадара, Очарование личности, Ведьмин снаряд.",
+            "Количество: Бард 2 заговора и 4 заклинания; Жрец 3 заговора и подготовленные заклинания = 1 + модификатор Мудрости; Друид 2 заговора и подготовленные заклинания = 1 + модификатор Мудрости; Волшебник 3 заговора и 6 заклинаний; Чародей 4 заговора и 2 заклинания; Колдун 2 заговора и 2 заклинания. Для не заклинателей cantrips и spells — пустые массивы.",
+            "JSON схема: {name,race,class,background,level,alignment,stats:{strength,dexterity,constitution,intelligence,wisdom,charisma},class_skill_choices:[...],subrace,dragon_ancestry,racial_ability_choices:[...],racial_skill_choices:[...],extra_language,racial_cantrip,subclass,fighting_style,expertise:[...],cantrips:[...],spells:[...],feat,history,personality,appearance,goals}. Не оставляй обязательные поля пустыми.",
             "Не делай персонажа сверхсильным. Идея игрока задаёт характер и историю, но не отменяет правила."
         ].join("\n");
         const model = env.GEMINI_CHARACTER_MODEL || getGeminiModel(env, null);
@@ -99,6 +106,105 @@ async function handleCharacterSuggestion(request, env) {
             "Колдун":["История","Запугивание","Магия","Обман","Природа","Расследование","Религия"]
         };
         if (skills.length !== required || new Set(skills).size !== required || skills.some(skill => !(classSkillOptions[suggestion.class] || []).includes(skill))) throw new Error("ИИ выбрал навыки, не подходящие классу по правилам. Попробуй ещё раз.");
+        const backgroundSkillMap = {
+            "Авантюрист":["Атлетика","Выживание"],"Солдат":["Атлетика","Запугивание"],"Преступник":["Обман","Скрытность"],
+            "Учёный":["Магия","История"],"Дворянин":["История","Убеждение"],"Изгнанник":["Медицина","Выживание"],
+            "Странник":["Атлетика","Восприятие"],"Послушник":["Проницательность","Религия"],"Шарлатан":["Обман","Ловкость рук"],
+            "Народный герой":["Уход за животными","Выживание"],"Гильдейский ремесленник":["Проницательность","Убеждение"],
+            "Отшельник":["Медицина","Выживание"],"Мудрец":["Магия","История"],"Моряк":["Атлетика","Восприятие"],"Артист":["Акробатика","Выступление"]
+        };
+        const backgroundSkills = backgroundSkillMap[suggestion.background] || [];
+        if (skills.some(skill => backgroundSkills.includes(skill))) throw new Error("ИИ повторил навык предыстории. Сгенерируй лист ещё раз.");
+        const subraceMap = {
+            "Человек":["Обычный человек","Вариантный человек"],
+            "Эльф":["Высший эльф","Лесной эльф","Тёмный эльф (дроу)"],
+            "Дварф":["Холмовой дварф","Горный дварф"],
+            "Полурослик":["Легконогий","Коренастый"]
+        };
+        const subraceOptions = subraceMap[suggestion.race] || [];
+        const subrace = subraceOptions.length ? String(suggestion.subrace || "") : "";
+        if (subraceOptions.length && !subraceOptions.includes(subrace)) throw new Error("ИИ не выбрал допустимую подрасу. Сгенерируй лист ещё раз.");
+        const abilityKeys = ["strength","dexterity","constitution","intelligence","wisdom","charisma"];
+        const racialAbilityChoices = Array.isArray(suggestion.racial_ability_choices) ? suggestion.racial_ability_choices.slice(0, 2) : [];
+        const racialSkillChoices = Array.isArray(suggestion.racial_skill_choices) ? suggestion.racial_skill_choices.slice(0, 2) : [];
+        const variantHuman = suggestion.race === "Человек" && subrace === "Вариантный человек";
+        const halfElf = suggestion.race === "Полуэльф";
+        if (variantHuman || halfElf) {
+            const neededSkills = variantHuman ? 1 : 2;
+            if (racialAbilityChoices.length !== 2 || new Set(racialAbilityChoices).size !== 2 ||
+                racialAbilityChoices.some(key => !abilityKeys.includes(key) || (halfElf && key === "charisma"))) {
+                throw new Error("ИИ неверно выбрал расовые бонусы характеристик.");
+            }
+            if (racialSkillChoices.length !== neededSkills || new Set(racialSkillChoices).size !== neededSkills ||
+                racialSkillChoices.some(skill => !skillNames.includes(skill) || skills.includes(skill) || backgroundSkills.includes(skill))) {
+                throw new Error("ИИ выбрал недопустимые дополнительные расовые навыки.");
+            }
+        }
+        const languageOptions = ["Дварфийский","Эльфийский","Великаний","Гномий","Гоблинский","Полуросликов","Орочий","Инфернальный","Драконий","Небесный","Бездны","Подземный"];
+        const extraLanguage = variantHuman || halfElf ? String(suggestion.extra_language || "") : "";
+        if ((variantHuman || halfElf) && !languageOptions.includes(extraLanguage)) throw new Error("ИИ не выбрал допустимый дополнительный язык.");
+        const featOptions = ["Бдительный","Крепкий","Боевой заклинатель"];
+        const feat = variantHuman ? String(suggestion.feat || "") : "";
+        if (variantHuman && !featOptions.includes(feat)) throw new Error("Вариантному человеку нужна допустимая черта.");
+        if (!variantHuman && suggestion.feat) throw new Error("Черта на 1 уровне недоступна этой расе.");
+        const dragonOptions = ["Чёрный","Синий","Латунный","Бронзовый","Медный","Золотой","Зелёный","Красный","Серебряный","Белый"];
+        const dragonAncestry = suggestion.race === "Драконорождённый" ? String(suggestion.dragon_ancestry || "") : "";
+        if (suggestion.race === "Драконорождённый" && !dragonOptions.includes(dragonAncestry)) throw new Error("Выбери драконье наследие.");
+        const racialCantripOptions = ["Огненный снаряд","Волшебная рука","Фокусы","Луч холода","Малая иллюзия","Свет","Шоковое прикосновение"];
+        const racialCantrip = suggestion.race === "Эльф" && subrace === "Высший эльф" ? String(suggestion.racial_cantrip || "") : "";
+        if (suggestion.race === "Эльф" && subrace === "Высший эльф" && !racialCantripOptions.includes(racialCantrip)) throw new Error("Высшему эльфу нужен допустимый расовый заговор.");
+        const subclassMap = {
+            "Жрец":["Домен Знания","Домен Жизни","Домен Света","Домен Природы","Домен Бури","Домен Обмана","Домен Войны"],
+            "Колдун":["Архифея","Исчадие","Великий Древний"],
+            "Чародей":["Драконья кровь","Дикая магия"]
+        };
+        const subclassOptions = subclassMap[suggestion.class] || [];
+        const subclass = subclassOptions.length ? String(suggestion.subclass || "") : "";
+        if (subclassOptions.length && !subclassOptions.includes(subclass)) throw new Error("ИИ не выбрал допустимую специализацию класса.");
+        const fightingStyleOptions = ["Стрельба","Защита","Дуэлянт","Сражение большим оружием"];
+        const fightingStyle = suggestion.class === "Воин" ? String(suggestion.fighting_style || "") : "";
+        if (suggestion.class === "Воин" && !fightingStyleOptions.includes(fightingStyle)) throw new Error("Воин должен выбрать боевой стиль.");
+        const expertise = suggestion.class === "Плут" && Array.isArray(suggestion.expertise) ? suggestion.expertise.slice(0, 2) : [];
+        const expertiseOptions = Array.from(new Set(skills.concat(backgroundSkills, ["Воровские инструменты"])));
+        if (suggestion.class === "Плут" && (expertise.length !== 2 || new Set(expertise).size !== 2 || expertise.some(skill => !expertiseOptions.includes(skill)))) {
+            throw new Error("Плут должен выбрать две компетентности из известных ему владений.");
+        }
+        const spellData = {
+            "Бард":{ability:"charisma",cantrips:2,spells:4,cantripList:["Злая насмешка","Волшебная рука","Малая иллюзия","Фокусы","Свет"],spellList:["Лечащее слово","Диссонирующий шёпот","Волшебный огонь","Громовая волна","Очарование личности","Усыпление","Лечение ран","Героизм"]},
+            "Жрец":{ability:"wisdom",cantrips:3,prepared:true,cantripList:["Священное пламя","Наставление","Свет","Сохранение умирающего","Тауматургия"],spellList:["Благословение","Лечение ран","Направляющий снаряд","Лечащее слово","Щит веры","Убежище","Приказ","Обнаружение магии","Защита от зла и добра"]},
+            "Друид":{ability:"wisdom",cantrips:2,prepared:true,cantripList:["Искусство друидов","Наставление","Сотворение пламени","Дубинка","Терновый кнут"],spellList:["Опутывание","Волшебный огонь","Доброягода","Лечащее слово","Длинный шаг","Разговор с животными","Громовая волна","Лечение ран"]},
+            "Волшебник":{ability:"intelligence",cantrips:3,spells:6,cantripList:["Огненный снаряд","Волшебная рука","Фокусы","Луч холода","Малая иллюзия","Свет","Шоковое прикосновение"],spellList:["Волшебная стрела","Щит","Доспехи мага","Обнаружение магии","Поиск фамильяра","Горящие руки","Усыпление","Громовая волна","Очарование личности","Опознание","Падение пёрышком"]},
+            "Чародей":{ability:"charisma",cantrips:4,spells:2,cantripList:["Огненный снаряд","Волшебная рука","Фокусы","Луч холода","Малая иллюзия","Свет","Шоковое прикосновение"],spellList:["Волшебная стрела","Щит","Доспехи мага","Горящие руки","Усыпление","Очарование личности","Громовая волна"]},
+            "Колдун":{ability:"charisma",cantrips:2,spells:2,cantripList:["Мистический заряд","Волшебная рука","Малая иллюзия","Фокусы","Холодное прикосновение","Ядовитые брызги"],spellList:["Порча","Доспехи Агатиса","Адское возмездие","Руки Хадара","Очарование личности","Ведьмин снаряд"]}
+        };
+        const spellRules = spellData[suggestion.class];
+        const cantrips = spellRules && Array.isArray(suggestion.cantrips) ? suggestion.cantrips.slice(0, spellRules.cantrips) : [];
+        const spells = spellRules && Array.isArray(suggestion.spells) ? suggestion.spells.slice(0, 8) : [];
+        if (spellRules) {
+            if (cantrips.length !== spellRules.cantrips || new Set(cantrips).size !== cantrips.length || cantrips.some(spell => !spellRules.cantripList.includes(spell))) {
+                throw new Error("ИИ выбрал недопустимые заговоры.");
+            }
+            const raceBonuses = {
+                "Человек":{strength:1,dexterity:1,constitution:1,intelligence:1,wisdom:1,charisma:1},
+                "Эльф":{dexterity:2},"Полуэльф":{charisma:2},"Дварф":{constitution:2},
+                "Полурослик":{dexterity:2},"Тифлинг":{charisma:2,intelligence:1},
+                "Драконорождённый":{strength:2,charisma:1},"Полуорк":{strength:2,constitution:1}
+            };
+            const subraceBonuses = {
+                "Высший эльф":{intelligence:1},"Лесной эльф":{wisdom:1},"Тёмный эльф (дроу)":{charisma:1},
+                "Холмовой дварф":{wisdom:1},"Горный дварф":{strength:2},
+                "Легконогий":{charisma:1},"Коренастый":{constitution:1}
+            };
+            const totalBonuses = Object.assign({}, raceBonuses[suggestion.race] || {});
+            if (variantHuman) { for (const key of Object.keys(totalBonuses)) totalBonuses[key] = 0; racialAbilityChoices.forEach(key => totalBonuses[key] = 1); }
+            if (halfElf) { racialAbilityChoices.forEach(key => totalBonuses[key] = (totalBonuses[key] || 0) + 1); }
+            if (subraceBonuses[subrace]) Object.entries(subraceBonuses[subrace]).forEach(([key,value]) => totalBonuses[key] = (totalBonuses[key] || 0) + value);
+            const abilityScore = Number(stats[spellRules.ability]) + (totalBonuses[spellRules.ability] || 0);
+            const requiredSpells = spellRules.prepared ? Math.max(1, 1 + Math.floor((abilityScore - 10) / 2)) : spellRules.spells;
+            if (spells.length !== requiredSpells || new Set(spells).size !== spells.length || spells.some(spell => !spellRules.spellList.includes(spell))) {
+                throw new Error("ИИ выбрал неверное количество или недопустимые заклинания.");
+            }
+        } else if (cantrips.length || spells.length) throw new Error("Неколдунский класс не должен получать заклинания из этого списка.");
         return jsonResponse({
             success: true,
             character: {
@@ -106,6 +212,11 @@ async function handleCharacterSuggestion(request, env) {
                 race: suggestion.race, class: suggestion.class, background: suggestion.background,
                 level: 1, alignment: alignments.includes(suggestion.alignment) ? suggestion.alignment : "Истинно нейтральный",
                 stats: stats, class_skill_choices: skills,
+                subrace: subrace, dragon_ancestry: dragonAncestry,
+                racial_ability_choices: racialAbilityChoices, racial_skill_choices: racialSkillChoices,
+                extra_language: extraLanguage, racial_cantrip: racialCantrip,
+                subclass: subclass, fighting_style: fightingStyle, expertise: expertise,
+                cantrips: cantrips, spells: spells, feat: feat,
                 history: String(suggestion.history || "").slice(0, 3000),
                 personality: String(suggestion.personality || "").slice(0, 1500),
                 appearance: String(suggestion.appearance || "").slice(0, 1500),
