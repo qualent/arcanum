@@ -389,7 +389,10 @@ function renderCharacterDetails() {
         ["Навыки", Array.isArray(stats.skill_proficiencies) ? stats.skill_proficiencies.join(", ") : "Не указаны"],
         ["Бонус мастерства", stats.proficiency_bonus ? "+" + stats.proficiency_bonus : "+2"],
         ["Доспехи", stats.armor_proficiencies || "Не указаны"],
-        ["Оружие", stats.weapon_proficiencies || "Не указано"]
+        ["Оружие", stats.weapon_proficiencies || "Не указано"],
+        ["Инструменты", stats.tool_proficiencies || "Нет"],
+        ["Языки", stats.languages || "Не указаны"],
+        ["Скорость / размер", (stats.speed || 30) + " фт. · " + (stats.size || "Средний")]
     ];
     if (elements.proficiencyList) {
         elements.proficiencyList.replaceChildren();
