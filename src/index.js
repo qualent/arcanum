@@ -416,7 +416,7 @@ function validateRollRequests(rawRequests, context) {
         const skill = typeof request.skill === "string" ? request.skill.slice(0, 40) : "";
         const mode = ["advantage", "disadvantage"].includes(request.mode) ? request.mode : "normal";
         return { type, ability, dc, skill, mode, weapon: typeof request.weapon === "string" ? request.weapon.slice(0, 60) : "", label: typeof request.label === "string" ? request.label.slice(0, 100) : "" };
-    });
+    }).filter(Boolean);
 }
 
 const SKILL_ABILITIES = {
