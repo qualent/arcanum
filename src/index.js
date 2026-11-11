@@ -453,7 +453,7 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
     );
     for (const request of orderedRequests) {
         if (request.type === "damage") {
-            const previousAttack = rolls.slice().reverse().find(roll => roll.type === "attack");
+            const previousAttack = rolls.slice().reverse().find(roll => roll.type === "attack" || roll.type === "spell_attack");
             if (previousAttack && previousAttack.success === false) continue;
         }
         const previousAttack = rolls.slice().reverse().find(roll => roll.type === "attack");
@@ -491,7 +491,7 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
 
 function validateRollRequests(rawRequests, context) {
     if (!Array.isArray(rawRequests)) return [];
-    const allowedTypes = ["ability_check", "saving_throw", "attack", "initiative", "death_save", "damage"];
+    const allowedTypes = ["ability_check", "saving_throw", "attack", "spell_attack", "initiative", "death_save", "damage"];
     const allowedAbilities = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
     return rawRequests.slice(0, 3).map(request => {
         if (!request || typeof request !== "object") return null;
@@ -584,6 +584,7 @@ function resolveServerRoll(request, context) {
     let ability = request.type === "ability_check" && request.skill
         ? (SKILL_ABILITIES[request.skill.toLowerCase()] || request.ability)
         : request.ability;
+    if (request.type === "spell_attack") ability = stats.spellcasting && stats.spellcasting.ability || stats.racial_spellcasting_ability || request.ability;
     if (request.type === "attack" && weaponItem && weaponProperties.ranged) ability = "dexterity";
     else if (request.type === "attack" && weaponItem && weaponProperties.finesse) {
         const strScore = Number(character.strength) || 10, dexScore = Number(character.dexterity) || 10;
@@ -602,6 +603,7 @@ function resolveServerRoll(request, context) {
     const martialWeapons = ["длинный меч","рапира","короткий меч","длинный лук","короткий лук","боевой топор","двуручный топор","молот","трезубец","тяжёлый арбалет","тяжелый арбалет"];
     let proficient = false;
     if (request.type === "saving_throw") proficient = saveList.includes(ability);
+    else if (request.type === "spell_attack") proficient = true;
     else if (request.type === "attack") {
         if (weaponProficiencies.includes("простое и воинское")) proficient = true;
         else if (weaponProficiencies.includes("простое оружие") && simpleWeapons.some(name => weapon.includes(name) || name.includes(weapon))) proficient = true;
@@ -622,8 +624,8 @@ function resolveServerRoll(request, context) {
     return {
         type: request.type, label: request.label || (request.skill || request.type),
         ability, skill: request.skill, weapon: request.weapon, dice, die, bonus, total, dc: request.dc,
-        success: request.type === "death_save" ? die >= 10 : request.type === "attack" ? (die === 20 || (die !== 1 && request.dc !== null && total >= request.dc)) : (request.dc === null ? null : total >= request.dc),
-        critical: request.type === "attack" && die === 20,
+        success: request.type === "death_save" ? die >= 10 : (request.type === "attack" || request.type === "spell_attack") ? (die === 20 || (die !== 1 && request.dc !== null && total >= request.dc)) : (request.dc === null ? null : total >= request.dc),
+        critical: (request.type === "attack" || request.type === "spell_attack") && die === 20,
         death_save_effect: request.type === "death_save" ? (die === 20 ? "восстановление 1 HP" : die === 1 ? "две неудачи" : die >= 10 ? "одна удача" : "одна неудача") : null,
         natural: die, proficient, mode: request.mode
     };
@@ -798,7 +800,7 @@ function buildSystemInstruction(context) {
         "Повествование: " + String(settings.response_style || "immersive") + ". Сеттинг: " + String(campaign.setting || "фэнтези") +
             ". Жанр: " + String(campaign.genre || "приключение") + ". Тон: " + String(campaign.tone || "приключенческий") +
             ". Сложность: " + String(campaign.difficulty || "обычная") + ".",
-        "ПРАВИЛА: профиль " + String(settings.rules_profile || "dnd5e_2014") + ". Используй характеристики, способности, заклинания, предметы и включённые правила кампании. Не выдумывай игровые свойства. Не назначай проверку очевидному действию. Если действие рискованное и исход не очевиден, верни roll_requests с типом ability_check, saving_throw, attack, initiative, death_save или damage. Для атаки укажи оружие, характеристику и КД цели; при попадании запроси формулу урона (например 1d8+3) и тип урона. Сервер сам пропустит урон, если атака промахнулась, и удвоит кости при критическом попадании. Бросок выполняет сервер; никогда не придумывай число на кости. После получения серверного результата строго примени его и опиши успех, провал или последствия. Для спасброска укажи ability и DC. Не проси игрока бросать спасбросок или проверку.",
+        "ПРАВИЛА: профиль " + String(settings.rules_profile || "dnd5e_2014") + ". Используй характеристики, способности, заклинания, предметы и включённые правила кампании. Не выдумывай игровые свойства. Не назначай проверку очевидному действию. Если действие рискованное и исход не очевиден, верни roll_requests с типом ability_check, saving_throw, attack, spell_attack, initiative, death_save или damage. Для атаки оружием укажи оружие, характеристику и КД цели; для атаки заклинанием используй spell_attack и характеристику заклинаний. При попадании запроси формулу урона (например 1d8+3) и тип урона. Сервер сам пропустит урон, если атака промахнулась, и удвоит кости при критическом попадании. Бросок выполняет сервер; никогда не придумывай число на кости. После получения серверного результата строго примени его и опиши успех, провал или последствия. Для спасброска укажи ability и DC. Не проси игрока бросать спасбросок или проверку.",
         "СОСТОЯНИЕ: HP, опыт, золото, инвентарь, локацию и время меняй только через JSON-поля. Не меняй уровень и базовые характеристики. Награды выдавай за реальные достижения, а не за каждое сообщение. Не создавай предметы из ничего, если персонаж их не получил.",
         "РЕСУРСЫ: используй только ресурсы из current_character.stats.resources. При фактическом расходе или восстановлении верни resource_changes: [{resource: rage|bardic_inspiration|second_wind|lay_on_hands|arcane_recovery|spell_slots_level_1, delta: -1}]. Списывай ресурс только после реального применения; восстанавливай только по правилам отдыха. Не позволяй значениям опускаться ниже 0 или превышать максимум.",
         "ЛИСТ ПЕРСОНАЖА: поле current_character.stats содержит подтверждённые владения, спасброски, навыки, расовые и классовые особенности, подкласс, черту, языки, скорость и список известных/подготовленных заклинаний. Не приписывай персонажу отсутствующие владения, способности или заклинания. Проверяй требования и ресурсы по этому листу. Для проверки навыка добавляй бонус мастерства только если навык указан в skill_proficiencies; для спасброска — только если характеристика есть в saving_throw_proficiencies. Заклинание можно использовать только если оно есть в known_spells, prepared_spells, racial_cantrips или дано особенностью подкласса.",
@@ -812,7 +814,7 @@ function buildSystemInstruction(context) {
         '"resource_changes":[{"resource":"rage","delta":-1}],' +
         '"inventory_changes":[{"operation":"add или remove","item_name":"название","quantity":1,"description":"","item_type":"misc","rarity":"common","weight":0,"properties":{}}],' +
         '"memories":[{"scope":"world или character или session","memory_type":"fact/event/secret/relationship/quest/promise/rule/summary","title":"заголовок","content":"точный факт","importance":1,"tags":[]}],' +
-        '"roll_requests":[{"type":"ability_check|saving_throw|attack|initiative|death_save|damage","ability":"strength|dexterity|constitution|intelligence|wisdom|charisma","skill":"название навыка или пусто","weapon":"оружие для атаки или пусто","two_handed":false,"dice":"1d8+3 для урона или пусто","damage_type":"тип урона","dc":10,"mode":"normal|advantage|disadvantage","label":"что проверяется"}]}',
+        '"roll_requests":[{"type":"ability_check|saving_throw|attack|spell_attack|initiative|death_save|damage","ability":"strength|dexterity|constitution|intelligence|wisdom|charisma","skill":"название навыка или пусто","weapon":"оружие для атаки или пусто","two_handed":false,"dice":"1d8+3 для урона или пусто","damage_type":"тип урона","dc":10,"mode":"normal|advantage|disadvantage","label":"что проверяется"}]}',
         "Если изменений нет — нули, null, пустые массивы. narrative обязательно. Не включай в narrative JSON, служебные пояснения или упоминания модели."
     ].join("\n\n");
 }
