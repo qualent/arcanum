@@ -64,7 +64,7 @@ async function handleCharacterSuggestion(request, env) {
             body: JSON.stringify({
                 systemInstruction: { parts: [{ text: systemText }] },
                 contents: [{ role: "user", parts: [{ text: JSON.stringify({ world: campaignResult.data[0], character_concept: concept }) }] }],
-                generationConfig: { responseMimeType: "application/json", maxOutputTokens: 1800, thinkingConfig: { thinkingLevel: "low" } }
+                generationConfig: { responseMimeType: "application/json", maxOutputTokens: 3000, thinkingConfig: { thinkingLevel: "low" } }
             }),
             signal: AbortSignal.timeout(35000)
         });
