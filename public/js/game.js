@@ -407,6 +407,8 @@ function renderCharacterDetails() {
         ["Навыки", Array.isArray(stats.skill_proficiencies) ? stats.skill_proficiencies.join(", ") : "Не указаны"],
         ["Бонус мастерства", stats.proficiency_bonus ? "+" + stats.proficiency_bonus : "+2"],
         ["Подкласс", stats.subclass || "Выбирается на следующем уровне по правилам класса"],
+        ["Компетентность", Array.isArray(stats.expertise) && stats.expertise.length ? stats.expertise.join(", ") : "Нет"],
+        ["Боевой стиль", stats.fighting_style || "Не выбран"],
         ["Доспехи", stats.armor_proficiencies || "Не указаны"],
         ["Оружие", stats.weapon_proficiencies || "Не указано"],
         ["Инструменты", stats.tool_proficiencies || "Нет"],
@@ -433,6 +435,7 @@ function renderCharacterDetails() {
             ["Особенности расы", stats.racial_traits],
             ["Особенность подкласса", stats.subclass_feature],
             ["Особенность класса", stats.class_features],
+            ["Эффект боевого стиля", stats.fighting_style_description],
             ["Предыстория", stats.background_feature],
             ["Черта", stats.feat && stats.feat.name ? stats.feat.name + " — " + stats.feat.description : "Нет дополнительной черты"]
         ];
