@@ -389,6 +389,7 @@ function renderCombatStats() {
         if (stats.subclass === "Драконья кровь") armorClass = Math.max(armorClass, 13 + dexterityModifier);
     }
     if (shield) armorClass += Number(shield.properties && shield.properties.armor_class_bonus) || 2;
+    if (bodyArmor && stats.fighting_style === "Защита") armorClass += 1;
     setText(elements.armorClassValue, armorClass, "10");
     let initiative = dexterityModifier;
     if (stats.feat && stats.feat.name === "Бдительный") initiative += 5;
