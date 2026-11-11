@@ -12,7 +12,7 @@
     <script src="../js/config.js"></script>
 <style>
 .builder-section{border:1px solid rgba(201,169,106,.25);border-radius:8px;padding:22px;margin:22px 0;background:rgba(201,169,106,.025)}
-.builder-note{color:var(--muted);font-size:13px;line-height:1.65;margin:8px 0}
+.ai-builder textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:6px;background:#0c0e13;color:var(--text);font:inherit;margin:8px 0 12px}.ai-builder button{margin-top:4px}#halfElfChoices[hidden]{display:none}.builder-note{color:var(--muted);font-size:13px;line-height:1.65;margin:8px 0}
 .builder-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
 .builder-info{padding:14px;border:1px solid var(--border);border-radius:6px;background:rgba(255,255,255,.025)}
 .builder-info strong{color:var(--gold-light)}.builder-info p{font-size:12px;line-height:1.6;color:var(--muted);margin:8px 0 0}
@@ -49,6 +49,7 @@
     </section>
 
     <form id="characterForm" class="form-card">
+        <div class="form-section ai-builder"><h2>Создать лист с помощью ИИ-мастера</h2><p class="builder-note">Опиши концепцию героя. Мастер предложит расу, класс, предысторию, характеристики и навыки по правилам 5e. Это черновик: перед созданием ты сможешь всё проверить и изменить.</p><textarea id="characterConcept" rows="3" maxlength="2500" placeholder="Например: эльф-изгнанник, который заключил договор с древним духом, предпочитает магию и скрытность..."></textarea><button type="button" class="button button-secondary" id="generateCharacterButton">Предложить персонажа</button><p id="suggestionStatus" class="builder-note"></p></div>
 
         <div class="form-section">
             <h2>Основное</h2>
@@ -73,7 +74,8 @@
                         Раса
                     </label>
 
-                    <select id="race">
+                    <select id="race" required>
+                        <option value="" selected disabled>Выбери расу</option>
                         <option value="Человек">Человек</option>
                         <option value="Эльф">Эльф</option>
                         <option value="Полуэльф">Полуэльф</option>
@@ -91,7 +93,8 @@
                         Класс
                     </label>
 
-                    <select id="characterClass">
+                    <select id="characterClass" required>
+                        <option value="" selected disabled>Выбери класс</option>
                         <option value="Воин">Воин</option>
                         <option value="Варвар">Варвар</option>
                         <option value="Плут">Плут</option>
@@ -126,7 +129,8 @@
                         Предыстория
                     </label>
 
-                    <select id="background">
+                    <select id="background" required>
+                        <option value="" selected disabled>Выбери предысторию</option>
                         <option value="Авантюрист">Авантюрист</option>
                         <option value="Солдат">Солдат</option>
                         <option value="Преступник">Преступник</option>
@@ -284,6 +288,11 @@
                 <div class="builder-info"><strong>Раса и происхождение</strong><p id="raceInfo">Выбери расу, чтобы увидеть её бонусы и особенности.</p></div>
                 <div class="builder-info"><strong>Класс</strong><p id="classInfo">Класс определяет кость хитов, спасброски, владения и умения.</p></div>
                 <div class="builder-info"><strong>Предыстория</strong><p id="backgroundInfo">Предыстория добавляет навыки, владения и особенность.</p></div>
+            </div>
+            <div class="builder-subsection" id="halfElfChoices" hidden>
+                <h3>Наследие полуэльфа</h3>
+                <p>Выбери две разные характеристики (кроме Харизмы), которые получат +1, и два навыка.</p>
+                <div class="form-grid"><div class="form-group"><label for="halfElfBonus1">Первая характеристика +1</label><select id="halfElfBonus1"><option value="strength">Сила</option><option value="dexterity">Ловкость</option><option value="constitution">Телосложение</option><option value="intelligence">Интеллект</option><option value="wisdom">Мудрость</option></select></div><div class="form-group"><label for="halfElfBonus2">Вторая характеристика +1</label><select id="halfElfBonus2"><option value="dexterity">Ловкость</option><option value="strength">Сила</option><option value="constitution">Телосложение</option><option value="intelligence">Интеллект</option><option value="wisdom">Мудрость</option></select></div><div class="form-group"><label for="halfElfSkill1">Дополнительный навык 1</label><select id="halfElfSkill1"></select></div><div class="form-group"><label for="halfElfSkill2">Дополнительный навык 2</label><select id="halfElfSkill2"></select></div></div>
             </div>
             <div class="builder-subsection">
                 <h3>Распределение характеристик</h3>
@@ -501,7 +510,7 @@ const classData={
 const raceData={
 "Человек":{bonus:{strength:1,dexterity:1,constitution:1,intelligence:1,wisdom:1,charisma:1},traits:"Увеличение всех характеристик на +1; базовая скорость 30 футов."},
 "Эльф":{bonus:{dexterity:2},traits:"Ловкость +2, тёмное зрение 60 футов, владение Восприятием, сопротивление очарованию и иммунитет ко сну от магии, транс вместо сна."},
-"Полуэльф":{bonus:{charisma:2,dexterity:1,constitution:1},traits:"Харизма +2 и две другие характеристики +1; тёмное зрение, наследие фей, два дополнительных навыка."},
+"Полуэльф":{bonus:{charisma:2},traits:"Харизма +2, две выбранные характеристики +1; тёмное зрение, наследие фей, два дополнительных навыка."},
 "Дварф":{bonus:{constitution:2},traits:"Телосложение +2, тёмное зрение 60 футов, устойчивость дварфов к яду, владение боевыми топорами/молотами и знание камня."},
 "Полурослик":{bonus:{dexterity:2},traits:"Ловкость +2, удачливость (переброс натуральной 1 на d20), храбрость и проворство полурослика."},
 "Тифлинг":{bonus:{charisma:2,intelligence:1},traits:"Харизма +2, Интеллект +1, тёмное зрение 60 футов, сопротивление огню, врождённая магия Ада."},
@@ -525,6 +534,7 @@ document.querySelectorAll(".stat-card input").forEach(el=>el.addEventListener("i
 const raceSelect=document.getElementById("race"),classSelect=document.getElementById("characterClass"),backgroundSelect=document.getElementById("background");
 function updateDescriptions(){
  const race=raceData[raceSelect.value],cls=classData[classSelect.value],bg=backgroundData[backgroundSelect.value];
+ document.getElementById("halfElfChoices").hidden=raceSelect.value!=="Полуэльф";
  document.getElementById("raceInfo").textContent=race?Object.entries(race.bonus).map(([k,v])=>abilityLabels[k]+" "+signed(v)).join(", ")+". "+race.traits:"Авторская раса: её игровые свойства нужно согласовать с мастером.";
  document.getElementById("classInfo").textContent=cls?"Кость хитов d"+cls.die+". Спасброски: "+cls.saves.map(x=>abilityLabels[x]).join(" и ")+". Владения: "+cls.armor+". Оружие: "+cls.weapons+". Особенность: "+cls.feature:"Авторский класс не имеет автоматических правил — согласуй кость хитов, владения и способности.";
  document.getElementById("backgroundInfo").textContent=bg?"Навыки: "+bg.skills.join(", ")+". Особенность: "+bg.feature:"Авторская предыстория: навыки и особенность нужно задать вручную с мастером.";
@@ -554,6 +564,32 @@ document.getElementById("standardArrayButton").addEventListener("click",()=>{
 });
 [raceSelect,classSelect,backgroundSelect].forEach(el=>el.addEventListener("change",updateDescriptions));
 document.getElementById("feat").addEventListener("change",()=>document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent);
+document.getElementById("halfElfSkill1").innerHTML=skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
+document.getElementById("halfElfSkill2").innerHTML=skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
+async function suggestCharacter(){
+ const concept=document.getElementById("characterConcept").value.trim(),status=document.getElementById("suggestionStatus"),button=document.getElementById("generateCharacterButton");
+ if(!concept){status.textContent="Сначала опиши концепцию персонажа.";return;}
+ button.disabled=true;button.textContent="Мастер подбирает лист...";status.textContent="Проверяем доступность правил и создаём черновик.";
+ try{
+  const {data:{session}}=await supabaseClient.auth.getSession();if(!session)throw new Error("Сессия истекла. Войди снова.");
+  const response=await fetch("/api/character/suggest",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},body:JSON.stringify({campaign_id:campaignId,concept})});
+  const result=await response.json();if(!response.ok||!result.success)throw new Error(result.error||"Мастер не смог создать лист.");
+  const c=result.character;
+  document.getElementById("characterName").value=c.name||"";
+  raceSelect.value=c.race;classSelect.value=c.class;backgroundSelect.value=c.background;
+  document.getElementById("level").value="1";document.getElementById("alignment").value=c.alignment||"Истинно нейтральный";
+  statNames.forEach(k=>document.getElementById(k).value=c.stats[k]);
+  ["history","personality","appearance","goals"].forEach(k=>document.getElementById(k).value=c[k]||"");
+  updateDescriptions();
+  (c.class_skill_choices||[]).forEach(skill=>{const input=Array.from(document.querySelectorAll('input[name="classSkill"]')).find(el=>el.value===skill);if(input)input.checked=true;});
+  updateSkillStatus();updateModifiers();
+  document.getElementById("abilityScoreStatus").textContent="ИИ распределил стандартный массив 15, 14, 13, 12, 10, 8. Проверь распределение.";
+  status.textContent="Черновик готов. Проверь все параметры, выбери недостающие особенности и создай персонажа.";
+ }catch(error){console.error(error);status.textContent=error.message||"Ошибка генерации.";}
+ finally{button.disabled=false;button.textContent="Предложить персонажа";}
+}
+document.getElementById("generateCharacterButton").addEventListener("click",suggestCharacter);
+
 async function checkUserAndCampaign(){
  const {data:{user},error}=await supabaseClient.auth.getUser();if(error||!user){window.location.href="login.html";return;}
  currentUser=user;
@@ -579,10 +615,19 @@ form.addEventListener("submit",async event=>{
   const clsData=classData[selectedClass],raceRules=raceData[selectedRace],bgRules=backgroundData[selectedBackground];
   const selectedSkills=Array.from(document.querySelectorAll('input[name="classSkill"]:checked')).map(x=>x.value);
   const required=clsData?clsData.count:2;if(selectedSkills.length!==required)throw new Error("Выбери ровно "+required+" навыка от класса.");
-  const racialBonuses=raceRules?raceRules.bonus:{};
+  let racialBonuses=raceRules?Object.assign({},raceRules.bonus):{};
+  let racialSkills=[];
+  if(selectedRace==="Полуэльф"){
+   const first=document.getElementById("halfElfBonus1").value,second=document.getElementById("halfElfBonus2").value;
+   if(first===second)throw new Error("Полуэльф получает +1 к двум разным характеристикам.");
+   racialBonuses[first]=(racialBonuses[first]||0)+1;racialBonuses[second]=(racialBonuses[second]||0)+1;
+   const skill1=document.getElementById("halfElfSkill1").value,skill2=document.getElementById("halfElfSkill2").value;
+   if(!skill1||!skill2||skill1===skill2)throw new Error("Выбери два разных дополнительных навыка полуэльфа.");
+   racialSkills=[skill1,skill2];
+  }
   const finalStats={};statNames.forEach(k=>finalStats[k]=baseStats[k]+(racialBonuses[k]||0));
   const backgroundSkills=bgRules?bgRules.skills:[];
-  const allSkills=Array.from(new Set(selectedSkills.concat(backgroundSkills)));
+  const allSkills=Array.from(new Set(selectedSkills.concat(backgroundSkills,racialSkills)));
   const level=Number(document.getElementById("level").value);
   const hitDie=clsData?clsData.die:8;
   const feat=document.getElementById("feat").value;
@@ -591,7 +636,7 @@ form.addEventListener("submit",async event=>{
    proficiency_bonus:Math.ceil(1+level/4),
    saving_throw_proficiencies:clsData?clsData.saves:[],
    skill_proficiencies:allSkills,class_skill_choices:selectedSkills,background_skill_proficiencies:backgroundSkills,
-   racial_traits:raceRules?raceRules.traits:"Авторские свойства требуют согласования",
+   racial_traits:raceRules?raceRules.traits:"Авторские свойства требуют согласования",racial_skill_proficiencies:racialSkills,
    class_features:clsData?clsData.feature:"Авторские свойства требуют согласования",
    background_feature:bgRules?bgRules.feature:"Авторская особенность требует согласования",
    hit_die:hitDie,armor_proficiencies:clsData?clsData.armor:"Требует согласования",
