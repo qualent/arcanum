@@ -309,7 +309,7 @@ async function handleCharacterInitialize(request, env) {
             inventory = fullInventory.ok ? fullInventory.data || [] : inventory;
         }
         let updatedStats = characterStats;
-        if (needsStarterGear || needsInitialResources || characterStats.arcanum_initialized !== true) {
+        if (needsStarterGear || needsInitialResources || characterStats.arcanum_initialized !== true || legacySheetNeedsReview) {
             updatedStats = Object.assign({}, characterStats, {
                 arcanum_initialized: true,
                 starter_gear_granted: true,
