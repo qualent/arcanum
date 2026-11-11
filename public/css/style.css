@@ -1905,3 +1905,64 @@ body.game-page > .game-layout > .game-sidebar-right {
         min-height: 46px;
     }
 }
+
+
+/* Character resources and manual combat controls */
+.resource-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 9px 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.resource-line strong {
+    color: var(--gold-light);
+    font-size: 13px;
+}
+
+.resource-actions {
+    display: flex;
+    gap: 7px;
+    margin-top: 9px;
+}
+
+.resource-button {
+    flex: 1;
+    min-height: 36px;
+    padding: 7px 8px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.resource-button:hover {
+    border-color: var(--gold);
+    background: rgba(201,169,106,0.1);
+}
+
+.resource-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.heal-button {
+    border-color: rgba(80,170,110,0.45);
+}
+
+.damage-button {
+    border-color: rgba(190,75,75,0.45);
+}
+
+.resource-hint {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.5;
+}
