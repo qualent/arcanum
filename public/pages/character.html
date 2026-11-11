@@ -575,10 +575,11 @@ const raceMeta={"Человек":{languages:"Общий и один дополн
 function renderSubclassChoices(){
  const options=subclassData[classSelect.value],field=document.getElementById("subclassField"),select=document.getElementById("subclass");
  field.hidden=!options;
- if(!options){select.replaceChildren();return;}
- const old=select.value;select.innerHTML=options.map((x,i)=>'<option value="'+i+'">'+x[0]+'</option>').join("");
- if(old&&options[Number(old)])select.value=old;
- document.getElementById("subclassInfo").textContent=options[Number(select.value)||0][1];
+ if(!options){select.replaceChildren();select.required=false;return;}
+ const old=select.value;select.innerHTML='<option value="" selected disabled>Выбери специализацию</option>'+options.map((x,i)=>'<option value="'+i+'">'+x[0]+'</option>').join("");
+ select.required=true;
+ if(old!==""&&options[Number(old)])select.value=old;else select.value="";
+ document.getElementById("subclassInfo").textContent=select.value?options[Number(select.value)][1]:"Выбери домен или происхождение магии. Это влияет на особенности персонажа.";
 }
 function renderSpellChoices(){
  const rules=spellData[classSelect.value],section=document.getElementById("spellcastingSection");
@@ -707,6 +708,7 @@ form.addEventListener("submit",async event=>{
   const subclassOptions=subclassData[selectedClass]||[];
   const subclassIndex=document.getElementById("subclass").value;
   const subclass=subclassOptions.length?subclassOptions[Number(subclassIndex)]:null;
+  if(subclassOptions.length&&!subclass)throw new Error("Выбери домен жреца, покровителя колдуна или происхождение чародея.");
   const spellRules=spellData[selectedClass];
   let spellcasting=null;
   if(spellRules){
