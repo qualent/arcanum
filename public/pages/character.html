@@ -296,7 +296,7 @@
             </div>
             <div class="builder-subsection" id="extraLanguageField" hidden>
                 <h3>Дополнительный язык</h3>
-                <div class="form-group"><label for="extraLanguage">Выбери дополнительный язык</label><select id="extraLanguage"><option value="Дварфийский">Дварфийский</option><option value="Эльфийский">Эльфийский</option><option value="Великаний">Великаний</option><option value="Гномий">Гномий</option><option value="Гоблинский">Гоблинский</option><option value="Полуросликов">Полуросликов</option><option value="Орочий">Орочий</option><option value="Инфернальный">Инфернальный</option><option value="Драконий">Драконий</option><option value="Небесный">Небесный</option><option value="Бездны">Бездны</option><option value="Подземный">Подземный</option></select></div>
+                <div class="form-group"><label for="extraLanguage">Выбери дополнительный язык</label><select id="extraLanguage"><option value="" selected disabled>Выбери язык</option><option value="Дварфийский">Дварфийский</option><option value="Эльфийский">Эльфийский</option><option value="Великаний">Великаний</option><option value="Гномий">Гномий</option><option value="Гоблинский">Гоблинский</option><option value="Полуросликов">Полуросликов</option><option value="Орочий">Орочий</option><option value="Инфернальный">Инфернальный</option><option value="Драконий">Драконий</option><option value="Небесный">Небесный</option><option value="Бездны">Бездны</option><option value="Подземный">Подземный</option></select></div>
             </div>
             <div class="builder-subsection" id="halfElfChoices" hidden>
                 <h3>Наследие полуэльфа</h3>
@@ -612,6 +612,7 @@ function updateDescriptions(){
  document.getElementById("halfElfChoices").hidden=raceSelect.value!=="Полуэльф";
  const meta=raceMeta[raceSelect.value];
  document.getElementById("extraLanguageField").hidden=!(raceSelect.value==="Человек"||raceSelect.value==="Полуэльф");
+ document.getElementById("extraLanguage").required=!document.getElementById("extraLanguageField").hidden;
  document.getElementById("raceInfo").textContent=race?Object.entries(race.bonus).map(([k,v])=>abilityLabels[k]+" "+signed(v)).join(", ")+". "+race.traits+(meta?" Скорость "+meta.speed+" фт.; размер: "+meta.size+"; языки: "+meta.languages+".":""):"Авторская раса: её игровые свойства нужно согласовать с мастером.";
  document.getElementById("classInfo").textContent=cls?"Кость хитов d"+cls.die+". Спасброски: "+cls.saves.map(x=>abilityLabels[x]).join(" и ")+". Владения: "+cls.armor+". Оружие: "+cls.weapons+". Инструменты: "+(classTools[classSelect.value]||classTools.остальные)+". Особенность: "+cls.feature:"Авторский класс не имеет автоматических правил — согласуй кость хитов, владения и способности.";
  document.getElementById("backgroundInfo").textContent=bg?"Навыки: "+bg.skills.join(", ")+". Инструменты/транспорт: "+(backgroundTools[backgroundSelect.value]||"Нет")+". Особенность: "+bg.feature:"Авторская предыстория: навыки и особенность нужно задать вручную с мастером.";
@@ -694,6 +695,7 @@ form.addEventListener("submit",async event=>{
   const clsData=classData[selectedClass],raceRules=raceData[selectedRace],bgRules=backgroundData[selectedBackground];
   const selectedSkills=Array.from(document.querySelectorAll('input[name="classSkill"]:checked')).map(x=>x.value);
   const required=clsData?clsData.count:2;if(selectedSkills.length!==required)throw new Error("Выбери ровно "+required+" навыка от класса.");
+  if((selectedRace==="Человек"||selectedRace==="Полуэльф")&&!document.getElementById("extraLanguage").value)throw new Error("Выбери дополнительный язык для этой расы.");
   let racialBonuses=raceRules?Object.assign({},raceRules.bonus):{};
   let racialSkills=[];
   if(selectedRace==="Полуэльф"){
