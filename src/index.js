@@ -166,7 +166,7 @@ async function handleCharacterSuggestion(request, env) {
         const fightingStyle = suggestion.class === "Воин" ? String(suggestion.fighting_style || "") : "";
         if (suggestion.class === "Воин" && !fightingStyleOptions.includes(fightingStyle)) throw new Error("Воин должен выбрать боевой стиль.");
         const expertise = suggestion.class === "Плут" && Array.isArray(suggestion.expertise) ? suggestion.expertise.slice(0, 2) : [];
-        const expertiseOptions = Array.from(new Set(skills.concat(backgroundSkills, ["Воровские инструменты"])));
+        const expertiseOptions = Array.from(new Set(skills.concat(backgroundSkills, racialSkillChoices, ["Воровские инструменты"])));
         if (suggestion.class === "Плут" && (expertise.length !== 2 || new Set(expertise).size !== 2 || expertise.some(skill => !expertiseOptions.includes(skill)))) {
             throw new Error("Плут должен выбрать две компетентности из известных ему владений.");
         }
