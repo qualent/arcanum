@@ -1,0 +1,236 @@
+
+/* =========================================
+   ARCANUM — HEADER
+========================================= */
+
+body > .header {
+    position: relative;
+    z-index: 100;
+
+    width: 100%;
+    height: 78px;
+
+    background: rgba(8, 9, 13, 0.94);
+    border-bottom: 1px solid rgba(201, 169, 106, 0.2);
+
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+body > .header .header-inner {
+    width: min(1180px, calc(100% - 48px));
+    height: 100%;
+
+    margin: 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+}
+
+/* Логотип */
+
+body > .header .logo {
+    display: inline-flex;
+    align-items: center;
+
+    flex-shrink: 0;
+
+    color: #e4c88a;
+
+    font-family: "Cinzel", serif;
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+
+    text-decoration: none;
+
+    transition:
+        color 0.2s ease,
+        text-shadow 0.2s ease;
+}
+
+body > .header .logo:hover {
+    color: #f3dba8;
+    text-shadow: 0 0 20px rgba(201, 169, 106, 0.3);
+}
+
+/* Навигация */
+
+body > .header .nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 36px;
+
+    height: 100%;
+}
+
+body > .header .nav > a:not(.nav-button) {
+    position: relative;
+
+    display: inline-flex;
+    align-items: center;
+
+    height: 100%;
+
+    color: #aaa7a0;
+
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition: color 0.2s ease;
+}
+
+body > .header .nav > a:not(.nav-button)::after {
+    content: "";
+
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+
+    width: 0;
+    height: 1px;
+
+    background: #c9a96a;
+
+    transition: width 0.2s ease;
+}
+
+body > .header .nav > a:not(.nav-button):hover {
+    color: #e4c88a;
+}
+
+body > .header .nav > a:not(.nav-button):hover::after {
+    width: 100%;
+}
+
+/* Кнопка входа */
+
+body > .header .nav .nav-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 112px;
+    height: 40px;
+
+    padding: 0 22px;
+
+    border: 1px solid #c9a96a;
+    border-radius: 5px;
+
+    background: rgba(201, 169, 106, 0.08);
+
+    color: #e4c88a;
+
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+body > .header .nav .nav-button:hover {
+    background: #c9a96a;
+    color: #08090d;
+
+    box-shadow: 0 0 22px rgba(201, 169, 106, 0.18);
+
+    transform: translateY(-1px);
+}
+
+/* Планшеты */
+
+@media (max-width: 760px) {
+    body > .header {
+        height: 70px;
+    }
+
+    body > .header .header-inner {
+        width: calc(100% - 32px);
+        gap: 16px;
+    }
+
+    body > .header .logo {
+        font-size: 21px;
+        letter-spacing: 0.13em;
+    }
+
+    body > .header .nav {
+        gap: 18px;
+    }
+
+    body > .header .nav > a:not(.nav-button) {
+        font-size: 12px;
+    }
+
+    body > .header .nav .nav-button {
+        min-width: 88px;
+        height: 36px;
+        padding: 0 15px;
+    }
+}
+
+/* Телефоны */
+
+@media (max-width: 520px) {
+    body > .header {
+        height: auto;
+        min-height: 70px;
+    }
+
+    body > .header .header-inner {
+        min-height: 70px;
+
+        flex-wrap: wrap;
+        justify-content: center;
+
+        padding: 12px 0;
+        gap: 12px;
+    }
+
+    body > .header .logo {
+        width: 100%;
+        justify-content: center;
+
+        font-size: 22px;
+    }
+
+    body > .header .nav {
+        justify-content: center;
+        flex-wrap: wrap;
+
+        gap: 12px 20px;
+    }
+
+    body > .header .nav > a:not(.nav-button) {
+        height: 32px;
+        font-size: 11px;
+    }
+
+    body > .header .nav > a:not(.nav-button)::after {
+        bottom: 0;
+    }
+
+    body > .header .nav .nav-button {
+        height: 32px;
+        min-width: 76px;
+
+        padding: 0 13px;
+        font-size: 11px;
+    }
+}
