@@ -333,7 +333,7 @@ async function handleGameAction(request, env) {
                             await insertRow(env, token, "game_events", {
                                 user_id: user.id, campaign_id: campaignId, character_id: characterId,
                                 event_type: "ai_turn", summary: changes.eventSummary,
-                                payload: { state_changes: changes.state, inventory_changes: changes.inventory }
+                                payload: { state_changes: changes.state, inventory_changes: changes.inventory, resource_changes: changes.resources }
                             }).catch(function (error) { console.error("Could not save game event:", error); });
                         }
 
@@ -768,6 +768,7 @@ function buildSystemInstruction(context) {
         "Верни ТОЛЬКО корректный JSON без Markdown. Поле narrative должно идти первым и содержать готовый текст ответа игроку. Остальные поля заполняй только при реальных изменениях: " +
         '{"narrative":"текст мастера","event_summary":"важное событие или пустая строка",' +
         '"state_changes":{"hp_delta":0,"experience_delta":0,"gold_delta":0,"location":null,"game_time":null,"game_day_delta":0},' +
+        '"resource_changes":[{"resource":"rage","delta":-1}],' +
         '"inventory_changes":[{"operation":"add или remove","item_name":"название","quantity":1,"description":"","item_type":"misc","rarity":"common","weight":0,"properties":{}}],' +
         '"memories":[{"scope":"world или character или session","memory_type":"fact/event/secret/relationship/quest/promise/rule/summary","title":"заголовок","content":"точный факт","importance":1,"tags":[]}],' +
         '"roll_requests":[{"type":"ability_check|saving_throw|attack|initiative|death_save|damage","ability":"strength|dexterity|constitution|intelligence|wisdom|charisma","skill":"название навыка или пусто","weapon":"оружие для атаки или пусто","dice":"1d8+3 для урона или пусто","damage_type":"тип урона","dc":10,"mode":"normal|advantage|disadvantage","label":"что проверяется"}]}',
@@ -822,6 +823,7 @@ function validateChanges(aiResult, gameState, character) {
     let resourcesChanged = false;
     const rawResourceChanges = Array.isArray(aiResult.resource_changes) ? aiResult.resource_changes.slice(0, 10) : [];
     for (const change of rawResourceChanges) {
+        if (!change || typeof change !== "object") continue;
         const key = String(change.resource || "");
         if (!Object.prototype.hasOwnProperty.call(currentResources, key)) continue;
         const existing = currentResources[key];
