@@ -33,6 +33,7 @@
         href="../css/style.css"
     >
 
+<style>.campaign-character-list{display:grid;gap:8px;margin:14px 0}.campaign-character-button{display:flex;flex-direction:column;gap:3px;text-align:left;padding:11px 13px;border:1px solid var(--border);border-radius:6px;background:rgba(255,255,255,.025);color:var(--text);cursor:pointer}.campaign-character-button:hover{border-color:var(--gold)}.campaign-character-button span{font-weight:600}.campaign-character-button small{color:var(--muted)}.campaign-card-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}.campaign-delete-button{border:1px solid rgba(190,75,75,.45);border-radius:5px;padding:9px 12px;background:transparent;color:#d98c8c;cursor:pointer}.campaign-delete-button:disabled{opacity:.5}</style>
 </head>
 
 
@@ -126,175 +127,7 @@
 
 
 
-        <section class="campaigns-grid">
-
-
-            <a
-                href="game.html"
-                class="campaign-card"
-            >
-
-                <div class="campaign-card-image campaign-image-one">
-
-                    <div class="campaign-card-overlay">
-
-                        <span class="campaign-status">
-                            Активная
-                        </span>
-
-                    </div>
-
-                </div>
-
-
-                <div class="campaign-card-content">
-
-                    <div class="campaign-card-top">
-
-                        <div>
-
-                            <h2>
-                                Затерянные земли
-                            </h2>
-
-                            <p class="campaign-type">
-                                Классическое фэнтези
-                            </p>
-
-                        </div>
-
-                        <span class="campaign-arrow">
-                            →
-                        </span>
-
-                    </div>
-
-
-                    <div class="campaign-meta">
-
-                        <div>
-                            <span>Последняя сессия</span>
-                            <strong>Сегодня</strong>
-                        </div>
-
-                        <div>
-                            <span>Персонаж</span>
-                            <strong>Неизвестный герой</strong>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </a>
-
-
-
-            <a
-                href="game.html"
-                class="campaign-card"
-            >
-
-                <div class="campaign-card-image campaign-image-two">
-
-                    <div class="campaign-card-overlay">
-
-                        <span class="campaign-status">
-                            Активная
-                        </span>
-
-                    </div>
-
-                </div>
-
-
-                <div class="campaign-card-content">
-
-                    <div class="campaign-card-top">
-
-                        <div>
-
-                            <h2>
-                                Пепел богов
-                            </h2>
-
-                            <p class="campaign-type">
-                                Тёмное фэнтези
-                            </p>
-
-                        </div>
-
-                        <span class="campaign-arrow">
-                            →
-                        </span>
-
-                    </div>
-
-
-                    <div class="campaign-meta">
-
-                        <div>
-                            <span>Последняя сессия</span>
-                            <strong>Вчера</strong>
-                        </div>
-
-                        <div>
-                            <span>Персонаж</span>
-                            <strong>Неизвестный герой</strong>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </a>
-
-
-
-            <a
-                href="campaign.html"
-                class="campaign-card campaign-card-new"
-            >
-
-                <div class="campaign-new-icon">
-                    +
-                </div>
-
-
-                <div class="campaign-card-content">
-
-                    <div class="campaign-card-top">
-
-                        <div>
-
-                            <h2>
-                                Создать приключение
-                            </h2>
-
-                            <p class="campaign-type">
-                                Начать новую историю
-                            </p>
-
-                        </div>
-
-                        <span class="campaign-arrow">
-                            →
-                        </span>
-
-                    </div>
-
-
-                    <p class="campaign-new-description">
-                        Создай собственный мир, настрой стиль
-                        игры и отправляйся навстречу неизвестности.
-                    </p>
-
-                </div>
-
-            </a>
-
-
-        </section>
+        <section class="campaigns-grid" id="campaignsGrid"><div class="empty-state">Загружаем миры...</div></section>
 
 
 
@@ -359,173 +192,39 @@
 
 
 <script>
-
-    const supabaseClient =
-        window.supabase.createClient(
-            CONFIG.SUPABASE_URL,
-            CONFIG.SUPABASE_ANON_KEY
-        );
-
-
-    async function initializeDashboard() {
-
-        try {
-
-            const {
-                data,
-                error
-            } =
-                await supabaseClient.auth.getSession();
-
-
-            if (error) {
-
-                console.error(
-                    "Ошибка получения сессии:",
-                    error
-                );
-
-                window.location.href =
-                    "login.html";
-
-                return;
-            }
-
-
-            const session =
-                data.session;
-
-
-            if (!session) {
-
-                window.location.href =
-                    "login.html";
-
-                return;
-            }
-
-
-            const email =
-                session.user.email || "Пользователь";
-
-
-            const userEmail =
-                document.getElementById("userEmail");
-
-
-            const userAvatar =
-                document.getElementById("userAvatar");
-
-
-            if (userEmail) {
-
-                userEmail.textContent =
-                    email;
-
-            }
-
-
-            if (userAvatar) {
-
-                userAvatar.textContent =
-                    email
-                        .charAt(0)
-                        .toUpperCase();
-
-            }
-
-
-            console.log(
-                "Arcanum: пользователь авторизован",
-                email
-            );
-
-        }
-        catch (error) {
-
-            console.error(
-                "Ошибка Dashboard:",
-                error
-            );
-
-
-            window.location.href =
-                "login.html";
-
-        }
-
-    }
-
-
-
-    const logoutButton =
-        document.getElementById("logoutButton");
-
-
-    if (logoutButton) {
-
-        logoutButton.addEventListener(
-            "click",
-            async function() {
-
-                logoutButton.disabled = true;
-
-                logoutButton.textContent =
-                    "Выход...";
-
-
-                try {
-
-                    const {
-                        error
-                    } =
-                        await supabaseClient.auth.signOut();
-
-
-                    if (error) {
-
-                        console.error(
-                            "Ошибка выхода:",
-                            error
-                        );
-
-                        logoutButton.disabled = false;
-
-                        logoutButton.textContent =
-                            "Выйти";
-
-                        return;
-                    }
-
-
-                    window.location.href =
-                        "login.html";
-
-                }
-                catch (error) {
-
-                    console.error(
-                        "Ошибка выхода:",
-                        error
-                    );
-
-
-                    logoutButton.disabled = false;
-
-                    logoutButton.textContent =
-                        "Выйти";
-
-                }
-
-            }
-        );
-
-    }
-
-
-
-    initializeDashboard();
-
+const supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const campaignsGrid = document.getElementById("campaignsGrid");
+function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function settingName(v){return ({"classic-fantasy":"Классическое фэнтези","dark-fantasy":"Тёмное фэнтези","high-fantasy":"Высокое фэнтези","low-fantasy":"Низкое фэнтези","steampunk":"Стимпанк","post-apocalypse":"Постапокалипсис","custom":"Авторский мир"})[v]||v||"Сеттинг не указан";}
+function openCharacter(campaignId,characterId){localStorage.setItem("arcanum_campaign_id",campaignId);localStorage.setItem("arcanum_character_id",characterId);window.location.href="game.html";}
+function createCharacter(campaignId){localStorage.setItem("arcanum_campaign_id",campaignId);localStorage.removeItem("arcanum_character_id");window.location.href="character.html";}
+function renderCampaigns(campaigns,characters){
+ campaignsGrid.replaceChildren();
+ if(!campaigns.length){const e=document.createElement("div");e.className="dashboard-info";e.innerHTML='<div class="dashboard-info-icon">✦</div><div><h3>Пока нет миров</h3><p>Создай первую кампанию — она появится здесь и останется в аккаунте.</p></div>';campaignsGrid.appendChild(e);}
+ campaigns.forEach((c,i)=>{
+  const card=document.createElement("article");card.className="campaign-card";
+  const chars=characters.filter(ch=>ch.campaign_id===c.id);
+  const buttons=chars.length?chars.map(ch=>'<button type="button" class="campaign-character-button" data-open-character="'+escapeHtml(ch.id)+'"><span>'+escapeHtml(ch.name||"Безымянный герой")+'</span><small>'+escapeHtml(ch.race||"Раса не указана")+" · "+escapeHtml(ch.class||"Класс не указан")+'</small></button>').join(""):'<p class="campaign-new-description">В этом мире пока нет персонажей.</p>';
+  card.innerHTML='<div class="campaign-card-image '+(i%2?"campaign-image-two":"campaign-image-one")+'"><div class="campaign-card-overlay"><span class="campaign-status">Сохранённый мир</span></div></div><div class="campaign-card-content"><div class="campaign-card-top"><div><h2>'+escapeHtml(c.name)+'</h2><p class="campaign-type">'+escapeHtml(settingName(c.setting))+'</p></div></div><div class="campaign-character-list">'+buttons+'</div><div class="campaign-card-actions"><button type="button" class="button button-primary" data-create-character="'+escapeHtml(c.id)+'">Новый персонаж +</button><button type="button" class="campaign-delete-button" data-delete-campaign="'+escapeHtml(c.id)+'">Удалить мир</button></div></div>';
+  campaignsGrid.appendChild(card);
+ });
+ const add=document.createElement("a");add.href="campaign.html";add.className="campaign-card campaign-card-new";add.innerHTML='<div class="campaign-new-icon">+</div><div class="campaign-card-content"><div class="campaign-card-top"><div><h2>Создать мир</h2><p class="campaign-type">Начать новое приключение</p></div><span class="campaign-arrow">→</span></div><p class="campaign-new-description">Создай отдельный мир со своей историей, персонажами и правилами.</p></div>';campaignsGrid.appendChild(add);
+}
+async function initializeDashboard(){
+ try{
+  const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();if(sessionError||!session){window.location.href="login.html";return;}
+  const email=session.user.email||"Пользователь";document.getElementById("userEmail").textContent=email;document.getElementById("userAvatar").textContent=email.charAt(0).toUpperCase();
+  const [cr,chr]=await Promise.all([supabaseClient.from("campaigns").select("*").eq("user_id",session.user.id).order("created_at",{ascending:false}),supabaseClient.from("characters").select("id,campaign_id,name,race,class,level").eq("user_id",session.user.id).order("created_at",{ascending:true})]);
+  if(cr.error)throw cr.error;if(chr.error)throw chr.error;renderCampaigns(cr.data||[],chr.data||[]);
+ }catch(error){console.error("Ошибка загрузки миров:",error);campaignsGrid.innerHTML='<div class="empty-state">Не удалось загрузить миры: '+escapeHtml(error.message)+'</div>';}
+}
+campaignsGrid.addEventListener("click",async event=>{
+ const open=event.target.closest("[data-open-character]");if(open){const id=open.closest(".campaign-card").querySelector("[data-delete-campaign]").dataset.deleteCampaign;openCharacter(id,open.dataset.openCharacter);return;}
+ const create=event.target.closest("[data-create-character]");if(create){createCharacter(create.dataset.createCharacter);return;}
+ const del=event.target.closest("[data-delete-campaign]");if(del){const id=del.dataset.deleteCampaign,card=del.closest(".campaign-card"),name=card.querySelector("h2")?.textContent||"этот мир";if(!confirm('Удалить мир "'+name+'" вместе со всеми персонажами, историей, инвентарём и памятью? Это действие нельзя отменить.'))return;del.disabled=true;del.textContent="Удаление...";const {error}=await supabaseClient.from("campaigns").delete().eq("id",id);if(error){alert("Не удалось удалить мир: "+error.message);del.disabled=false;del.textContent="Удалить мир";return;}card.remove();initializeDashboard();}
+});
+document.getElementById("logoutButton").addEventListener("click",async()=>{const {error}=await supabaseClient.auth.signOut();if(!error)window.location.href="login.html";});
+initializeDashboard();
 </script>
 
 
