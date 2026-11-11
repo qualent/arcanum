@@ -88,7 +88,9 @@ async function handleGameAction(request, env) {
 
         const characterResult = await supabaseRequest(
             env,
-            `/rest/v1/characters?select=*&id=eq.${encodeURIComponent(characterId)}&campaign_id=eq.${encodeURIComponent(campaignId)}&user_id=eq.${encodeURIComponent(user.id)}`
+            `/rest/v1/characters?select=*&id=eq.${encodeURIComponent(characterId)}&campaign_id=eq.${encodeURIComponent(campaignId)}&user_id=eq.${encodeURIComponent(user.id)}`,
+            {},
+            token
         );
 
         if (!characterResult.ok || !characterResult.data.length) {
@@ -105,7 +107,9 @@ async function handleGameAction(request, env) {
 
         const stateResult = await supabaseRequest(
             env,
-            `/rest/v1/game_states?select=*&character_id=eq.${encodeURIComponent(characterId)}&campaign_id=eq.${encodeURIComponent(campaignId)}&user_id=eq.${encodeURIComponent(user.id)}`
+            `/rest/v1/game_states?select=*&character_id=eq.${encodeURIComponent(characterId)}&campaign_id=eq.${encodeURIComponent(campaignId)}&user_id=eq.${encodeURIComponent(user.id)}`,
+            {},
+            token
         );
 
         if (!stateResult.ok) {
@@ -147,7 +151,8 @@ async function handleGameAction(request, env) {
                         "Prefer": "return=representation"
                     },
                     body: JSON.stringify(newState)
-                }
+                },
+                token
             );
 
             if (!createStateResult.ok || !createStateResult.data.length) {
@@ -180,7 +185,8 @@ async function handleGameAction(request, env) {
                     "Prefer": "return=representation"
                 },
                 body: JSON.stringify(playerMessage)
-            }
+            },
+            token
         );
 
         if (!playerMessageResult.ok) {
@@ -236,7 +242,8 @@ async function handleGameAction(request, env) {
                     "Prefer": "return=representation"
                 },
                 body: JSON.stringify(dmMessage)
-            }
+            },
+            token
         );
 
         if (!dmMessageResult.ok) {
@@ -299,14 +306,14 @@ async function getSupabaseUser(env, token) {
 }
 
 
-async function supabaseRequest(env, path, options = {}) {
+async function supabaseRequest(env, path, options = {}, accessToken) {
     const response = await fetch(
         `${env.SUPABASE_URL}${path}`,
         {
             method: options.method || "GET",
             headers: {
                 "apikey": env.SUPABASE_ANON_KEY,
-                "Authorization": `Bearer ${env.SUPABASE_ANON_KEY}`,
+                "Authorization": `Bearer ${accessToken || env.SUPABASE_ANON_KEY}`,
                 "Content-Type": "application/json",
                 ...(options.headers || {})
             },
