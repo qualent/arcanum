@@ -500,8 +500,16 @@ function resolveServerRoll(request, context) {
         const sides = Number(match[2]);
         const bonus = match[3] ? Number(match[3]) : 0;
         const dice = Array.from({ length: count }, () => randomDie(sides));
+        const style = stats.fighting_style;
+        const twoHandedWeapons = ["двуручный топор","двуручный меч","алебарда","глефа","пика","боевой посох","длинный лук","тяжёлый арбалет"];
+        const weapon = String(request.weapon || "").toLowerCase();
+        if (style === "Сражение большим оружием" && twoHandedWeapons.some(name => weapon.includes(name))) {
+            for (let index = 0; index < dice.length; index++) if (dice[index] <= 2) dice[index] = randomDie(sides);
+        }
         const subtotal = dice.reduce((sum, value) => sum + value, 0);
-        return { type: "damage", label: request.label || "Урон", dice, die: subtotal, bonus, total: Math.max(0, subtotal + bonus), dc: null, is_damage: true, critical: Boolean(request.critical), damage_type: request.damage_type || "обычный", dice_expression: request.dice };
+        const duelingBonus = style === "Дуэлянт" && weapon && !twoHandedWeapons.some(name => weapon.includes(name)) ? 2 : 0;
+        const totalBonus = bonus + duelingBonus;
+        return { type: "damage", label: request.label || "Урон", dice, die: subtotal, bonus: totalBonus, total: Math.max(0, subtotal + totalBonus), dc: null, is_damage: true, critical: Boolean(request.critical), damage_type: request.damage_type || "обычный", dice_expression: request.dice, weapon: request.weapon };
     }
 
     const skillAliases = {
@@ -521,6 +529,8 @@ function resolveServerRoll(request, context) {
     const proficiencyBonus = Math.max(2, Math.min(6, Number(stats.proficiency_bonus) || (Math.ceil((Number(character.level) || 1) / 4) + 1)));
     const skillList = Array.isArray(stats.skill_proficiencies) ? stats.skill_proficiencies.map(value => String(value).toLowerCase()) : [];
     const saveList = Array.isArray(stats.saving_throw_proficiencies) ? stats.saving_throw_proficiencies : [];
+    const expertiseList = Array.isArray(stats.expertise) ? stats.expertise.map(value => String(value).toLowerCase()) : [];
+    const toolProficiencies = String(stats.tool_proficiencies || "").toLowerCase();
     const weaponProficiencies = String(stats.weapon_proficiencies || "").toLowerCase();
     const weapon = String(request.weapon || "").toLowerCase();
     const simpleWeapons = ["кинжал","дротик","праща","посох","булава","копьё","копье","дубина","серп","ятаган","лёгкий арбалет","легкий арбалет"];
@@ -532,9 +542,11 @@ function resolveServerRoll(request, context) {
         else if (weaponProficiencies.includes("простое оружие") && simpleWeapons.some(name => weapon.includes(name) || name.includes(weapon))) proficient = true;
         else if (weaponProficiencies.includes("воинское оружие") && martialWeapons.some(name => weapon.includes(name) || name.includes(weapon))) proficient = true;
         else if (weapon && weaponProficiencies.includes(weapon)) proficient = true;
+        else if (stats.fighting_style === "Стрельба" && ["лук","арбалет"].some(part => weapon.includes(part))) proficient = true;
         else if (weapon && ["кинжал","рапир","длинн","коротк","арбалет","топор","меч","посох","пращ","дротик","булав","копь","ятаган","молот"].some(root => weapon.includes(root) && weaponProficiencies.includes(root))) proficient = true;
-    } else if (request.skill) proficient = skillList.includes(normalizedSkill);
-    let bonus = request.type === "death_save" ? 0 : abilityModifier + (proficient ? proficiencyBonus : 0);
+    } else if (request.skill) proficient = skillList.includes(normalizedSkill) || toolProficiencies.includes(normalizedSkill);
+    const expertise = request.skill && expertiseList.includes(normalizedSkill);
+    let bonus = request.type === "death_save" ? 0 : abilityModifier + (proficient ? proficiencyBonus * (expertise ? 2 : 1) : 0);
     if (request.type === "initiative" && stats.feat && stats.feat.name === "Бдительный") bonus += 5;
     if (request.type === "saving_throw" && stats.feat && stats.feat.name === "Боевой заклинатель" && /концентрац/i.test(request.label || "")) request.mode = "advantage";
     const dice = request.mode === "normal" ? [randomDie(20)] : [randomDie(20), randomDie(20)];
