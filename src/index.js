@@ -124,45 +124,85 @@ async function loadGameContext(env, token, userId, campaignId, characterId, owne
 }
 
 async function askGemini(env, context, playerAction) {
-    const model = getGeminiModel(env, context.aiSettings);
+    const primaryModel = getGeminiModel(env, context.aiSettings);
+    const fallbackModel = env.GEMINI_FALLBACK_MODEL || "gemini-3.5-flash-lite";
+    const models = primaryModel === fallbackModel ? [primaryModel] : [primaryModel, fallbackModel];
     const userPayload = {
         campaign_details: context.campaign, player_action: playerAction, recent_history: context.messages,
         current_character: context.character, current_game_state: context.gameState,
         current_inventory: context.inventory, known_memories: context.memories,
         known_world_entities: context.entities, enabled_campaign_rules: context.rules
     };
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" +
-        encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            systemInstruction: { parts: [{ text: buildSystemInstruction(context) }] },
-            contents: [{ role: "user", parts: [{ text: JSON.stringify(userPayload) }] }],
-            generationConfig: {
-                temperature: clampNumber(context.aiSettings.temperature, 0.2, 1.2, 0.8),
-                responseMimeType: "application/json",
-                maxOutputTokens: 3000
-            }
-        })
-    });
+    const requestBody = {
+        systemInstruction: { parts: [{ text: buildSystemInstruction(context) }] },
+        contents: [{ role: "user", parts: [{ text: JSON.stringify(userPayload) }] }],
+        generationConfig: {
+            temperature: clampNumber(context.aiSettings.temperature, 0.2, 1.2, 0.8),
+            responseMimeType: "application/json",
+            maxOutputTokens: 3000
+        }
+    };
 
-    const data = await response.json().catch(function () { return {}; });
-    if (!response.ok) {
-        const detail = data.error && data.error.message ? data.error.message : "Gemini API error";
-        const error = new Error("Ошибка Gemini: " + detail);
-        error.status = response.status === 429 ? 429 : 502;
+    let lastError = null;
+    for (let modelIndex = 0; modelIndex < models.length; modelIndex++) {
+        const model = models[modelIndex];
+        const attempts = modelIndex === 0 ? 2 : 1;
+        for (let attempt = 0; attempt < attempts; attempt++) {
+            let response;
+            let data = {};
+            try {
+                response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" +
+                    encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestBody)
+                });
+                data = await response.json().catch(function () { return {}; });
+            } catch (networkError) {
+                lastError = new Error("Не удалось связаться с Gemini: " + networkError.message);
+                if (attempt + 1 < attempts) {
+                    await new Promise(function (resolve) { setTimeout(resolve, 700); });
+                    continue;
+                }
+                break;
+            }
+
+            if (response.ok) {
+                const output = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts
+                    ? data.candidates[0].content.parts.map(function (part) { return part.text || ""; }).join("")
+                    : "";
+                if (!output) throw new Error("Gemini не вернул текстовый ответ. Попробуй ещё раз.");
+                try {
+                    const parsed = JSON.parse(output);
+                    parsed._model_used = model;
+                    return parsed;
+                } catch (parseError) {
+                    throw new Error("Gemini вернул ответ в неверном формате. Повтори действие.");
+                }
+            }
+
+            const detail = data.error && data.error.message ? data.error.message : "Gemini API error";
+            const retryable = [429, 500, 502, 503, 504].includes(response.status) ||
+                /high demand|overload|temporarily unavailable|rate.?limit|try again later/i.test(detail);
+            lastError = new Error("Ошибка Gemini (" + model + "): " + detail);
+            lastError.status = response.status === 429 ? 429 : (retryable ? 503 : 502);
+
+            if (!retryable) throw lastError;
+            if (attempt + 1 < attempts) {
+                await new Promise(function (resolve) { setTimeout(resolve, 900); });
+            }
+        }
+        if (modelIndex + 1 < models.length) {
+            console.warn("Gemini primary model unavailable; switching to fallback:", model);
+        }
+    }
+
+    if (lastError) {
+        const error = new Error("Основная и резервная модели Gemini сейчас перегружены или недоступны. Твоё сообщение сохранено; подожди немного и отправь действие ещё раз. Подробности: " + lastError.message);
+        error.status = lastError.status || 503;
         throw error;
     }
-
-    const output = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts
-        ? data.candidates[0].content.parts.map(function (part) { return part.text || ""; }).join("")
-        : "";
-    if (!output) throw new Error("Gemini не вернул текстовый ответ. Попробуй ещё раз.");
-    try {
-        return JSON.parse(output);
-    } catch (error) {
-        throw new Error("Gemini вернул ответ в неверном формате. Повтори действие.");
-    }
+    throw new Error("Gemini не смог обработать действие. Попробуй ещё раз.");
 }
 
 function getGeminiModel(env, settings) {
