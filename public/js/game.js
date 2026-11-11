@@ -343,7 +343,7 @@ function renderCharacter() {
     setText(elements.characterName, name);
     setText(
         elements.characterSubtitle,
-        (character.race || "Неизвестная раса") + " · " + (character.class || "Без класса")
+        (character.race || "Неизвестная раса") + (character.stats && character.stats.subrace ? " (" + character.stats.subrace + ")" : "") + " · " + (character.class || "Без класса") + (character.stats && character.stats.subclass ? " · " + character.stats.subclass : "")
     );
     setText(elements.characterLevel, character.level || 1);
 
@@ -428,6 +428,7 @@ function renderCharacterDetails() {
     if (elements.featureList) {
         elements.featureList.replaceChildren();
         const features = [
+            ["Подраса / наследие", stats.subrace || (stats.dragon_ancestry ? stats.dragon_ancestry : "—")],
             ["Особенности расы", stats.racial_traits],
             ["Особенность подкласса", stats.subclass_feature],
             ["Особенность класса", stats.class_features],
