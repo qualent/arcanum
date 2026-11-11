@@ -388,6 +388,7 @@ function renderCharacterDetails() {
         ["Спасброски", Array.isArray(stats.saving_throw_proficiencies) ? stats.saving_throw_proficiencies.map(key => ({strength:"Сила",dexterity:"Ловкость",constitution:"Телосложение",intelligence:"Интеллект",wisdom:"Мудрость",charisma:"Харизма"}[key] || key)).join(", ") : "Не указаны"],
         ["Навыки", Array.isArray(stats.skill_proficiencies) ? stats.skill_proficiencies.join(", ") : "Не указаны"],
         ["Бонус мастерства", stats.proficiency_bonus ? "+" + stats.proficiency_bonus : "+2"],
+        ["Подкласс", stats.subclass || "Выбирается на следующем уровне по правилам класса"],
         ["Доспехи", stats.armor_proficiencies || "Не указаны"],
         ["Оружие", stats.weapon_proficiencies || "Не указано"],
         ["Инструменты", stats.tool_proficiencies || "Нет"],
@@ -415,6 +416,16 @@ function renderCharacterDetails() {
             ["Предыстория", stats.background_feature],
             ["Черта", stats.feat && stats.feat.name ? stats.feat.name + " — " + stats.feat.description : "Нет дополнительной черты"]
         ];
+        const magic = stats.spellcasting;
+        if (magic) {
+            const spells = (magic.cantrips || []).concat(magic.known_spells || [], magic.prepared_spells || []);
+            const abilityNames = {charisma:"Харизма",wisdom:"Мудрость",intelligence:"Интеллект"};
+            const magicText = "Основа: " + (abilityNames[magic.ability] || magic.ability) +
+                " · СЛ " + magic.spell_save_dc + " · атака +" + magic.spell_attack_bonus +
+                " · ячейки 1 уровня: " + magic.spell_slots_level_1 +
+                ". Заговоры и заклинания: " + (spells.length ? spells.join(", ") : "не выбраны");
+            features.push(["Магия", magicText]);
+        }
         features.forEach(([title, value]) => {
             if (!value) return;
             const row = document.createElement("div");
