@@ -239,7 +239,25 @@ function getClassHitDie(className) {
 
 function getStarterEquipment(className) {
     const name = String(className || "").toLowerCase();
-    const item = (name, type, description, quantity, weight, equipped, properties) => ({ name, type, description, quantity: quantity || 1, weight: weight || 0, equipped: Boolean(equipped), properties: properties || {} });
+    const weaponProperties = {
+        "Двуручный топор": { damage_dice: "1d12", damage_type: "рубящий", weapon_category: "martial", heavy: true, two_handed: true },
+        "Ручной топор": { damage_dice: "1d6", damage_type: "рубящий", weapon_category: "simple", light: true, thrown: true },
+        "Длинный меч": { damage_dice: "1d8", versatile_damage_dice: "1d10", damage_type: "рубящий", weapon_category: "martial", versatile: true },
+        "Рапира": { damage_dice: "1d8", damage_type: "колющий", weapon_category: "martial", finesse: true },
+        "Короткий лук": { damage_dice: "1d6", damage_type: "колющий", weapon_category: "simple", ranged: true, two_handed: true },
+        "Длинный лук": { damage_dice: "1d8", damage_type: "колющий", weapon_category: "martial", ranged: true, heavy: true, two_handed: true },
+        "Лёгкий арбалет": { damage_dice: "1d8", damage_type: "колющий", weapon_category: "simple", ranged: true, two_handed: true, loading: true },
+        "Булава": { damage_dice: "1d6", damage_type: "дробящий", weapon_category: "simple" },
+        "Боевой посох": { damage_dice: "1d6", versatile_damage_dice: "1d8", damage_type: "дробящий", weapon_category: "simple", versatile: true },
+        "Кинжал": { damage_dice: "1d4", damage_type: "колющий", weapon_category: "simple", finesse: true, light: true, thrown: true },
+        "Ятаган": { damage_dice: "1d6", damage_type: "рубящий", weapon_category: "martial", finesse: true, light: true },
+        "Короткий меч": { damage_dice: "1d6", damage_type: "колющий", weapon_category: "martial", finesse: true, light: true },
+        "Дротик": { damage_dice: "1d4", damage_type: "колющий", weapon_category: "simple", finesse: true, thrown: true }
+    };
+    const item = (name, type, description, quantity, weight, equipped, properties) => ({
+        name, type, description, quantity: quantity || 1, weight: weight || 0, equipped: Boolean(equipped),
+        properties: Object.assign({}, weaponProperties[name] || {}, properties || {})
+    });
     const commonPack = item("Набор исследователя", "gear", "Рюкзак, спальник, столовый набор, трутница, факелы, рацион и бурдюк.", 1, 25, false);
     const kits = [
         { match: ["варвар", "barbarian"], items: [item("Двуручный топор", "weapon", "Воинское рукопашное оружие, 1к12 рубящего урона.", 1, 7, true), item("Ручной топор", "weapon", "Простое рукопашное оружие, 1к6 рубящего урона.", 2, 2, false), commonPack] },
