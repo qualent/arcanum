@@ -1199,6 +1199,33 @@ body.game-page > .game-layout > .game-sidebar-right {
     color: var(--gold-light);
 }
 
+.dice-count-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.dice-count-control input {
+    width: 72px;
+    min-height: 34px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    outline: none;
+    background: #0c0e13;
+    color: var(--text);
+    text-align: center;
+    font: inherit;
+}
+
+.dice-count-control input:focus {
+    border-color: var(--gold);
+}
+
 .dice-result {
     height: 65px;
     display: flex;
