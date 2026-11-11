@@ -611,7 +611,7 @@ function renderRaceChoices(){
  if(!dragonField.hidden){dragonSelect.innerHTML='<option value="" selected disabled>Выбери дракона</option>'+Object.keys(dragonAncestries).map(x=>'<option value="'+x+'">'+x+'</option>').join("");document.getElementById("dragonAncestryInfo").textContent="Наследие определяет тип урона дыхания и сопротивление.";}
  else{dragonSelect.replaceChildren();document.getElementById("dragonAncestryInfo").textContent="";}
 }
-document.getElementById("subrace").addEventListener("change",()=>{const options=subraceData[raceSelect.value];if(options)document.getElementById("subraceInfo").textContent=options[Number(document.getElementById("subrace").value)][1];});
+document.getElementById("subrace").addEventListener("change",()=>{const options=subraceData[raceSelect.value];if(options)document.getElementById("subraceInfo").textContent=options[Number(document.getElementById("subrace").value)][2];});
 document.getElementById("dragonAncestry").addEventListener("change",()=>{document.getElementById("dragonAncestryInfo").textContent=dragonAncestries[document.getElementById("dragonAncestry").value]||"";});
 const raceMeta={"Человек":{languages:"Общий",speed:30,size:"Средний"},"Эльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Полуэльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Дварф":{languages:"Общий и дварфийский",speed:25,size:"Средний"},"Полурослик":{languages:"Общий и язык полуросликов",speed:25,size:"Маленький"},"Тифлинг":{languages:"Общий и инфернальный",speed:30,size:"Средний"},"Драконорождённый":{languages:"Общий и драконий",speed:30,size:"Средний"},"Полуорк":{languages:"Общий и орочий",speed:30,size:"Средний"}};
 function renderSubclassChoices(){
@@ -746,9 +746,8 @@ form.addEventListener("submit",async event=>{
   let raceSpeed=raceMeta[selectedRace]?raceMeta[selectedRace].speed:30;
   if(subrace){
    Object.entries(subrace[1]).forEach(([key,value])=>racialBonuses[key]=(racialBonuses[key]||0)+value);
-   racialTraits+=" "+subrace[1]&&subrace[1];
-   racialTraits+=" "+subrace[1];
-   raceSpeed=subrace[2];
+   racialTraits+=" "+subrace[2];
+   raceSpeed=subrace[3];
   }
   if(dragonAncestry)racialTraits+=" Драконье наследие "+dragonAncestry+": "+dragonAncestries[dragonAncestry];
   let racialSkills=[];
