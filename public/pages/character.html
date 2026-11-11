@@ -670,12 +670,35 @@ function renderSubclassChoices(){
  if(old!==""&&options[Number(old)])select.value=old;else select.value="";
  document.getElementById("subclassInfo").textContent=select.value?options[Number(select.value)][1]:"Выбери домен или происхождение магии. Это влияет на особенности персонажа.";
 }
+function getEffectiveAbilityScore(key){
+ const base=Number(document.getElementById(key).value)||10;
+ const race=raceSelect.value;
+ const bonuses=Object.assign({},(raceData[race]&&raceData[race].bonus)||{});
+ const subraceOptions=subraceData[race]||[];
+ const subraceValue=document.getElementById("subrace").value;
+ const subrace=subraceValue!==""?subraceOptions[Number(subraceValue)]:null;
+ const isVariantHuman=race==="Человек"&&subrace&&subrace[0]==="Вариантный человек";
+ if(isVariantHuman){
+  Object.keys(bonuses).forEach(stat=>bonuses[stat]=0);
+  const first=document.getElementById("variantHumanBonus1").value,second=document.getElementById("variantHumanBonus2").value;
+  if(first)bonuses[first]=(bonuses[first]||0)+1;
+  if(second)bonuses[second]=(bonuses[second]||0)+1;
+ }else{
+  if(subrace)Object.entries(subrace[1]).forEach(([stat,value])=>bonuses[stat]=(bonuses[stat]||0)+value);
+  if(race==="Полуэльф"){
+   const first=document.getElementById("halfElfBonus1").value,second=document.getElementById("halfElfBonus2").value;
+   if(first)bonuses[first]=(bonuses[first]||0)+1;
+   if(second)bonuses[second]=(bonuses[second]||0)+1;
+  }
+ }
+ return base+(bonuses[key]||0);
+}
 function renderSpellChoices(){
  const rules=spellData[classSelect.value],section=document.getElementById("spellcastingSection");
  section.hidden=!rules;
  const abilityLabelsForSpells={charisma:"Харизма",wisdom:"Мудрость",intelligence:"Интеллект"};
  if(!rules){document.getElementById("cantripChoices").replaceChildren();document.getElementById("spellChoices").replaceChildren();return;}
- const abilityScore=Number(document.getElementById(rules.ability).value)||10;
+ const abilityScore=getEffectiveAbilityScore(rules.ability);
  const spellCount=rules.prepared?Math.max(1,1+Math.floor((abilityScore-10)/2)):rules.spells;
  document.getElementById("spellcastingInfo").textContent="Характеристика: "+abilityLabelsForSpells[rules.ability]+". Заговоры: "+rules.cantrips+". "+(rules.prepared?"Подготовленные заклинания: "+spellCount+" (уровень + модификатор характеристики).":"Известные заклинания / книга: "+spellCount+".");
  const makeChoices=(container,items,name)=>{container.replaceChildren();items.forEach(spell=>{const label=document.createElement("label");label.className="skill-choice";const input=document.createElement("input");input.type="checkbox";input.name=name;input.value=spell;input.addEventListener("change",updateSpellStatus);const span=document.createElement("span");span.textContent=spell;label.append(input,span);container.append(label);});};
@@ -685,7 +708,7 @@ function renderSpellChoices(){
 }
 function updateSpellStatus(){
  const rules=spellData[classSelect.value];if(!rules)return;
- const abilityScore=Number(document.getElementById(rules.ability).value)||10;
+ const abilityScore=getEffectiveAbilityScore(rules.ability);
  const requiredSpells=rules.prepared?Math.max(1,1+Math.floor((abilityScore-10)/2)):rules.spells;
  const cantrips=document.querySelectorAll('input[name="cantrip"]:checked').length,spells=document.querySelectorAll('input[name="knownSpell"]:checked').length;
  document.getElementById("cantripStatus").textContent="Выбрано заговоров: "+cantrips+" / "+rules.cantrips;
@@ -743,11 +766,11 @@ classSelect.addEventListener("change",()=>{updateDescriptions();renderSkillChoic
 document.getElementById("feat").addEventListener("change",()=>document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent);
 document.getElementById("halfElfSkill1").innerHTML='<option value="" selected disabled>Выбери навык</option>'+skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
 document.getElementById("halfElfSkill2").innerHTML='<option value="" selected disabled>Выбери навык</option>'+skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
-document.getElementById("halfElfSkill2").selectedIndex=1;
+document.getElementById("halfElfSkill2").selectedIndex=0;
 async function suggestCharacter(){
  const concept=document.getElementById("characterConcept").value.trim(),status=document.getElementById("suggestionStatus"),button=document.getElementById("generateCharacterButton");
  if(!concept){status.textContent="Сначала опиши концепцию персонажа.";return;}
- button.disabled=true;button.textContent="Мастер подбирает лист...";status.textContent="Проверяем доступность правил и создаём черновик.";
+ button.disabled=true;button.textContent="Мастер подбирает лист...";status.textContent="Подбираем расу, класс, навыки, особенности и заклинания по правилам.";
  try{
   const {data:{session}}=await supabaseClient.auth.getSession();if(!session)throw new Error("Сессия истекла. Войди снова.");
   const response=await fetch("/api/character/suggest",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},body:JSON.stringify({campaign_id:campaignId,concept})});
@@ -758,11 +781,58 @@ async function suggestCharacter(){
   document.getElementById("level").value="1";document.getElementById("alignment").value=c.alignment||"Истинно нейтральный";
   statNames.forEach(k=>document.getElementById(k).value=c.stats[k]);
   ["history","personality","appearance","goals"].forEach(k=>document.getElementById(k).value=c[k]||"");
-  updateDescriptions();renderRaceChoices();renderSkillChoices();renderSubclassChoices();renderSpellChoices();renderClassFeatureChoices();
+  renderRaceChoices();
+  if(c.subrace){
+   const raceOptions=subraceData[c.race]||[];
+   const subraceIndex=raceOptions.findIndex(x=>x[0]===c.subrace);
+   if(subraceIndex>=0)document.getElementById("subrace").value=String(subraceIndex);
+  }
+  renderRacialCantrip();
+  updateDescriptions();
+  if(c.dragon_ancestry)document.getElementById("dragonAncestry").value=c.dragon_ancestry;
+  if(c.extra_language)document.getElementById("extraLanguage").value=c.extra_language;
+  if(c.racial_ability_choices&&c.racial_ability_choices.length===2){
+   if(c.race==="Полуэльф"){
+    document.getElementById("halfElfBonus1").value=c.racial_ability_choices[0];
+    document.getElementById("halfElfBonus2").value=c.racial_ability_choices[1];
+   }else if(c.subrace==="Вариантный человек"){
+    document.getElementById("variantHumanBonus1").value=c.racial_ability_choices[0];
+    document.getElementById("variantHumanBonus2").value=c.racial_ability_choices[1];
+   }
+  }
+  if(c.racial_skill_choices&&c.racial_skill_choices.length){
+   if(c.race==="Полуэльф"){
+    document.getElementById("halfElfSkill1").value=c.racial_skill_choices[0]||"";
+    document.getElementById("halfElfSkill2").value=c.racial_skill_choices[1]||"";
+   }else if(c.subrace==="Вариантный человек"){
+    document.getElementById("variantHumanSkill").value=c.racial_skill_choices[0]||"";
+   }
+  }
+  if(c.racial_cantrip)document.getElementById("racialCantrip").value=c.racial_cantrip;
+  updateDescriptions();
+  renderSkillChoices();
+  renderSubclassChoices();
+  renderSpellChoices();
   (c.class_skill_choices||[]).forEach(skill=>{const input=Array.from(document.querySelectorAll('input[name="classSkill"]')).find(el=>el.value===skill);if(input)input.checked=true;});
-  updateSkillStatus();updateModifiers();
-  document.getElementById("abilityScoreStatus").textContent="ИИ распределил стандартный массив 15, 14, 13, 12, 10, 8. Проверь распределение.";
-  status.textContent="Черновик готов. Проверь все параметры, выбери недостающие особенности и создай персонажа.";
+  renderClassFeatureChoices();
+  if(c.subclass){
+   const options=subclassData[c.class]||[];
+   const index=options.findIndex(x=>x[0]===c.subclass);
+   if(index>=0)document.getElementById("subclass").value=String(index);
+  }
+  if(c.fighting_style){
+   const index=fightingStyles.findIndex(x=>x[0]===c.fighting_style);
+   if(index>=0)document.getElementById("fightingStyle").value=String(index);
+   const style=fightingStyles[index];
+   document.getElementById("fightingStyleInfo").textContent=style?style[1]:"";
+  }
+  (c.expertise||[]).forEach(skill=>{const input=Array.from(document.querySelectorAll('input[name="expertise"]')).find(el=>el.value===skill);if(input)input.checked=true;});
+  (c.cantrips||[]).forEach(spell=>{const input=Array.from(document.querySelectorAll('input[name="cantrip"]')).find(el=>el.value===spell);if(input)input.checked=true;});
+  (c.spells||[]).forEach(spell=>{const input=Array.from(document.querySelectorAll('input[name="knownSpell"]')).find(el=>el.value===spell);if(input)input.checked=true;});
+  if(c.feat)document.getElementById("feat").value=c.feat;
+  updateDescriptions();updateSkillStatus();updateExpertiseStatus();updateModifiers();updateSpellStatus();
+  document.getElementById("abilityScoreStatus").textContent="ИИ распределил стандартный массив 15, 14, 13, 12, 10, 8 до расовых бонусов.";
+  status.textContent="Полный черновик заполнен: проверь каждое поле, эффекты расы, класса, навыков, подкласса и заклинаний перед созданием.";
  }catch(error){console.error(error);status.textContent=error.message||"Ошибка генерации.";}
  finally{button.disabled=false;button.textContent="Предложить персонажа";}
 }
