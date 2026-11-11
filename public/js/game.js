@@ -390,6 +390,9 @@ function renderCharacterDetails() {
             ["Предыстория", stats.background_feature],
             ["Черта", stats.feat && stats.feat.name ? stats.feat.name + " — " + stats.feat.description : "Нет дополнительной черты"]
         ];
+        if (stats.legacy_sheet_needs_review) {
+            features.push(["Лист персонажа", "Создан старой версией: навыки, владения и часть особенностей не сохранены. Для полноценной D&D-игры пересоздай лист через помощника персонажа."]);
+        }
         const resources = stats.resources && typeof stats.resources === "object" ? Object.entries(stats.resources) : [];
         if (resources.length) {
             const resourceText = resources.map(([key, value]) => (value.label || key) + ": " + value.current + "/" + value.max + (value.unit ? " " + value.unit : "")).join(" · ");
