@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="../css/style.css">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../js/config.js?v=20261111-2"></script>
+    <script src="../js/config.js?v=20261111-3?v=20261111-2"></script>
 <style>
 .builder-section{border:1px solid rgba(201,169,106,.25);border-radius:8px;padding:22px;margin:22px 0;background:rgba(201,169,106,.025)}
 .ai-builder textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:6px;background:#0c0e13;color:var(--text);font:inherit;margin:8px 0 12px}.ai-builder button{margin-top:4px}#halfElfChoices[hidden]{display:none}.builder-note{color:var(--muted);font-size:13px;line-height:1.65;margin:8px 0}
@@ -601,6 +601,7 @@ function updateExpertiseStatus(){
  const count=document.querySelectorAll('input[name="expertise"]:checked').length;
  document.getElementById("expertiseStatus").textContent="Выбрано компетентностей: "+count+" / 2.";
 }
+document.getElementById("feat").addEventListener("change",()=>{document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent;});
 document.getElementById("fightingStyle").addEventListener("change",()=>{const style=fightingStyles[Number(document.getElementById("fightingStyle").value)];document.getElementById("fightingStyleInfo").textContent=style?style[1]:"";});
 const spellData={
 "Бард":{ability:"charisma",cantrips:2,spells:4,cantripList:["Злая насмешка","Волшебная рука","Малая иллюзия","Фокусы","Свет"],spellList:["Лечащее слово","Диссонирующий шёпот","Волшебный огонь","Громовая волна","Очарование личности","Усыпление","Лечение ран","Героизм"]},
@@ -631,7 +632,8 @@ const dragonAncestries={
 function renderRacialCantrip(){
  const field=document.getElementById("racialCantripField"),select=document.getElementById("racialCantrip");
  const subraceOptions=subraceData[raceSelect.value]||[];
- const selectedSubrace=subraceOptions[Number(document.getElementById("subrace").value)];
+ const subraceValue=document.getElementById("subrace").value;
+ const selectedSubrace=subraceValue!==""?subraceOptions[Number(subraceValue)]:null;
  const isHighElf=raceSelect.value==="Эльф"&&selectedSubrace&&selectedSubrace[0]==="Высший эльф";
  const isDrow=raceSelect.value==="Эльф"&&selectedSubrace&&selectedSubrace[0]==="Тёмный эльф (дроу)";
  const isTiefling=raceSelect.value==="Тифлинг";
@@ -657,7 +659,7 @@ function renderRaceChoices(){
  if(!dragonField.hidden){dragonSelect.innerHTML='<option value="" selected disabled>Выбери дракона</option>'+Object.keys(dragonAncestries).map(x=>'<option value="'+x+'">'+x+'</option>').join("");document.getElementById("dragonAncestryInfo").textContent="Наследие определяет тип урона дыхания и сопротивление.";}
  else{dragonSelect.replaceChildren();document.getElementById("dragonAncestryInfo").textContent="";}
 }
-document.getElementById("subrace").addEventListener("change",()=>{const options=subraceData[raceSelect.value];if(options)document.getElementById("subraceInfo").textContent=options[Number(document.getElementById("subrace").value)][2];renderRacialCantrip();updateDescriptions();});
+document.getElementById("subrace").addEventListener("change",()=>{const options=subraceData[raceSelect.value],value=document.getElementById("subrace").value;if(options&&value!=="")document.getElementById("subraceInfo").textContent=options[Number(value)][2];renderRacialCantrip();updateDescriptions();});
 document.getElementById("dragonAncestry").addEventListener("change",()=>{document.getElementById("dragonAncestryInfo").textContent=dragonAncestries[document.getElementById("dragonAncestry").value]||"";});
 const raceMeta={"Человек":{languages:"Общий",speed:30,size:"Средний"},"Эльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Полуэльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Дварф":{languages:"Общий и дварфийский",speed:25,size:"Средний"},"Полурослик":{languages:"Общий и язык полуросликов",speed:25,size:"Маленький"},"Тифлинг":{languages:"Общий и инфернальный",speed:30,size:"Средний"},"Драконорождённый":{languages:"Общий и драконий",speed:30,size:"Средний"},"Полуорк":{languages:"Общий и орочий",speed:30,size:"Средний"}};
 function renderSubclassChoices(){
@@ -690,11 +692,12 @@ function updateSpellStatus(){
  document.getElementById("cantripStatus").textContent="Выбрано заговоров: "+cantrips+" / "+rules.cantrips;
  document.getElementById("spellStatus").textContent="Выбрано заклинаний: "+spells+" / "+requiredSpells;
 }
-document.getElementById("subclass").addEventListener("change",()=>{const options=subclassData[classSelect.value];if(options)document.getElementById("subclassInfo").textContent=options[Number(document.getElementById("subclass").value)][1];});
+document.getElementById("subclass").addEventListener("change",()=>{const options=subclassData[classSelect.value],value=document.getElementById("subclass").value;if(options&&value!=="")document.getElementById("subclassInfo").textContent=options[Number(value)][1];});
 function updateDescriptions(){
  const race=raceData[raceSelect.value],cls=classData[classSelect.value],bg=backgroundData[backgroundSelect.value];
  const selectedSubraceOptions=subraceData[raceSelect.value]||[];
- const selectedSubrace=selectedSubraceOptions[Number(document.getElementById("subrace").value)];
+ const selectedSubraceValue=document.getElementById("subrace").value;
+ const selectedSubrace=selectedSubraceValue!==""?selectedSubraceOptions[Number(selectedSubraceValue)]:null;
  const isVariantHuman=raceSelect.value==="Человек"&&selectedSubrace&&selectedSubrace[0]==="Вариантный человек";
  document.getElementById("halfElfChoices").hidden=raceSelect.value!=="Полуэльф";
  document.getElementById("variantHumanChoices").hidden=!isVariantHuman;
@@ -794,7 +797,7 @@ form.addEventListener("submit",async event=>{
   if((selectedRace==="Человек"||selectedRace==="Полуэльф")&&!document.getElementById("extraLanguage").value)throw new Error("Выбери дополнительный язык для этой расы.");
   const subraceOptions=subraceData[selectedRace]||[];
   const subraceIndex=document.getElementById("subrace").value;
-  const subrace=subraceOptions.length?subraceOptions[Number(subraceIndex)]:null;
+  const subrace=subraceOptions.length&&subraceIndex!==""?subraceOptions[Number(subraceIndex)]:null;
   if(subraceOptions.length&&!subrace)throw new Error("Выбери подрасу.");
   const dragonAncestry=selectedRace==="Драконорождённый"?document.getElementById("dragonAncestry").value:"";
   if(selectedRace==="Драконорождённый"&&!dragonAncestry)throw new Error("Выбери драконье наследие.");
@@ -846,13 +849,13 @@ form.addEventListener("submit",async event=>{
   if(isVariantHuman&&!feat)throw new Error("Вариантный человек обязан выбрать черту.");
   if(racialSkills.some(skill=>selectedSkills.includes(skill)||backgroundSkills.includes(skill)))throw new Error("Расовый навык не должен дублировать навыки класса или предыстории.");
   const fightingStyleIndex=document.getElementById("fightingStyle").value;
-  const fightingStyle=fightingStyles[Number(fightingStyleIndex)];
+  const fightingStyle=fightingStyleIndex!==""?fightingStyles[Number(fightingStyleIndex)]:null;
   if(selectedClass==="Воин"&&!fightingStyle)throw new Error("Выбери боевой стиль воина.");
   const expertise=Array.from(document.querySelectorAll('input[name="expertise"]:checked')).map(x=>x.value);
   if(selectedClass==="Плут"&&expertise.length!==2)throw new Error("Плут выбирает две компетентности.");
   const subclassOptions=subclassData[selectedClass]||[];
   const subclassIndex=document.getElementById("subclass").value;
-  const subclass=subclassOptions.length?subclassOptions[Number(subclassIndex)]:null;
+  const subclass=subclassOptions.length&&subclassIndex!==""?subclassOptions[Number(subclassIndex)]:null;
   if(subclassOptions.length&&!subclass)throw new Error("Выбери домен жреца, покровителя колдуна или происхождение чародея.");
   const spellRules=spellData[selectedClass];
   let spellcasting=null;
@@ -915,7 +918,7 @@ form.addEventListener("submit",async event=>{
   window.location.href="game.html";
  }catch(error){console.error(error);errorMessage.textContent=error.message||"Не удалось создать персонажа.";createButton.disabled=false;createButton.textContent="Создать персонажа";}
 });
-checkUserAndCampaign();updateModifiers();updateDescriptions();renderRaceChoices();renderSkillChoices();renderSubclassChoices();renderSpellChoices();
+checkUserAndCampaign();updateModifiers();renderRaceChoices();updateDescriptions();renderSkillChoices();renderSubclassChoices();renderSpellChoices();
 </script>
 
 </body>
