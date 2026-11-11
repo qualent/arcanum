@@ -43,12 +43,12 @@ async function handleGameAction(request, env) {
         });
 
         const aiResult = await askGemini(env, context, action);
+        const dmContent = String(aiResult.narrative || "").trim();
+        if (!dmContent) throw new Error("Gemini вернул пустой ответ. Повтори действие.");
+
         const changes = validateChanges(aiResult, context.gameState);
         const updatedState = await applyStateChanges(env, token, user.id, campaignId, characterId, context.gameState, changes.state);
         const updatedInventory = await applyInventoryChanges(env, token, user.id, campaignId, characterId, context.inventory, changes.inventory);
-
-        const dmContent = String(aiResult.narrative || "").trim();
-        if (!dmContent) throw new Error("Gemini вернул пустой ответ. Повтори действие.");
 
         const assistantMessage = await insertRow(env, token, "game_messages", {
             user_id: user.id, campaign_id: campaignId, character_id: characterId, role: "assistant", content: dmContent
