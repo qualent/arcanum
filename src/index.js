@@ -158,7 +158,10 @@ async function loadGameContext(env, token, userId, campaignId, characterId, owne
 async function askGemini(env, context, playerAction, onNarrativeDelta) {
     const primaryModel = getGeminiModel(env, context.aiSettings);
     const fallbackModel = env.GEMINI_FALLBACK_MODEL || "gemini-3.5-flash-lite";
-    const models = primaryModel === fallbackModel ? [primaryModel] : [primaryModel, fallbackModel];
+    const tertiaryModel = env.GEMINI_TERTIARY_MODEL || "gemini-3.1-flash-lite";
+    const quaternaryModel = env.GEMINI_QUATERNARY_MODEL || "gemini-3.5-flash";
+    // Keep a short cascade of distinct, currently supported Gemini models.
+    const models = Array.from(new Set([primaryModel, fallbackModel, tertiaryModel, quaternaryModel].filter(Boolean)));
     const userPayload = {
         campaign_details: context.campaign,
         player_action: playerAction,
@@ -181,6 +184,7 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
     };
 
     let lastError = null;
+    const modelErrors = [];
     for (let modelIndex = 0; modelIndex < models.length; modelIndex++) {
         const model = models[modelIndex];
         let response;
@@ -200,7 +204,11 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
                 ? "Gemini не ответил за 45 секунд (тайм-аут)."
                 : "Не удалось связаться с Gemini: " + (networkError.message || String(networkError)));
             lastError.status = 503;
-            if (modelIndex + 1 < models.length) continue;
+            modelErrors.push(lastError.message);
+            if (modelIndex + 1 < models.length) {
+                console.warn("Gemini network failure; switching model:", model);
+                continue;
+            }
             break;
         }
 
@@ -214,8 +222,12 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
                 /high demand|overload|temporarily unavailable|rate.?limit|try again later|internal error/i.test(detail);
             lastError = new Error("Ошибка Gemini (" + model + ", HTTP " + response.status + "): " + detail);
             lastError.status = response.status === 429 ? 429 : (retryable ? 503 : 502);
-            if (!retryable || modelIndex + 1 >= models.length) throw lastError;
-            console.warn("Gemini model unavailable; switching to fallback:", model);
+            modelErrors.push(lastError.message);
+            if (!retryable || modelIndex + 1 >= models.length) {
+                if (!retryable) throw lastError;
+                break;
+            }
+            console.warn("Gemini model unavailable; switching to next fallback:", model);
             continue;
         }
 
@@ -271,7 +283,7 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
     }
 
     if (lastError) {
-        const error = new Error("Основная и резервная модели Gemini сейчас перегружены или недоступны. Твоё сообщение сохранено; подожди немного и отправь действие ещё раз. Подробности: " + lastError.message);
+        const error = new Error("Все доступные модели Gemini сейчас перегружены или недоступны. Твоё сообщение сохранено; повтори действие чуть позже. Проверены модели: " + models.join(", ") + ". Подробности: " + modelErrors.join(" | "));
         error.status = lastError.status || 503;
         throw error;
     }
