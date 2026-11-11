@@ -239,33 +239,6 @@ async function loadOrCreateGameState() {
 
     if (existingState) {
         currentGameState = existingState;
-        const calculatedMaxHp = calculateMaxHp(currentCharacter);
-
-        if (Number(currentGameState.max_hp) !== calculatedMaxHp) {
-            const adjustedHp = Math.min(
-                Number(currentGameState.current_hp),
-                calculatedMaxHp
-            );
-
-            const { data, error } = await supabaseClient
-                .from("game_states")
-                .update({
-                    max_hp: calculatedMaxHp,
-                    current_hp: Math.max(0, adjustedHp),
-                    updated_at: new Date().toISOString()
-                })
-                .eq("id", currentGameState.id)
-                .eq("user_id", currentUser.id)
-                .select()
-                .single();
-
-            if (error) {
-                throw new Error("Не удалось обновить максимальное здоровье: " + error.message);
-            }
-
-            currentGameState = data;
-        }
-
         return;
     }
 
