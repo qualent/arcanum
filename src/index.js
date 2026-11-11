@@ -74,6 +74,7 @@ async function handleCharacterSuggestion(request, env) {
         const races = ["Человек","Эльф","Полуэльф","Дварф","Полурослик","Тифлинг","Драконорождённый","Полуорк"];
         const classes = ["Варвар","Бард","Жрец","Друид","Воин","Монах","Паладин","Следопыт","Плут","Волшебник","Чародей","Колдун"];
         const backgrounds = ["Авантюрист","Солдат","Преступник","Учёный","Дворянин","Изгнанник","Странник","Послушник","Шарлатан","Народный герой","Гильдейский ремесленник","Отшельник","Мудрец","Моряк","Артист"];
+        const alignments = ["Законопослушный добрый","Нейтральный добрый","Хаотичный добрый","Законопослушный нейтральный","Истинно нейтральный","Хаотичный нейтральный","Законопослушный злой","Нейтральный злой","Хаотичный злой"];
         const stats = suggestion.stats || {};
         const scores = ["strength","dexterity","constitution","intelligence","wisdom","charisma"].map(key => Number(stats[key])).sort((a,b) => a-b);
         if (!races.includes(suggestion.race) || !classes.includes(suggestion.class) || !backgrounds.includes(suggestion.background)) {
@@ -103,7 +104,7 @@ async function handleCharacterSuggestion(request, env) {
             character: {
                 name: String(suggestion.name || "Новый герой").slice(0, 80),
                 race: suggestion.race, class: suggestion.class, background: suggestion.background,
-                level: 1, alignment: String(suggestion.alignment || "Истинно нейтральный"),
+                level: 1, alignment: alignments.includes(suggestion.alignment) ? suggestion.alignment : "Истинно нейтральный",
                 stats: stats, class_skill_choices: skills,
                 history: String(suggestion.history || "").slice(0, 3000),
                 personality: String(suggestion.personality || "").slice(0, 1500),
