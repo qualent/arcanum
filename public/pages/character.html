@@ -311,6 +311,17 @@
                 <div id="skillChoices" class="skill-choice-grid"></div>
                 <p id="skillStatus" class="builder-note"></p>
             </div>
+            <div class="builder-subsection" id="subclassField" hidden>
+                <h3>Происхождение магии / домен</h3>
+                <div class="form-group"><label for="subclass">Выбери специализацию 1 уровня</label><select id="subclass"></select></div>
+                <p id="subclassInfo" class="builder-note"></p>
+            </div>
+            <div class="builder-subsection" id="spellcastingSection" hidden>
+                <h3>Заклинания</h3>
+                <p id="spellcastingInfo" class="builder-note"></p>
+                <div class="form-group"><strong>Заговоры</strong><div id="cantripChoices" class="skill-choice-grid"></div><p id="cantripStatus" class="builder-note"></p></div>
+                <div class="form-group"><strong>Заклинания 1 уровня</strong><div id="spellChoices" class="skill-choice-grid"></div><p id="spellStatus" class="builder-note"></p></div>
+            </div>
             <div class="builder-subsection">
                 <h3>Черта персонажа</h3>
                 <div class="form-group">
@@ -543,11 +554,54 @@ const abilityLabels={strength:"Сила",dexterity:"Ловкость",constituti
 function modifier(v){return Math.floor((Number(v)-10)/2);}
 function signed(v){return v>=0?"+"+v:String(v);}
 function updateModifiers(){statNames.forEach(k=>{const el=document.getElementById(k+"Mod");if(el)el.textContent=signed(modifier(document.getElementById(k).value));});}
-document.querySelectorAll(".stat-card input").forEach(el=>el.addEventListener("input",updateModifiers));
+document.querySelectorAll(".stat-card input").forEach(el=>el.addEventListener("input",()=>{updateModifiers();updateSpellStatus();}));
 const raceSelect=document.getElementById("race"),classSelect=document.getElementById("characterClass"),backgroundSelect=document.getElementById("background");
 const classTools={"Бард":"Три музыкальных инструмента на выбор","Друид":"Набор травника","Монах":"Один ремесленный инструмент или музыкальный инструмент на выбор","Плут":"Воровские инструменты","остальные":"Нет автоматического владения инструментами от класса"};
 const backgroundTools={"Солдат":"Один игровой набор и наземный транспорт","Преступник":"Воровские инструменты и один игровой набор","Дворянин":"Один игровой набор","Послушник":"Нет","Шарлатан":"Набор для грима и набор для подделки документов","Народный герой":"Один ремесленный инструмент и наземный транспорт","Гильдейский ремесленник":"Один набор ремесленника на выбор","Отшельник":"Набор травника","Моряк":"Инструменты навигации и водный транспорт","Артист":"Набор для грима и один музыкальный инструмент","Странник":"Один музыкальный инструмент","Мудрец":"Нет","Учёный":"Нет","Изгнанник":"Набор травника","Авантюрист":"Нет"};
+const subclassData={
+"Жрец":[["Домен Знания","Благословение знаний: владение двумя языками или навыками на выбор."],["Домен Жизни","Ученик жизни: лечение заклинаниями восстанавливает дополнительные HP."],["Домен Света","Защитная вспышка: реакцией можешь наложить помеху атаке против тебя."],["Домен Природы","Послушник природы: заговор друида и дополнительные владения."],["Домен Бури","Гнев бури: реакцией наносишь урон громом или молнией атакующему."],["Домен Обмана","Благословение обманщика: даёшь союзнику преимущество на Скрытность."],["Домен Войны","Боевой жрец: бонусной атакой после атаки можешь ударить ещё раз ограниченное число раз."]],
+"Колдун":[["Архифея","Присутствие фей: очаровываешь или пугаешь существ рядом."],["Исчадие","Благословение тёмного: получаешь временные HP, когда сводишь врага к 0 HP."],["Великий Древний","Пробуждённый разум: телепатическая связь с существами рядом."]],
+"Чародей":[["Драконья кровь","Драконья устойчивость: дополнительный максимум HP и природный КД без доспехов."],["Дикая магия","Всплеск дикой магии: заклинание может вызвать случайный магический эффект."]]
+};
+const spellData={
+"Бард":{ability:"charisma",cantrips:2,spells:4,cantripList:["Злая насмешка","Волшебная рука","Малая иллюзия","Фокусы","Свет"],spellList:["Лечащее слово","Диссонирующий шёпот","Волшебный огонь","Громовая волна","Очарование личности","Усыпление","Лечение ран","Героизм"]},
+"Жрец":{ability:"wisdom",cantrips:3,prepared:true,cantripList:["Священное пламя","Наставление","Свет","Сохранение умирающего","Тауматургия"],spellList:["Благословение","Лечение ран","Направляющий снаряд","Лечащее слово","Щит веры","Убежище","Приказ","Обнаружение магии","Защита от зла и добра"]},
+"Друид":{ability:"wisdom",cantrips:2,prepared:true,cantripList:["Искусство друидов","Наставление","Сотворение пламени","Дубинка","Терновый кнут"],spellList:["Опутывание","Волшебный огонь","Доброягода","Лечащее слово","Длинный шаг","Разговор с животными","Громовая волна","Лечение ран"]},
+"Волшебник":{ability:"intelligence",cantrips:3,spells:6,cantripList:["Огненный снаряд","Волшебная рука","Фокусы","Луч холода","Малая иллюзия","Свет","Шоковое прикосновение"],spellList:["Волшебная стрела","Щит","Доспехи мага","Обнаружение магии","Поиск фамильяра","Горящие руки","Усыпление","Громовая волна","Очарование личности","Опознание","Падение пёрышком"]},
+"Чародей":{ability:"charisma",cantrips:4,spells:2,cantripList:["Огненный снаряд","Волшебная рука","Фокусы","Луч холода","Малая иллюзия","Свет","Шоковое прикосновение"],spellList:["Волшебная стрела","Щит","Доспехи мага","Горящие руки","Усыпление","Очарование личности","Громовая волна"]},
+"Колдун":{ability:"charisma",cantrips:2,spells:2,cantripList:["Мистический заряд","Волшебная рука","Малая иллюзия","Фокусы","Холодное прикосновение","Ядовитые брызги"],spellList:["Порча","Доспехи Агатиса","Адское возмездие","Руки Хадара","Очарование личности","Ведьмин снаряд"]}
+};
 const raceMeta={"Человек":{languages:"Общий и один дополнительный язык на выбор",speed:30,size:"Средний"},"Эльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Полуэльф":{languages:"Общий, эльфийский и один дополнительный язык",speed:30,size:"Средний"},"Дварф":{languages:"Общий и дварфийский",speed:25,size:"Средний"},"Полурослик":{languages:"Общий и язык полуросликов",speed:25,size:"Маленький"},"Тифлинг":{languages:"Общий и инфернальный",speed:30,size:"Средний"},"Драконорождённый":{languages:"Общий и драконий",speed:30,size:"Средний"},"Полуорк":{languages:"Общий и орочий",speed:30,size:"Средний"}};
+function renderSubclassChoices(){
+ const options=subclassData[classSelect.value],field=document.getElementById("subclassField"),select=document.getElementById("subclass");
+ field.hidden=!options;
+ if(!options){select.replaceChildren();return;}
+ const old=select.value;select.innerHTML=options.map((x,i)=>'<option value="'+i+'">'+x[0]+'</option>').join("");
+ if(old&&options[Number(old)])select.value=old;
+ document.getElementById("subclassInfo").textContent=options[Number(select.value)||0][1];
+}
+function renderSpellChoices(){
+ const rules=spellData[classSelect.value],section=document.getElementById("spellcastingSection");
+ section.hidden=!rules;
+ const abilityLabelsForSpells={charisma:"Харизма",wisdom:"Мудрость",intelligence:"Интеллект"};
+ if(!rules){document.getElementById("cantripChoices").replaceChildren();document.getElementById("spellChoices").replaceChildren();return;}
+ const abilityScore=Number(document.getElementById(rules.ability).value)||10;
+ const spellCount=rules.prepared?Math.max(1,1+Math.floor((abilityScore-10)/2)):rules.spells;
+ document.getElementById("spellcastingInfo").textContent="Характеристика: "+abilityLabelsForSpells[rules.ability]+". Заговоры: "+rules.cantrips+". "+(rules.prepared?"Подготовленные заклинания: "+spellCount+" (уровень + модификатор характеристики).":"Известные заклинания / книга: "+spellCount+".");
+ const makeChoices=(container,items,name)=>{container.replaceChildren();items.forEach(spell=>{const label=document.createElement("label");label.className="skill-choice";const input=document.createElement("input");input.type="checkbox";input.name=name;input.value=spell;input.addEventListener("change",updateSpellStatus);const span=document.createElement("span");span.textContent=spell;label.append(input,span);container.append(label);});};
+ makeChoices(document.getElementById("cantripChoices"),rules.cantripList,"cantrip");
+ makeChoices(document.getElementById("spellChoices"),rules.spellList,"knownSpell");
+ updateSpellStatus();
+}
+function updateSpellStatus(){
+ const rules=spellData[classSelect.value];if(!rules)return;
+ const abilityScore=Number(document.getElementById(rules.ability).value)||10;
+ const requiredSpells=rules.prepared?Math.max(1,1+Math.floor((abilityScore-10)/2)):rules.spells;
+ const cantrips=document.querySelectorAll('input[name="cantrip"]:checked').length,spells=document.querySelectorAll('input[name="knownSpell"]:checked').length;
+ document.getElementById("cantripStatus").textContent="Выбрано заговоров: "+cantrips+" / "+rules.cantrips;
+ document.getElementById("spellStatus").textContent="Выбрано заклинаний: "+spells+" / "+requiredSpells;
+}
+document.getElementById("subclass").addEventListener("change",()=>{const options=subclassData[classSelect.value];if(options)document.getElementById("subclassInfo").textContent=options[Number(document.getElementById("subclass").value)][1];});
 function updateDescriptions(){
  const race=raceData[raceSelect.value],cls=classData[classSelect.value],bg=backgroundData[backgroundSelect.value];
  document.getElementById("halfElfChoices").hidden=raceSelect.value!=="Полуэльф";
@@ -558,6 +612,8 @@ function updateDescriptions(){
  document.getElementById("skillInstruction").textContent=cls?"Выбери ровно "+cls.count+" навыка из списка класса. Навыки предыстории добавятся автоматически: "+(bg?bg.skills.join(", "):"нет")+".":"Для авторского класса выбери навыки вручную после согласования.";
  document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent;
  renderSkillChoices();
+ renderSubclassChoices();
+ renderSpellChoices();
 }
 function renderSkillChoices(){
  const box=document.getElementById("skillChoices"),cls=classData[classSelect.value];box.replaceChildren();
@@ -649,6 +705,19 @@ form.addEventListener("submit",async event=>{
   const level=Number(document.getElementById("level").value);
   const hitDie=clsData?clsData.die:8;
   const feat=document.getElementById("feat").value;
+  const subclassOptions=subclassData[selectedClass]||[];
+  const subclassIndex=document.getElementById("subclass").value;
+  const subclass=subclassOptions.length?subclassOptions[Number(subclassIndex)]:null;
+  const spellRules=spellData[selectedClass];
+  let spellcasting=null;
+  if(spellRules){
+   const cantrips=Array.from(document.querySelectorAll('input[name="cantrip"]:checked')).map(x=>x.value);
+   const chosenSpells=Array.from(document.querySelectorAll('input[name="knownSpell"]:checked')).map(x=>x.value);
+   const abilityScore=finalStats[spellRules.ability],spellCount=spellRules.prepared?Math.max(1,1+modifier(abilityScore)):spellRules.spells;
+   if(cantrips.length!==spellRules.cantrips)throw new Error("Выбери ровно "+spellRules.cantrips+" заговоров.");
+   if(chosenSpells.length!==spellCount)throw new Error("Выбери ровно "+spellCount+" заклинаний 1 уровня.");
+   spellcasting={ability:spellRules.ability,cantrips,known_spells:spellRules.prepared?[]:chosenSpells,prepared_spells:spellRules.prepared?chosenSpells:[],spell_save_dc:8+Math.ceil(1+level/4)+modifier(abilityScore),spell_attack_bonus:Math.ceil(1+level/4)+modifier(abilityScore),spell_slots_level_1:selectedClass==="Колдун"?1:2,spellcasting_type:spellRules.prepared?"prepared":"known"};
+  }
   const details={
    ability_scores_base:baseStats,ability_bonuses:racialBonuses,ability_scores:finalStats,
    proficiency_bonus:Math.ceil(1+level/4),
@@ -657,7 +726,7 @@ form.addEventListener("submit",async event=>{
    racial_traits:raceRules?raceRules.traits:"Авторские свойства требуют согласования",racial_skill_proficiencies:racialSkills,
    class_features:clsData?clsData.feature:"Авторские свойства требуют согласования",
    background_feature:bgRules?bgRules.feature:"Авторская особенность требует согласования",
-   hit_die:hitDie,armor_proficiencies:clsData?clsData.armor:"Требует согласования",
+   hit_die:hitDie,subclass:subclass?subclass[0]:null,subclass_feature:subclass?subclass[1]:null,spellcasting:spellcasting,armor_proficiencies:clsData?clsData.armor:"Требует согласования",
    weapon_proficiencies:clsData?clsData.weapons:"Требует согласования",
    tool_proficiencies:[classTools[selectedClass]||"Нет",backgroundTools[selectedBackground]||"Нет"].filter(x=>x!=="Нет").join("; ")||"Нет",
    languages:raceMeta[selectedRace]?raceMeta[selectedRace].languages:"Требует согласования",
