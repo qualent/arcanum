@@ -171,7 +171,6 @@ async function handleCharacterInitialize(request, env) {
             "&campaign_id=eq." + encodeURIComponent(body.campaign_id) + "&user_id=eq." + encodeURIComponent(user.id) + "&limit=1", {}, token);
         if (!inventoryResult.ok) throw new Error("Не удалось проверить инвентарь персонажа.");
         let inventory = inventoryResult.data || [];
-        const characterStats = character.stats && typeof character.stats === "object" ? character.stats : {};
         const needsInitialGear = characterStats.arcanum_initialized !== true;
         if (!inventory.length && needsInitialGear) {
             const starterItems = getStarterEquipment(character.class);
