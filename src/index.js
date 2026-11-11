@@ -74,7 +74,7 @@ async function handleGameAction(request, env) {
 
         return jsonResponse({
             success: true,
-            result: { text: dmContent, model: getGeminiModel(env, context.aiSettings) },
+            result: { text: dmContent, model: aiResult._model_used || getGeminiModel(env, context.aiSettings) },
             messages: { player: playerMessage, assistant: assistantMessage },
             state: updatedState,
             inventory: updatedInventory
