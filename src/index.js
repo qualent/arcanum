@@ -172,6 +172,7 @@ async function handleCharacterInitialize(request, env) {
         if (!inventoryResult.ok) throw new Error("Не удалось проверить инвентарь персонажа.");
         let inventory = inventoryResult.data || [];
         const needsInitialGear = characterStats.arcanum_initialized !== true;
+        const needsInitialResources = !characterStats.resources || typeof characterStats.resources !== "object";
         if (!inventory.length && needsInitialGear) {
             const starterItems = getStarterEquipment(character.class);
             for (const item of starterItems) {
@@ -190,8 +191,9 @@ async function handleCharacterInitialize(request, env) {
                 "&campaign_id=eq." + encodeURIComponent(body.campaign_id) + "&user_id=eq." + encodeURIComponent(user.id) + "&order=created_at.asc", {}, token);
             inventory = fullInventory.ok ? fullInventory.data || [] : inventory;
         }
-        if (needsInitialGear) {
+        if (needsInitialGear || needsInitialResources) {
             const updatedStats = Object.assign({}, characterStats, { arcanum_initialized: true });
+            if (needsInitialResources) updatedStats.resources = getDefaultCharacterResources(character, updatedStats);
             const marked = await supabaseAdminRequest(env,
                 "/rest/v1/characters?id=eq." + encodeURIComponent(character.id) + "&user_id=eq." + encodeURIComponent(user.id), {
                     method: "PATCH", headers: { "Prefer": "return=minimal" },
@@ -204,6 +206,27 @@ async function handleCharacterInitialize(request, env) {
         console.error("Character initialization error:", error);
         return jsonResponse({ success: false, error: error.message || "Не удалось подготовить персонажа." }, error.status || 500);
     }
+}
+
+function getDefaultCharacterResources(character, stats) {
+    const resources = {};
+    const className = String(character.class || "").toLowerCase();
+    const level = Math.max(1, Number(character.level) || 1);
+    const charisma = Number(character.charisma) || 10;
+    if (className.includes("варвар")) resources.rage = { label: "Ярость", current: 2, max: 2, reset: "long_rest" };
+    if (className.includes("бард")) {
+        const uses = Math.max(1, Math.floor((charisma - 10) / 2));
+        resources.bardic_inspiration = { label: "Вдохновение барда", current: uses, max: uses, reset: "long_rest" };
+    }
+    if (className.includes("воин")) resources.second_wind = { label: "Второе дыхание", current: 1, max: 1, reset: "short_or_long_rest" };
+    if (className.includes("паладин")) resources.lay_on_hands = { label: "Запас наложения рук", current: 5 * level, max: 5 * level, unit: "HP", reset: "long_rest" };
+    if (className.includes("волшебник")) resources.arcane_recovery = { label: "Магическое восстановление", current: 1, max: 1, reset: "long_rest" };
+    const spellSlots = stats && stats.spellcasting ? Number(stats.spellcasting.spell_slots_level_1) || 0 : 0;
+    if (spellSlots > 0) resources.spell_slots_level_1 = {
+        label: "Ячейки заклинаний 1 уровня", current: spellSlots, max: spellSlots,
+        reset: className.includes("колдун") ? "short_or_long_rest" : "long_rest"
+    };
+    return resources;
 }
 
 function getClassHitDie(className) {
