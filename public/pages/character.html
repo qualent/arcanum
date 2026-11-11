@@ -611,9 +611,6 @@ function updateDescriptions(){
  document.getElementById("backgroundInfo").textContent=bg?"Навыки: "+bg.skills.join(", ")+". Инструменты/транспорт: "+(backgroundTools[backgroundSelect.value]||"Нет")+". Особенность: "+bg.feature:"Авторская предыстория: навыки и особенность нужно задать вручную с мастером.";
  document.getElementById("skillInstruction").textContent=cls?"Выбери ровно "+cls.count+" навыка из списка класса. Навыки предыстории добавятся автоматически: "+(bg?bg.skills.join(", "):"нет")+".":"Для авторского класса выбери навыки вручную после согласования.";
  document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent;
- renderSkillChoices();
- renderSubclassChoices();
- renderSpellChoices();
 }
 function renderSkillChoices(){
  const box=document.getElementById("skillChoices"),cls=classData[classSelect.value];box.replaceChildren();
@@ -635,7 +632,9 @@ document.getElementById("standardArrayButton").addEventListener("click",()=>{
  [15,14,13,12,10,8].forEach((v,i)=>document.getElementById(statNames[i]).value=v);
  updateModifiers();document.getElementById("abilityScoreStatus").textContent="Массив распределён. Можешь менять числа местами, сохраняя набор.";
 });
-[raceSelect,classSelect,backgroundSelect].forEach(el=>el.addEventListener("change",updateDescriptions));
+raceSelect.addEventListener("change",updateDescriptions);
+backgroundSelect.addEventListener("change",updateDescriptions);
+classSelect.addEventListener("change",()=>{updateDescriptions();renderSkillChoices();renderSubclassChoices();renderSpellChoices();});
 document.getElementById("feat").addEventListener("change",()=>document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent);
 document.getElementById("halfElfSkill1").innerHTML=skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
 document.getElementById("halfElfSkill2").innerHTML=skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
@@ -654,7 +653,7 @@ async function suggestCharacter(){
   document.getElementById("level").value="1";document.getElementById("alignment").value=c.alignment||"Истинно нейтральный";
   statNames.forEach(k=>document.getElementById(k).value=c.stats[k]);
   ["history","personality","appearance","goals"].forEach(k=>document.getElementById(k).value=c[k]||"");
-  updateDescriptions();
+  updateDescriptions();renderSkillChoices();renderSubclassChoices();renderSpellChoices();
   (c.class_skill_choices||[]).forEach(skill=>{const input=Array.from(document.querySelectorAll('input[name="classSkill"]')).find(el=>el.value===skill);if(input)input.checked=true;});
   updateSkillStatus();updateModifiers();
   document.getElementById("abilityScoreStatus").textContent="ИИ распределил стандартный массив 15, 14, 13, 12, 10, 8. Проверь распределение.";
@@ -759,7 +758,7 @@ form.addEventListener("submit",async event=>{
   window.location.href="game.html";
  }catch(error){console.error(error);errorMessage.textContent=error.message||"Не удалось создать персонажа.";createButton.disabled=false;createButton.textContent="Создать персонажа";}
 });
-checkUserAndCampaign();updateModifiers();updateDescriptions();
+checkUserAndCampaign();updateModifiers();updateDescriptions();renderSkillChoices();renderSubclassChoices();renderSpellChoices();
 </script>
 
 </body>
