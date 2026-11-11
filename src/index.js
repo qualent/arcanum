@@ -5,7 +5,7 @@ export default {
             return new Response(null, { status: 204, headers: corsHeaders() });
         }
         if (url.pathname === "/api/health" && request.method === "GET") {
-            return jsonResponse({ success: true, service: "Arcanum API", status: "online", ai: env.GEMINI_API_KEY ? "configured" : "missing_key" });
+            return jsonResponse({ success: true, service: "Arcanum API", status: "online", ai: env.GEMINI_API_KEY ? "configured" : "missing_key", model: env.GEMINI_MODEL || DEFAULT_MODEL, supabase: env.SUPABASE_URL && env.SUPABASE_ANON_KEY ? "configured" : "missing_config", server_writes: env.SUPABASE_SERVICE_ROLE_KEY ? "configured" : "missing_service_role_key" });
         }
         if (url.pathname === "/api/game/action" && request.method === "POST") return handleGameAction(request, env);
         if (url.pathname.startsWith("/api/")) return jsonResponse({ success: false, error: "API endpoint not found" }, 404);
