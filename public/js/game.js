@@ -224,12 +224,15 @@ async function initializeCharacterOnServer() {
     if (!response.ok || !result.success) {
         throw new Error(result.error || "Не удалось загрузить лист персонажа и стартовый инвентарь.");
     }
-    if (result.state) currentGameState = result.state;
+    if (!result.state) throw new Error("Сервер не вернул игровое состояние персонажа.");
+    currentGameState = result.state;
     if (Array.isArray(result.inventory)) currentInventory = result.inventory;
+    if (result.character_stats && currentCharacter) currentCharacter.stats = result.character_stats;
 }
 
 async function loadOrCreateGameState() {
-    const { data: existingState, error: loadError } = await supabaseClient
+    if (currentGameState) return;
+    const { data, error } = await supabaseClient
         .from("game_states")
         .select("*")
         .eq("character_id", characterId)
@@ -237,55 +240,8 @@ async function loadOrCreateGameState() {
         .eq("user_id", currentUser.id)
         .maybeSingle();
 
-    if (loadError) {
-        throw new Error("Ошибка загрузки игрового состояния: " + loadError.message);
-    }
-
-    if (existingState) {
-        currentGameState = existingState;
-        return;
-    }
-
-    const maxHp = calculateMaxHp(currentCharacter);
-    const newState = {
-        user_id: currentUser.id,
-        campaign_id: campaignId,
-        character_id: characterId,
-        current_hp: maxHp,
-        max_hp: maxHp,
-        location: "Неизвестно",
-        game_day: 1,
-        game_time: "Утро",
-        experience: 0,
-        gold: 0
-    };
-
-    const { data, error } = await supabaseClient
-        .from("game_states")
-        .insert(newState)
-        .select()
-        .single();
-
-    if (error && error.code === "23505") {
-        const { data: racedState, error: racedError } = await supabaseClient
-            .from("game_states")
-            .select("*")
-            .eq("character_id", characterId)
-            .eq("user_id", currentUser.id)
-            .maybeSingle();
-
-        if (racedError || !racedState) {
-            throw new Error("Не удалось получить созданное игровое состояние: " + (racedError?.message || error.message));
-        }
-
-        currentGameState = racedState;
-        return;
-    }
-
-    if (error) {
-        throw new Error("Не удалось создать игровое состояние: " + error.message);
-    }
-
+    if (error) throw new Error("Ошибка загрузки игрового состояния: " + error.message);
+    if (!data) throw new Error("Сервер не создал игровое состояние. Повтори загрузку страницы.");
     currentGameState = data;
 }
 
@@ -809,7 +765,10 @@ async function submitAction() {
 async function rollDice(sides) {
     if (!Number.isInteger(sides) || sides < 2 || !currentUser || isSaving) return;
 
-    const result = Math.floor(Math.random() * sides) + 1;
+    const bytes = new Uint32Array(1);
+    const limit = Math.floor(0x100000000 / sides) * sides;
+    do { crypto.getRandomValues(bytes); } while (bytes[0] >= limit);
+    const result = (bytes[0] % sides) + 1;
     setText(elements.diceResult, result);
 
     if (elements.diceResult) {
