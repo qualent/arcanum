@@ -286,12 +286,12 @@ async function loadMessages() {
         .eq("character_id", characterId)
         .eq("campaign_id", campaignId)
         .eq("user_id", currentUser.id)
-        .order("created_at", { ascending: true })
+        .order("created_at", { ascending: false })
         .limit(150);
 
     if (error) throw new Error("Ошибка загрузки истории игры: " + error.message);
 
-    renderMessages(data || []);
+    renderMessages((data || []).reverse());
 }
 
 function renderGame() {
@@ -423,6 +423,21 @@ function renderMessages(messages) {
 
         welcome.append(label, paragraph);
         elements.storyLog.appendChild(welcome);
+
+        const system = document.createElement("article");
+        system.className = "story-message system-message";
+
+        const systemLabel = document.createElement("div");
+        systemLabel.className = "message-label";
+        systemLabel.textContent = "СИСТЕМА";
+
+        const systemText = document.createElement("p");
+        systemText.id = "systemMessage";
+        systemText.textContent = "Игровое состояние загружено.";
+
+        system.append(systemLabel, systemText);
+        elements.storyLog.appendChild(system);
+        elements.systemMessage = systemText;
         return;
     }
 
