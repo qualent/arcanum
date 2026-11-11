@@ -502,7 +502,7 @@ function validateRollRequests(rawRequests, context) {
         const dc = rawDc === null || rawDc === undefined || rawDc === "" ? (type === "death_save" ? 10 : null) : (Number.isInteger(Number(rawDc)) ? Math.max(1, Math.min(30, Number(rawDc))) : null);
         const skill = typeof request.skill === "string" ? request.skill.slice(0, 40) : "";
         const mode = ["advantage", "disadvantage"].includes(request.mode) ? request.mode : "normal";
-        return { type, ability, dc, skill, mode, weapon: typeof request.weapon === "string" ? request.weapon.slice(0, 60) : "", dice: typeof request.dice === "string" ? request.dice.slice(0, 20) : "", damage_type: typeof request.damage_type === "string" ? request.damage_type.slice(0, 40) : "обычный", label: typeof request.label === "string" ? request.label.slice(0, 100) : "" };
+        return { type, ability, dc, skill, mode, weapon: typeof request.weapon === "string" ? request.weapon.slice(0, 60) : "", dice: typeof request.dice === "string" ? request.dice.slice(0, 20) : "", two_handed: Boolean(request.two_handed), damage_type: typeof request.damage_type === "string" ? request.damage_type.slice(0, 40) : "обычный", label: typeof request.label === "string" ? request.label.slice(0, 100) : "" };
     }).filter(Boolean);
 }
 
@@ -535,24 +535,41 @@ function resolveServerRoll(request, context) {
         crypto.getRandomValues(bytes);
         return (bytes[0] % sides) + 1;
     };
+    const inventory = Array.isArray(context.inventory) ? context.inventory : [];
+    const weaponItem = request.weapon ? inventory.find(item => String(item.item_name || "").toLowerCase() === String(request.weapon).toLowerCase()) : null;
+    const weaponProperties = weaponItem && weaponItem.properties && typeof weaponItem.properties === "object" ? weaponItem.properties : {};
     if (request.type === "damage") {
-        const match = request.dice.match(/^(\d{1,2})d(4|6|8|10|12|20)([+-]\d{1,3})?$/i);
-        if (!match) throw new Error("Мастер запросил неверную формулу урона: " + request.dice);
+        let expression = request.dice;
+        let damageType = request.damage_type || "обычный";
+        let bonusFromFormula = 0;
+        let weaponAbilityModifier = null;
+        if (weaponItem && weaponProperties.damage_dice) {
+            expression = weaponProperties.versatile_damage_dice && request.two_handed
+                ? weaponProperties.versatile_damage_dice : weaponProperties.damage_dice;
+            damageType = weaponProperties.damage_type || damageType;
+            const strMod = Math.floor(((Number(character.strength) || 10) - 10) / 2);
+            const dexMod = Math.floor(((Number(character.dexterity) || 10) - 10) / 2);
+            weaponAbilityModifier = weaponProperties.ranged ? dexMod :
+                weaponProperties.finesse ? Math.max(strMod, dexMod) : strMod;
+        }
+        const match = String(expression || "").match(/^(\d{1,2})d(4|6|8|10|12|20)([+-]\d{1,3})?$/i);
+        if (!match) throw new Error("Мастер запросил неверную формулу урона: " + expression);
         const count = Math.max(1, Math.min(20, Number(match[1]) * (request.critical ? 2 : 1)));
         const sides = Number(match[2]);
-        const bonus = match[3] ? Number(match[3]) : 0;
+        bonusFromFormula = match[3] ? Number(match[3]) : 0;
         const dice = Array.from({ length: count }, () => randomDie(sides));
         const style = stats.fighting_style;
-        const twoHandedWeapons = ["двуручный топор","двуручный меч","алебарда","глефа","пика","боевой посох","молот"];
         const weapon = String(request.weapon || "").toLowerCase();
-        if (style === "Сражение большим оружием" && twoHandedWeapons.some(name => weapon.includes(name))) {
+        const twoHandedMelee = Boolean(weaponProperties.two_handed || (weaponProperties.versatile && request.two_handed)) && !weaponProperties.ranged;
+        if (style === "Сражение большим оружием" && twoHandedMelee) {
             for (let index = 0; index < dice.length; index++) if (dice[index] <= 2) dice[index] = randomDie(sides);
         }
         const subtotal = dice.reduce((sum, value) => sum + value, 0);
-        const oneHandedMelee = ["длинный меч","рапира","короткий меч","булава","кинжал","боевой топор","копьё","копье","ятаган","молот"];
-        const duelingBonus = style === "Дуэлянт" && oneHandedMelee.some(name => weapon.includes(name)) ? 2 : 0;
-        const totalBonus = bonus + duelingBonus;
-        return { type: "damage", label: request.label || "Урон", dice, die: subtotal, bonus: totalBonus, total: Math.max(0, subtotal + totalBonus), dc: null, is_damage: true, critical: Boolean(request.critical), damage_type: request.damage_type || "обычный", dice_expression: request.dice, weapon: request.weapon };
+        const oneHandedMelee = weaponItem && !weaponProperties.ranged && !twoHandedMelee;
+        const duelingBonus = style === "Дуэлянт" && oneHandedMelee ? 2 : 0;
+        const abilityBonus = weaponAbilityModifier === null ? bonusFromFormula : weaponAbilityModifier;
+        const totalBonus = abilityBonus + duelingBonus;
+        return { type: "damage", label: request.label || "Урон", dice, die: subtotal, bonus: totalBonus, total: Math.max(0, subtotal + totalBonus), dc: null, is_damage: true, critical: Boolean(request.critical), damage_type: damageType, dice_expression: expression, weapon: request.weapon };
     }
 
     const skillAliases = {
@@ -564,9 +581,14 @@ function resolveServerRoll(request, context) {
         "stealth":"скрытность","survival":"выживание"
     };
     const normalizedSkill = skillAliases[request.skill.toLowerCase()] || request.skill.toLowerCase();
-    const ability = request.type === "ability_check" && request.skill
+    let ability = request.type === "ability_check" && request.skill
         ? (SKILL_ABILITIES[request.skill.toLowerCase()] || request.ability)
         : request.ability;
+    if (request.type === "attack" && weaponItem && weaponProperties.ranged) ability = "dexterity";
+    else if (request.type === "attack" && weaponItem && weaponProperties.finesse) {
+        const strScore = Number(character.strength) || 10, dexScore = Number(character.dexterity) || 10;
+        ability = dexScore >= strScore ? "dexterity" : "strength";
+    } else if (request.type === "attack" && weaponItem) ability = "strength";
     const score = Number(character[ability] ?? (stats.ability_scores && stats.ability_scores[ability]) ?? 10);
     const abilityModifier = request.type === "death_save" ? 0 : Math.floor((score - 10) / 2);
     const proficiencyBonus = Math.max(2, Math.min(6, Number(stats.proficiency_bonus) || (Math.ceil((Number(character.level) || 1) / 4) + 1)));
