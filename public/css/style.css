@@ -1213,6 +1213,44 @@ body.game-page > .game-layout > .game-sidebar-right {
     font-size: 30px;
 }
 
+.check-label {
+    display: block;
+    margin: 10px 0 5px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.check-input {
+    width: 100%;
+    min-height: 36px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    outline: none;
+    background: #0c0e13;
+    color: var(--text);
+    font: inherit;
+}
+
+.check-input:focus {
+    border-color: var(--gold);
+}
+
+.check-button {
+    width: 100%;
+    min-height: 40px;
+    margin-top: 12px;
+    flex: none;
+}
+
+.check-result {
+    min-height: 34px;
+    margin: 12px 0 0;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
 .dice-roll-animation {
     animation: diceRoll 0.35s ease;
 }
