@@ -34,14 +34,6 @@ const elements = {
     actionButton: document.getElementById("actionButton"),
     diceResult: document.getElementById("diceResult"),
     diceCount: document.getElementById("diceCount"),
-    experienceValue: document.getElementById("experienceValue"),
-    goldValue: document.getElementById("goldValue"),
-    resourceAmount: document.getElementById("resourceAmount"),
-    hpAmount: document.getElementById("hpAmount"),
-    addExperienceButton: document.getElementById("addExperienceButton"),
-    addGoldButton: document.getElementById("addGoldButton"),
-    healButton: document.getElementById("healButton"),
-    damageButton: document.getElementById("damageButton"),
     settingsModal: document.getElementById("settingsModal"),
     storyLog: document.getElementById("storyLog"),
     inventoryList: document.getElementById("inventoryList"),
@@ -445,8 +437,6 @@ function renderGameState() {
     setText(elements.locationText, currentGameState.location, "Неизвестно");
     setText(elements.timeText, currentGameState.game_time, "Утро");
     setText(elements.dayText, currentGameState.game_day, "1");
-    setText(elements.experienceValue, Number(currentGameState.experience) || 0, "0");
-    setText(elements.goldValue, Number(currentGameState.gold) || 0, "0");
 }
 
 function renderInventory() {
