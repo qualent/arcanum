@@ -658,7 +658,7 @@ function renderRaceChoices(){
  if(!dragonField.hidden){dragonSelect.innerHTML='<option value="" selected disabled>Выбери дракона</option>'+Object.keys(dragonAncestries).map(x=>'<option value="'+x+'">'+x+'</option>').join("");document.getElementById("dragonAncestryInfo").textContent="Наследие определяет тип урона дыхания и сопротивление.";}
  else{dragonSelect.replaceChildren();document.getElementById("dragonAncestryInfo").textContent="";}
 }
-document.getElementById("subrace").addEventListener("change",()=>{const options=subraceData[raceSelect.value],value=document.getElementById("subrace").value;if(options&&value!=="")document.getElementById("subraceInfo").textContent=options[Number(value)][2];renderRacialCantrip();updateDescriptions();});
+document.getElementById("subrace").addEventListener("change",()=>{const options=subraceData[raceSelect.value],value=document.getElementById("subrace").value;if(options&&value!=="")document.getElementById("subraceInfo").textContent=options[Number(value)][2];renderRacialCantrip();updateDescriptions();updateSpellStatus();});
 document.getElementById("dragonAncestry").addEventListener("change",()=>{document.getElementById("dragonAncestryInfo").textContent=dragonAncestries[document.getElementById("dragonAncestry").value]||"";});
 const raceMeta={"Человек":{languages:"Общий",speed:30,size:"Средний"},"Эльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Полуэльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Дварф":{languages:"Общий и дварфийский",speed:25,size:"Средний"},"Полурослик":{languages:"Общий и язык полуросликов",speed:25,size:"Маленький"},"Тифлинг":{languages:"Общий и инфернальный",speed:30,size:"Средний"},"Драконорождённый":{languages:"Общий и драконий",speed:30,size:"Средний"},"Полуорк":{languages:"Общий и орочий",speed:30,size:"Средний"}};
 function renderSubclassChoices(){
@@ -760,10 +760,11 @@ document.getElementById("standardArrayButton").addEventListener("click",()=>{
  [15,14,13,12,10,8].forEach((v,i)=>document.getElementById(statNames[i]).value=v);
  updateModifiers();document.getElementById("abilityScoreStatus").textContent="Массив распределён. Можешь менять числа местами, сохраняя набор.";
 });
-raceSelect.addEventListener("change",()=>{renderRaceChoices();updateDescriptions();});
+raceSelect.addEventListener("change",()=>{renderRaceChoices();updateDescriptions();updateSpellStatus();});
 backgroundSelect.addEventListener("change",()=>{updateDescriptions();renderClassFeatureChoices();});
 classSelect.addEventListener("change",()=>{updateDescriptions();renderSkillChoices();renderSubclassChoices();renderSpellChoices();renderClassFeatureChoices();});
 document.getElementById("feat").addEventListener("change",()=>document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent);
+["halfElfBonus1","halfElfBonus2","variantHumanBonus1","variantHumanBonus2"].forEach(id=>document.getElementById(id).addEventListener("change",updateSpellStatus));
 document.getElementById("halfElfSkill1").innerHTML='<option value="" selected disabled>Выбери навык</option>'+skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
 document.getElementById("halfElfSkill2").innerHTML='<option value="" selected disabled>Выбери навык</option>'+skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
 document.getElementById("halfElfSkill2").selectedIndex=0;
