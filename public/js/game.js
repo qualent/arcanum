@@ -601,7 +601,6 @@ async function runAbilityCheck() {
 
 async function submitAction() {
     const action = elements.actionInput ? elements.actionInput.value.trim() : "";
-
     if (!action || !currentUser || !currentCharacter || isSaving) return;
 
     if (action.length > 5000) {
@@ -612,68 +611,135 @@ async function submitAction() {
     isSaving = true;
     if (elements.actionButton) elements.actionButton.disabled = true;
     setSaveStatus("Мастер думает...");
-    setText(elements.systemMessage, "Gemini обрабатывает твоё действие...");
+    setText(elements.systemMessage, "Мастер обдумывает ситуацию...");
+
+    let playerShown = false;
+    let streamingArticle = null;
+    let streamingText = "";
+    let completedResult = null;
+
+    const showPlayerMessage = function (message) {
+        if (playerShown) return;
+        appendMessage(message || { role: "player", content: action });
+        playerShown = true;
+        elements.actionInput.value = "";
+    };
+
+    const showNarrativeDelta = function (delta) {
+        if (!delta) return;
+        if (!streamingArticle) {
+            streamingArticle = document.createElement("article");
+            streamingArticle.className = "story-message dm-message";
+            const label = document.createElement("div");
+            label.className = "message-label";
+            label.textContent = "МАСТЕР";
+            const paragraph = document.createElement("p");
+            paragraph.className = "streaming-narrative";
+            streamingArticle.append(label, paragraph);
+            elements.storyLog.appendChild(streamingArticle);
+        }
+        streamingText += delta;
+        streamingArticle.querySelector("p").textContent = streamingText;
+        scrollStoryToBottom();
+    };
 
     try {
         const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
         const accessToken = sessionData && sessionData.session ? sessionData.session.access_token : null;
-
-        if (sessionError || !accessToken) {
-            throw new Error("Сессия истекла. Войди в аккаунт заново.");
-        }
+        if (sessionError || !accessToken) throw new Error("Сессия истекла. Войди в аккаунт заново.");
 
         const response = await fetch("/api/game/action", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + accessToken
+                "Authorization": "Bearer " + accessToken,
+                "Accept": "text/event-stream"
             },
-            body: JSON.stringify({
-                campaign_id: campaignId,
-                character_id: characterId,
-                action: action
-            })
+            body: JSON.stringify({ campaign_id: campaignId, character_id: characterId, action: action })
         });
 
-        const result = await response.json().catch(() => ({}));
+        const contentType = response.headers.get("content-type") || "";
+        if (!response.ok || !contentType.includes("text/event-stream")) {
+            const errorResult = await response.json().catch(() => ({}));
+            throw new Error(errorResult.error || "Не удалось получить потоковый ответ мастера.");
+        }
+        if (!response.body) throw new Error("Браузер не поддерживает потоковый ответ.");
 
-        if (!response.ok || !result.success) {
-            throw new Error(result.error || "Не удалось получить ответ мастера.");
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let currentEvent = "message";
+
+        const handleSseEvent = function (eventName, dataText) {
+            if (!dataText) return;
+            let payload;
+            try { payload = JSON.parse(dataText); } catch (error) { return; }
+
+            if (eventName === "player") {
+                showPlayerMessage(payload.message);
+                setText(elements.systemMessage, "Мастер формирует ответ...");
+            } else if (eventName === "delta") {
+                showNarrativeDelta(payload.text || "");
+            } else if (eventName === "done") {
+                completedResult = payload;
+            } else if (eventName === "error") {
+                throw new Error(payload.error || "Мастер не смог обработать действие.");
+            }
+        };
+
+        while (true) {
+            const chunk = await reader.read();
+            if (chunk.done) break;
+            buffer += decoder.decode(chunk.value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+            for (const line of lines) {
+                const trimmed = line.trimEnd();
+                if (!trimmed) {
+                    currentEvent = "message";
+                    continue;
+                }
+                if (trimmed.startsWith("event:")) currentEvent = trimmed.slice(6).trim();
+                else if (trimmed.startsWith("data:")) handleSseEvent(currentEvent, trimmed.slice(5).trim());
+            }
+        }
+        buffer += decoder.decode();
+        if (buffer.trim()) {
+            for (const line of buffer.split("\n")) {
+                if (line.startsWith("event:")) currentEvent = line.slice(6).trim();
+                else if (line.startsWith("data:")) handleSseEvent(currentEvent, line.slice(5).trim());
+            }
         }
 
-        elements.actionInput.value = "";
-
-        if (result.messages && result.messages.player) {
-            appendMessage(result.messages.player);
-        } else {
-            appendMessage({
-                role: "player",
-                content: action
-            });
+        if (!completedResult || !completedResult.success) {
+            throw new Error("Поток ответа завершился раньше времени. Обнови журнал и попробуй ещё раз.");
         }
 
-        if (result.messages && result.messages.assistant) {
-            appendMessage(result.messages.assistant);
-        } else if (result.result && result.result.text) {
-            appendMessage({
-                role: "assistant",
-                content: result.result.text
-            });
+        showPlayerMessage(completedResult.messages && completedResult.messages.player);
+        const finalText = completedResult.result && completedResult.result.text
+            ? completedResult.result.text
+            : streamingText;
+
+        if (streamingArticle) {
+            streamingArticle.querySelector("p").textContent = finalText;
+        } else if (finalText) {
+            appendMessage({ role: "assistant", content: finalText });
         }
 
-        if (result.state) {
-            currentGameState = result.state;
+        if (completedResult.state) {
+            currentGameState = completedResult.state;
             renderHealth();
             renderGameState();
         }
-
-        if (Array.isArray(result.inventory)) {
-            currentInventory = result.inventory;
+        if (Array.isArray(completedResult.inventory)) {
+            currentInventory = completedResult.inventory;
             renderInventory();
         }
 
         setSaveStatus("Сохранено");
-        setText(elements.systemMessage, "Ответ получен от " + ((result.result && result.result.model) || "Gemini") + ". Изменения кампании сохранены.");
+        setText(elements.systemMessage, "Ответ получен от " +
+            ((completedResult.result && completedResult.result.model) || "Gemini") +
+            ". Изменения кампании сохранены.");
     } catch (error) {
         console.error("Gemini action error:", error);
         setSaveStatus("Ошибка мастера");
@@ -683,6 +749,7 @@ async function submitAction() {
         if (elements.actionButton) elements.actionButton.disabled = false;
     }
 }
+
 async function rollDice(sides) {
     if (!Number.isInteger(sides) || sides < 2 || !currentUser || isSaving) return;
 
