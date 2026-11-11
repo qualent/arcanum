@@ -20,6 +20,7 @@ async function handleGameAction(request, env) {
     try {
         if (!env.GEMINI_API_KEY) return jsonResponse({ success: false, error: "Gemini API не настроен. Добавь GEMINI_API_KEY в Cloudflare Worker Secrets." }, 503);
         if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return jsonResponse({ success: false, error: "Не настроены переменные Supabase на сервере." }, 503);
+        if (!env.SUPABASE_SERVICE_ROLE_KEY) return jsonResponse({ success: false, error: "Не настроен SUPABASE_SERVICE_ROLE_KEY в Cloudflare Worker Secrets." }, 503);
 
         const authHeader = request.headers.get("Authorization") || "";
         if (!authHeader.startsWith("Bearer ")) return jsonResponse({ success: false, error: "Authorization required" }, 401);
@@ -238,7 +239,7 @@ function validateChanges(aiResult, gameState) {
 }
 
 async function applyStateChanges(env, token, userId, campaignId, characterId, oldState, changes) {
-    const result = await supabaseRequest(env,
+    const result = await supabaseAdminRequest(env,
         "/rest/v1/game_states?id=eq." + encodeURIComponent(oldState.id) + "&user_id=eq." + encodeURIComponent(userId) +
         "&campaign_id=eq." + encodeURIComponent(campaignId) + "&character_id=eq." + encodeURIComponent(characterId), {
             method: "PATCH", headers: { "Prefer": "return=representation" },
@@ -257,11 +258,11 @@ async function applyInventoryChanges(env, token, userId, campaignId, characterId
             const existing = inventory[index];
             const quantity = Math.max(0, Number(existing.quantity || 1) - change.quantity);
             if (quantity === 0) {
-                const deleted = await supabaseRequest(env, "/rest/v1/inventory?id=eq." + encodeURIComponent(existing.id) + "&user_id=eq." + encodeURIComponent(userId), { method: "DELETE" }, token);
+                const deleted = await supabaseAdminRequest(env, "/rest/v1/inventory?id=eq." + encodeURIComponent(existing.id) + "&user_id=eq." + encodeURIComponent(userId), { method: "DELETE" }, token);
                 if (!deleted.ok) throw new Error("Не удалось удалить предмет из инвентаря.");
                 inventory.splice(index, 1);
             } else {
-                const updated = await supabaseRequest(env, "/rest/v1/inventory?id=eq." + encodeURIComponent(existing.id) + "&user_id=eq." + encodeURIComponent(userId), {
+                const updated = await supabaseAdminRequest(env, "/rest/v1/inventory?id=eq." + encodeURIComponent(existing.id) + "&user_id=eq." + encodeURIComponent(userId), {
                     method: "PATCH", headers: { "Prefer": "return=representation" },
                     body: JSON.stringify({ quantity: quantity, updated_at: new Date().toISOString() })
                 }, token);
@@ -290,11 +291,29 @@ async function applyInventoryChanges(env, token, userId, campaignId, characterId
 }
 
 async function insertRow(env, token, table, row) {
-    const result = await supabaseRequest(env, "/rest/v1/" + table, {
+    const result = await supabaseAdminRequest(env, "/rest/v1/" + table, {
         method: "POST", headers: { "Prefer": "return=representation" }, body: JSON.stringify(row)
     }, token);
     if (!result.ok || !result.data || !result.data.length) throw new Error("Не удалось сохранить данные (" + table + "): " + JSON.stringify(result.data));
     return result.data[0];
+}
+
+async function supabaseAdminRequest(env, path, options) {
+    const key = env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!key) throw new Error("Не настроен SUPABASE_SERVICE_ROLE_KEY в Cloudflare Worker Secrets.");
+    const response = await fetch(env.SUPABASE_URL + path, {
+        method: options && options.method ? options.method : "GET",
+        headers: {
+            "apikey": key,
+            "Authorization": "Bearer " + key,
+            "Content-Type": "application/json",
+            ...((options && options.headers) || {})
+        },
+        body: options ? options.body : undefined
+    });
+    let data = null;
+    try { data = await response.json(); } catch (error) { data = null; }
+    return { ok: response.ok, status: response.status, data: data };
 }
 
 async function getSupabaseUser(env, token) {
