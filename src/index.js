@@ -5,7 +5,7 @@ export default {
             return new Response(null, { status: 204, headers: corsHeaders() });
         }
         if (url.pathname === "/api/health" && request.method === "GET") {
-            return jsonResponse({ success: true, service: "Arcanum API", status: "online", ai: env.GEMINI_API_KEY ? "configured" : "missing_key", model: env.GEMINI_MODEL || DEFAULT_MODEL, supabase: env.SUPABASE_URL && env.SUPABASE_ANON_KEY ? "configured" : "missing_config", server_writes: env.SUPABASE_SERVICE_ROLE_KEY ? "configured" : "missing_service_role_key" });
+            return jsonResponse({ success: true, service: "Arcanum API", status: "online", ai: env.GEMINI_API_KEY ? "configured" : "missing_key", model: env.GEMINI_MODEL || DEFAULT_MODEL, supabase: env.SUPABASE_URL && env.SUPABASE_ANON_KEY ? "configured" : "missing_config", server_writes: (env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY) ? "configured" : "missing_secret_key" });
         }
         if (url.pathname === "/api/game/action" && request.method === "POST") return handleGameAction(request, env);
         if (url.pathname.startsWith("/api/")) return jsonResponse({ success: false, error: "API endpoint not found" }, 404);
@@ -20,7 +20,7 @@ async function handleGameAction(request, env) {
     try {
         if (!env.GEMINI_API_KEY) return jsonResponse({ success: false, error: "Gemini API не настроен. Добавь GEMINI_API_KEY в Cloudflare Worker Secrets." }, 503);
         if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return jsonResponse({ success: false, error: "Не настроены переменные Supabase на сервере." }, 503);
-        if (!env.SUPABASE_SERVICE_ROLE_KEY) return jsonResponse({ success: false, error: "Не настроен SUPABASE_SERVICE_ROLE_KEY в Cloudflare Worker Secrets." }, 503);
+        if (!(env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY)) return jsonResponse({ success: false, error: "Не настроен SUPABASE_SECRET_KEY в Cloudflare Worker Secrets." }, 503);
 
         const authHeader = request.headers.get("Authorization") || "";
         if (!authHeader.startsWith("Bearer ")) return jsonResponse({ success: false, error: "Authorization required" }, 401);
@@ -299,16 +299,19 @@ async function insertRow(env, token, table, row) {
 }
 
 async function supabaseAdminRequest(env, path, options) {
-    const key = env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!key) throw new Error("Не настроен SUPABASE_SERVICE_ROLE_KEY в Cloudflare Worker Secrets.");
+    const key = env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!key) throw new Error("Не настроен SUPABASE_SECRET_KEY в Cloudflare Worker Secrets.");
+    const headers = {
+        "apikey": key,
+        "Content-Type": "application/json",
+        ...((options && options.headers) || {})
+    };
+    // Modern sb_secret keys are opaque API keys: never send them as Bearer JWTs.
+    // Legacy service_role keys are JWTs and must also be sent in Authorization.
+    if (!key.startsWith("sb_secret_")) headers.Authorization = "Bearer " + key;
     const response = await fetch(env.SUPABASE_URL + path, {
         method: options && options.method ? options.method : "GET",
-        headers: {
-            "apikey": key,
-            "Authorization": "Bearer " + key,
-            "Content-Type": "application/json",
-            ...((options && options.headers) || {})
-        },
+        headers: headers,
         body: options ? options.body : undefined
     });
     let data = null;
