@@ -624,7 +624,7 @@ function resolveServerRoll(request, context) {
     return {
         type: request.type, label: request.label || (request.skill || request.type),
         ability, skill: request.skill, weapon: request.weapon, dice, die, bonus, total, dc: request.dc,
-        success: request.type === "death_save" ? die >= 10 : (request.type === "attack" || request.type === "spell_attack") ? (die === 20 || (die !== 1 && request.dc !== null && total >= request.dc)) : (request.dc === null ? null : total >= request.dc),
+        success: request.type === "death_save" ? die >= 10 : (request.type === "attack" || request.type === "spell_attack") ? (die === 20 ? true : die === 1 ? false : (request.dc === null ? null : total >= request.dc)) : (request.dc === null ? null : total >= request.dc),
         critical: (request.type === "attack" || request.type === "spell_attack") && die === 20,
         death_save_effect: request.type === "death_save" ? (die === 20 ? "восстановление 1 HP" : die === 1 ? "две неудачи" : die >= 10 ? "одна удача" : "одна неудача") : null,
         natural: die, proficient, mode: request.mode
