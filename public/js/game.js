@@ -103,7 +103,8 @@ function calculateMaxHp(character) {
 
     const toughBonus = character.stats && character.stats.feat && character.stats.feat.name === "Крепкий" ? 2 * level : 0;
     const hillDwarfBonus = character.stats && character.stats.subrace === "Холмовой дварф" ? level : 0;
-    return Math.max(1, firstLevelHp + laterLevelsHp + toughBonus + hillDwarfBonus);
+    const draconicResilienceBonus = character.stats && character.stats.subclass === "Драконья кровь" ? level : 0;
+    return Math.max(1, firstLevelHp + laterLevelsHp + toughBonus + hillDwarfBonus + draconicResilienceBonus);
 }
 
 function getCharacterStat(character, stat) {
