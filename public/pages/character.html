@@ -294,6 +294,10 @@
                 <div class="builder-info"><strong>Класс</strong><p id="classInfo">Класс определяет кость хитов, спасброски, владения и умения.</p></div>
                 <div class="builder-info"><strong>Предыстория</strong><p id="backgroundInfo">Предыстория добавляет навыки, владения и особенность.</p></div>
             </div>
+            <div class="builder-subsection" id="extraLanguageField" hidden>
+                <h3>Дополнительный язык</h3>
+                <div class="form-group"><label for="extraLanguage">Выбери дополнительный язык</label><select id="extraLanguage"><option value="Дварфийский">Дварфийский</option><option value="Эльфийский">Эльфийский</option><option value="Великаний">Великаний</option><option value="Гномий">Гномий</option><option value="Гоблинский">Гоблинский</option><option value="Полуросликов">Полуросликов</option><option value="Орочий">Орочий</option><option value="Инфернальный">Инфернальный</option><option value="Драконий">Драконий</option><option value="Небесный">Небесный</option><option value="Бездны">Бездны</option><option value="Подземный">Подземный</option></select></div>
+            </div>
             <div class="builder-subsection" id="halfElfChoices" hidden>
                 <h3>Наследие полуэльфа</h3>
                 <p>Выбери две разные характеристики (кроме Харизмы), которые получат +1, и два навыка.</p>
@@ -607,6 +611,7 @@ function updateDescriptions(){
  const race=raceData[raceSelect.value],cls=classData[classSelect.value],bg=backgroundData[backgroundSelect.value];
  document.getElementById("halfElfChoices").hidden=raceSelect.value!=="Полуэльф";
  const meta=raceMeta[raceSelect.value];
+ document.getElementById("extraLanguageField").hidden=!(raceSelect.value==="Человек"||raceSelect.value==="Полуэльф");
  document.getElementById("raceInfo").textContent=race?Object.entries(race.bonus).map(([k,v])=>abilityLabels[k]+" "+signed(v)).join(", ")+". "+race.traits+(meta?" Скорость "+meta.speed+" фт.; размер: "+meta.size+"; языки: "+meta.languages+".":""):"Авторская раса: её игровые свойства нужно согласовать с мастером.";
  document.getElementById("classInfo").textContent=cls?"Кость хитов d"+cls.die+". Спасброски: "+cls.saves.map(x=>abilityLabels[x]).join(" и ")+". Владения: "+cls.armor+". Оружие: "+cls.weapons+". Инструменты: "+(classTools[classSelect.value]||classTools.остальные)+". Особенность: "+cls.feature:"Авторский класс не имеет автоматических правил — согласуй кость хитов, владения и способности.";
  document.getElementById("backgroundInfo").textContent=bg?"Навыки: "+bg.skills.join(", ")+". Инструменты/транспорт: "+(backgroundTools[backgroundSelect.value]||"Нет")+". Особенность: "+bg.feature:"Авторская предыстория: навыки и особенность нужно задать вручную с мастером.";
@@ -730,7 +735,7 @@ form.addEventListener("submit",async event=>{
    hit_die:hitDie,subclass:subclass?subclass[0]:null,subclass_feature:subclass?subclass[1]:null,subclass_bonus_spells:subclass&&subclass[2]?subclass[2]:[],spellcasting:spellcasting,armor_proficiencies:clsData?clsData.armor:"Требует согласования",
    weapon_proficiencies:clsData?clsData.weapons:"Требует согласования",
    tool_proficiencies:[classTools[selectedClass]||"Нет",backgroundTools[selectedBackground]||"Нет"].filter(x=>x!=="Нет").join("; ")||"Нет",
-   languages:raceMeta[selectedRace]?raceMeta[selectedRace].languages:"Требует согласования",
+   languages:raceMeta[selectedRace]?raceMeta[selectedRace].languages+((selectedRace==="Человек"||selectedRace==="Полуэльф")?"; "+document.getElementById("extraLanguage").value:""):"Требует согласования",
    speed:raceMeta[selectedRace]?raceMeta[selectedRace].speed:30,
    size:raceMeta[selectedRace]?raceMeta[selectedRace].size:"Средний",
    feat:feat?{name:feat,description:document.getElementById("featInfo").textContent}:null,
