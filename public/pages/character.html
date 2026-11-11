@@ -573,8 +573,7 @@ const fightingStyles=[
 ["Защита","+1 к КД, пока носишь доспех."],
 ["Дуэлянт","+2 к урону рукопашным оружием в одной руке, если в другой нет другого оружия."],
 ["Сражение большим оружием","При броске урона двуручным или универсальным оружием можешь перебросить 1 или 2 на кости урона (один раз за кость)."],
-["Оборона","Реакцией можешь наложить помеху атаке по союзнику рядом, если держишь щит."],
-["Сражение двумя оружиями","Добавляешь модификатор характеристики к урону второй атаки при сражении двумя оружиями."]
+
 ];
 function renderClassFeatureChoices(){
  const section=document.getElementById("classFeatureChoices"),fighter=classSelect.value==="Воин",rogue=classSelect.value==="Плут";
@@ -710,7 +709,8 @@ function updateDescriptions(){
  featSelect.disabled=!isVariantHuman;featSelect.required=Boolean(isVariantHuman);
  if(!isVariantHuman)featSelect.value="";
  document.getElementById("featInfo").textContent=isVariantHuman?(featSelect.selectedOptions[0]?.textContent||"Выбери черту: она является частью правил вариантного человека."):"Черта на 1 уровне доступна вариантному человеку или по специальному правилу кампании.";
- document.getElementById("raceInfo").textContent=race?Object.entries(race.bonus).map(([k,v])=>abilityLabels[k]+" "+signed(v)).join(", ")+". "+race.traits+(meta?" Скорость "+meta.speed+" фт.; размер: "+meta.size+"; языки: "+meta.languages+".":""):"Авторская раса: её игровые свойства нужно согласовать с мастером.";
+ const raceBonusText=isVariantHuman?"Две разные характеристики +1 по выбору.":race?Object.entries(race.bonus).map(([k,v])=>abilityLabels[k]+" "+signed(v)).join(", "):"";
+ document.getElementById("raceInfo").textContent=race?raceBonusText+". "+(isVariantHuman?selectedSubrace[2]:race.traits)+(meta?" Скорость "+meta.speed+" фт.; размер: "+meta.size+"; языки: "+meta.languages+".":""):"Авторская раса: её игровые свойства нужно согласовать с мастером.";
  document.getElementById("classInfo").textContent=cls?"Кость хитов d"+cls.die+". Спасброски: "+cls.saves.map(x=>abilityLabels[x]).join(" и ")+". Владения: "+cls.armor+". Оружие: "+cls.weapons+". Инструменты: "+(classTools[classSelect.value]||classTools.остальные)+". Особенность: "+cls.feature:"Авторский класс не имеет автоматических правил — согласуй кость хитов, владения и способности.";
  document.getElementById("backgroundInfo").textContent=bg?"Навыки: "+bg.skills.join(", ")+". Инструменты/транспорт: "+(backgroundTools[backgroundSelect.value]||"Нет")+". Особенность: "+bg.feature:"Авторская предыстория: навыки и особенность нужно задать вручную с мастером.";
  document.getElementById("skillInstruction").textContent=cls?"Выбери ровно "+cls.count+" навыка из списка класса. Навыки предыстории добавятся автоматически: "+(bg?bg.skills.join(", "):"нет")+".":"Для авторского класса выбери навыки вручную после согласования.";
@@ -722,7 +722,7 @@ function renderSkillChoices(){
  options.forEach(skill=>{
   const label=document.createElement("label");label.className="skill-choice";
   const input=document.createElement("input");input.type="checkbox";input.name="classSkill";input.value=skill;
-  input.addEventListener("change",updateSkillStatus);
+  input.addEventListener("change",()=>{updateSkillStatus();if(typeof renderClassFeatureChoices==="function")renderClassFeatureChoices();});
   const span=document.createElement("span");span.textContent=skill;label.append(input,span);box.append(label);
  });
  updateSkillStatus();
@@ -741,8 +741,8 @@ raceSelect.addEventListener("change",()=>{renderRaceChoices();updateDescriptions
 backgroundSelect.addEventListener("change",()=>{updateDescriptions();renderClassFeatureChoices();});
 classSelect.addEventListener("change",()=>{updateDescriptions();renderSkillChoices();renderSubclassChoices();renderSpellChoices();renderClassFeatureChoices();});
 document.getElementById("feat").addEventListener("change",()=>document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent);
-document.getElementById("halfElfSkill1").innerHTML=skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
-document.getElementById("halfElfSkill2").innerHTML=skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
+document.getElementById("halfElfSkill1").innerHTML='<option value="" selected disabled>Выбери навык</option>'+skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
+document.getElementById("halfElfSkill2").innerHTML='<option value="" selected disabled>Выбери навык</option>'+skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
 document.getElementById("halfElfSkill2").selectedIndex=1;
 async function suggestCharacter(){
  const concept=document.getElementById("characterConcept").value.trim(),status=document.getElementById("suggestionStatus"),button=document.getElementById("generateCharacterButton");
@@ -805,7 +805,7 @@ form.addEventListener("submit",async event=>{
   const isVariantHuman=selectedRace==="Человек"&&chosenSubraceName==="Вариантный человек";
   let racialBonuses=raceRules?Object.assign({},raceRules.bonus):{};
   if(isVariantHuman)racialBonuses={};
-  let racialTraits=raceRules?raceRules.traits:"Авторские свойства требуют согласования";
+  let racialTraits=isVariantHuman?"Вариантный человек: +1 к двум разным характеристикам, один дополнительный навык, одна черта и один дополнительный язык.":(raceRules?raceRules.traits:"Авторские свойства требуют согласования");
   let raceSpeed=raceMeta[selectedRace]?raceMeta[selectedRace].speed:30;
   if(subrace){
    Object.entries(subrace[1]).forEach(([key,value])=>racialBonuses[key]=(racialBonuses[key]||0)+value);
