@@ -590,7 +590,8 @@ function renderClassFeatureChoices(){
  if(rogue){
   const old=Array.from(expertiseBox.querySelectorAll('input:checked')).map(x=>x.value);
   const bg=backgroundData[backgroundSelect.value];
-  const options=Array.from(new Set(Array.from(document.querySelectorAll('input[name="classSkill"]:checked')).map(x=>x.value).concat(bg?bg.skills:[],"Воровские инструменты")));
+  const racialSkillChoices=["halfElfSkill1","halfElfSkill2","variantHumanSkill"].map(id=>document.getElementById(id).value).filter(Boolean);
+  const options=Array.from(new Set(Array.from(document.querySelectorAll('input[name="classSkill"]:checked')).map(x=>x.value).concat(bg?bg.skills:[],racialSkillChoices,["Воровские инструменты"])));
   expertiseBox.replaceChildren();
   options.forEach(value=>{const label=document.createElement("label");label.className="skill-choice";const input=document.createElement("input");input.type="checkbox";input.name="expertise";input.value=value;input.checked=old.includes(value);input.addEventListener("change",updateExpertiseStatus);const span=document.createElement("span");span.textContent=value;label.append(input,span);expertiseBox.append(label);});
   updateExpertiseStatus();
@@ -768,6 +769,7 @@ document.getElementById("feat").addEventListener("change",()=>document.getElemen
 document.getElementById("halfElfSkill1").innerHTML='<option value="" selected disabled>Выбери навык</option>'+skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
 document.getElementById("halfElfSkill2").innerHTML='<option value="" selected disabled>Выбери навык</option>'+skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
 document.getElementById("halfElfSkill2").selectedIndex=0;
+["halfElfSkill1","halfElfSkill2","variantHumanSkill"].forEach(id=>document.getElementById(id).addEventListener("change",()=>{if(typeof renderClassFeatureChoices==="function")renderClassFeatureChoices();}));
 async function suggestCharacter(){
  const concept=document.getElementById("characterConcept").value.trim(),status=document.getElementById("suggestionStatus"),button=document.getElementById("generateCharacterButton");
  if(!concept){status.textContent="Сначала опиши концепцию персонажа.";return;}
