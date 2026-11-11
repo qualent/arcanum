@@ -440,6 +440,11 @@ function renderCharacterDetails() {
             ["Предыстория", stats.background_feature],
             ["Черта", stats.feat && stats.feat.name ? stats.feat.name + " — " + stats.feat.description : "Нет дополнительной черты"]
         ];
+        const resources = stats.resources && typeof stats.resources === "object" ? Object.entries(stats.resources) : [];
+        if (resources.length) {
+            const resourceText = resources.map(([key, value]) => (value.label || key) + ": " + value.current + "/" + value.max + (value.unit ? " " + value.unit : "")).join(" · ");
+            features.push(["Ресурсы", resourceText]);
+        }
         const magic = stats.spellcasting;
         if (magic) {
             const spells = (magic.cantrips || []).concat(magic.known_spells || [], magic.prepared_spells || [], stats.subclass_bonus_spells || [], stats.racial_cantrips || []);
@@ -759,6 +764,10 @@ async function submitAction() {
         }
 
         showPlayerMessage(completedResult.messages && completedResult.messages.player);
+        if (completedResult.resources && currentCharacter && currentCharacter.stats) {
+            currentCharacter.stats.resources = completedResult.resources;
+            renderCharacterDetails();
+        }
         if (Array.isArray(completedResult.rolls) && completedResult.rolls.length) {
             const rollText = completedResult.rolls.map(roll => roll.is_damage ? "Урон мастера — " + roll.label + ": " + roll.dice.join(", ") + " " + (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) + " = " + roll.total + " (" + roll.damage_type + ")" + (roll.critical ? " — критическое попадание" : "") : "Бросок мастера — " + roll.label + ": d20 (" + roll.dice.join(", ") + ")" + (roll.dice.length > 1 ? ", выбран " + roll.die : "") + " " + (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) + " = " + roll.total + (roll.dc ? " против СЛ " + roll.dc + (roll.success ? " — успех" : " — неудача") : "") + (roll.critical ? " — критическое попадание" : "") + (roll.death_save_effect ? " (" + roll.death_save_effect + ")" : "")).join("\n");
             appendMessage({ role: "system", content: rollText });
