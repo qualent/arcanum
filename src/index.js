@@ -246,7 +246,8 @@ async function handleGameAction(request, env) {
                                 "Бросок мастера — " + roll.label + ": d20 (" + roll.dice.join(", ") + ")" +
                                 (roll.dice.length > 1 ? ", выбран " + roll.die : "") +
                                 " " + (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) +
-                                " = " + roll.total + (roll.dc ? " против СЛ " + roll.dc + (roll.success ? " — успех" : " — неудача") : "")
+                                " = " + roll.total + (roll.dc ? " против СЛ " + roll.dc + (roll.success ? " — успех" : " — неудача") : "") +
+                                (roll.death_save_effect ? " (" + roll.death_save_effect + ")" : "")
                             ).join("\n");
                             await insertRow(env, token, "game_messages", {
                                 user_id: user.id, campaign_id: campaignId, character_id: characterId,
@@ -366,7 +367,8 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
         roll.label + ": " + roll.dice.join(", ") +
         (roll.dice.length > 1 ? " → выбран " + roll.die : "") +
         " " + (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) +
-        " = " + roll.total + (roll.dc ? " против СЛ " + roll.dc + (roll.success ? " — успех" : " — неудача") : "")
+        " = " + roll.total + (roll.dc ? " против СЛ " + roll.dc + (roll.success ? " — успех" : " — неудача") : "") +
+        (roll.death_save_effect ? " (" + roll.death_save_effect + ")" : "")
     ).join("\n");
 
     const resolutionContext = Object.assign({}, context, {
@@ -392,12 +394,14 @@ function validateRollRequests(rawRequests, context) {
     const allowedTypes = ["ability_check", "saving_throw", "attack", "initiative", "death_save"];
     const allowedAbilities = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
     return rawRequests.slice(0, 3).map(request => {
+        if (!request || typeof request !== "object") return null;
         const type = allowedTypes.includes(request.type) ? request.type : "ability_check";
         const ability = allowedAbilities.includes(request.ability) ? request.ability : "strength";
-        const dc = request.dc === null || request.dc === undefined || request.dc === "" ? null : (Number.isInteger(Number(request.dc)) ? Math.max(1, Math.min(30, Number(request.dc))) : null);
+        const rawDc = request.dc;
+        const dc = rawDc === null || rawDc === undefined || rawDc === "" ? (type === "death_save" ? 10 : null) : (Number.isInteger(Number(rawDc)) ? Math.max(1, Math.min(30, Number(rawDc))) : null);
         const skill = typeof request.skill === "string" ? request.skill.slice(0, 40) : "";
         const mode = ["advantage", "disadvantage"].includes(request.mode) ? request.mode : "normal";
-        return { type, ability, dc, skill, mode, label: typeof request.label === "string" ? request.label.slice(0, 100) : "" };
+        return { type, ability, dc, skill, mode, weapon: typeof request.weapon === "string" ? request.weapon.slice(0, 60) : "", label: typeof request.label === "string" ? request.label.slice(0, 100) : "" };
     });
 }
 
@@ -635,7 +639,7 @@ function buildSystemInstruction(context) {
         '"state_changes":{"hp_delta":0,"experience_delta":0,"gold_delta":0,"location":null,"game_time":null,"game_day_delta":0},' +
         '"inventory_changes":[{"operation":"add или remove","item_name":"название","quantity":1,"description":"","item_type":"misc","rarity":"common","weight":0,"properties":{}}],' +
         '"memories":[{"scope":"world или character или session","memory_type":"fact/event/secret/relationship/quest/promise/rule/summary","title":"заголовок","content":"точный факт","importance":1,"tags":[]}],' +
-        '"roll_requests":[{"type":"ability_check|saving_throw|attack|initiative|death_save","ability":"strength|dexterity|constitution|intelligence|wisdom|charisma","skill":"название навыка или пусто","dc":10,"mode":"normal|advantage|disadvantage","label":"что проверяется"}]}',
+        '"roll_requests":[{"type":"ability_check|saving_throw|attack|initiative|death_save","ability":"strength|dexterity|constitution|intelligence|wisdom|charisma","skill":"название навыка или пусто","weapon":"оружие для атаки или пусто","dc":10,"mode":"normal|advantage|disadvantage","label":"что проверяется"}]}',
         "Если изменений нет — нули, null, пустые массивы. narrative обязательно. Не включай в narrative JSON, служебные пояснения или упоминания модели."
     ].join("\n\n");
 }
