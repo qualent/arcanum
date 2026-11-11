@@ -138,7 +138,8 @@ async function handleCharacterInitialize(request, env) {
         const level = Math.max(1, Math.min(20, Number(character.level) || 1));
         const hitDie = getClassHitDie(character.class);
         const conModifier = Math.floor(((Number(character.constitution) || 10) - 10) / 2);
-        const maxHp = Math.max(1, hitDie + conModifier + (Math.floor(hitDie / 2) + 1 + conModifier) * (level - 1));
+        const toughBonus = character.stats && character.stats.feat && character.stats.feat.name === "Крепкий" ? 2 * level : 0;
+        const maxHp = Math.max(1, hitDie + conModifier + (Math.floor(hitDie / 2) + 1 + conModifier) * (level - 1) + toughBonus);
 
         const stateResult = await supabaseRequest(env,
             "/rest/v1/game_states?select=*&character_id=eq." + encodeURIComponent(character.id) +
@@ -531,7 +532,9 @@ function resolveServerRoll(request, context) {
         else if (weapon && weaponProficiencies.includes(weapon)) proficient = true;
         else if (weapon && ["кинжал","рапир","длинн","коротк","арбалет","топор","меч","посох","пращ","дротик","булав","копь","ятаган","молот"].some(root => weapon.includes(root) && weaponProficiencies.includes(root))) proficient = true;
     } else if (request.skill) proficient = skillList.includes(normalizedSkill);
-    const bonus = request.type === "death_save" ? 0 : abilityModifier + (proficient ? proficiencyBonus : 0);
+    let bonus = request.type === "death_save" ? 0 : abilityModifier + (proficient ? proficiencyBonus : 0);
+    if (request.type === "initiative" && stats.feat && stats.feat.name === "Бдительный") bonus += 5;
+    if (request.type === "saving_throw" && stats.feat && stats.feat.name === "Боевой заклинатель" && /концентрац/i.test(request.label || "")) request.mode = "advantage";
     const dice = request.mode === "normal" ? [randomDie(20)] : [randomDie(20), randomDie(20)];
     const die = request.mode === "advantage" ? Math.max(...dice) :
         request.mode === "disadvantage" ? Math.min(...dice) : dice[0];
