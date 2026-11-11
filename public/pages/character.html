@@ -117,10 +117,7 @@
                     </label>
 
                     <select id="level">
-                        <option value="1">1</option>
-                        <option value="3">3</option>
-                        <option value="5">5</option>
-                        <option value="10">10</option>
+                        <option value="1">1 уровень</option>
                     </select>
                 </div>
 
@@ -138,6 +135,14 @@
                         <option value="Дворянин">Дворянин</option>
                         <option value="Изгнанник">Изгнанник</option>
                         <option value="Странник">Странник</option>
+                        <option value="Послушник">Послушник</option>
+                        <option value="Шарлатан">Шарлатан</option>
+                        <option value="Народный герой">Народный герой</option>
+                        <option value="Гильдейский ремесленник">Гильдейский ремесленник</option>
+                        <option value="Отшельник">Отшельник</option>
+                        <option value="Мудрец">Мудрец</option>
+                        <option value="Моряк">Моряк</option>
+                        <option value="Артист">Артист</option>
                         <option value="custom">Своя предыстория</option>
                     </select>
                 </div>
@@ -492,7 +497,7 @@ const createButton=document.getElementById("createCharacterButton");
 const campaignId=localStorage.getItem("arcanum_campaign_id");
 let currentUser=null;
 const statNames=["strength","dexterity","constitution","intelligence","wisdom","charisma"];
-const skillNames=["Акробатика","Анализ","Атлетика","Восприятие","Выживание","Выступление","Запугивание","История","Ловкость рук","Магия","Медицина","Обман","Природа","Проницательность","Религия","Скрытность","Убеждение","Уход за животными"];
+const skillNames=["Акробатика","Анализ","Атлетика","Восприятие","Выживание","Выступление","Запугивание","История","Ловкость рук","Магия","Медицина","Обман","Природа","Проницательность","Расследование","Религия","Скрытность","Убеждение","Уход за животными"];
 const classData={
 "Варвар":{die:12,saves:["strength","constitution"],count:2,skills:["Атлетика","Выживание","Запугивание","Природа","Восприятие","Уход за животными"],feature:"Ярость: бонусный урон и сопротивление дробящему, колющему и рубящему урону в ярости.",armor:"Лёгкие и средние доспехи, щиты",weapons:"Простое и воинское оружие"},
 "Бард":{die:8,saves:["dexterity","charisma"],count:3,skills:["Акробатика","Анализ","Атлетика","Восприятие","Выступление","Запугивание","История","Ловкость рук","Магия","Медицина","Обман","Проницательность","Природа","Религия","Скрытность","Убеждение","Уход за животными"],feature:"Вдохновение барда: бонусным действием даёт союзнику кость d6 для проверки, атаки или спасброска.",armor:"Лёгкие доспехи",weapons:"Простое оружие, ручные арбалеты, длинные и короткие мечи, рапиры"},
@@ -524,7 +529,15 @@ const backgroundData={
 "Учёный":{skills:["Магия","История"],feature:"Исследователь: знаешь, где искать библиотеки, архивы и других учёных."},
 "Дворянин":{skills:["История","Убеждение"],feature:"Привилегированное положение: можешь рассчитывать на уважение знати и доступ к высшему обществу."},
 "Изгнанник":{skills:["Медицина","Выживание"],feature:"Выживший: умеешь добывать пищу и находить укрытие в дикой местности."},
-"Странник":{skills:["Атлетика","Восприятие"],feature:"Память на маршруты: хорошо ориентируешься в знакомой местности и помнишь карты."}
+"Странник":{skills:["Атлетика","Восприятие"],feature:"Память на маршруты: хорошо ориентируешься в знакомой местности и помнишь карты."},
+"Послушник":{skills:["Проницательность","Религия"],feature:"Приют верующих: можешь получить помощь и убежище в храмах своей веры."},
+"Шарлатан":{skills:["Обман","Ловкость рук"],feature:"Ложная личность: у тебя есть поддельная личность и документы."},
+"Народный герой":{skills:["Уход за животными","Выживание"],feature:"Гостеприимство простого народа: обычные люди готовы укрыть и помочь тебе."},
+"Гильдейский ремесленник":{skills:["Проницательность","Убеждение"],feature:"Членство в гильдии: доступ к коллегам, заказам и поддержке гильдии."},
+"Отшельник":{skills:["Медицина","Религия"],feature:"Открытие: у тебя есть важное личное открытие, определяющее твою историю."},
+"Мудрец":{skills:["Магия","История"],feature:"Исследователь: знаешь, где искать библиотеки, архивы и других учёных."},
+"Моряк":{skills:["Атлетика","Восприятие"],feature:"Проезд на корабле: можешь рассчитывать на проход на судах и помощь моряков."},
+"Артист":{skills:["Акробатика","Выступление"],feature:"По популярности: можешь найти место для выступления и получить ночлег за представление."}
 };
 const abilityLabels={strength:"Сила",dexterity:"Ловкость",constitution:"Телосложение",intelligence:"Интеллект",wisdom:"Мудрость",charisma:"Харизма"};
 function modifier(v){return Math.floor((Number(v)-10)/2);}
@@ -596,7 +609,7 @@ async function checkUserAndCampaign(){
  if(!campaignId){errorMessage.textContent="Сначала выбери или создай мир.";createButton.disabled=true;return;}
  const {data:campaign,error:campaignError}=await supabaseClient.from("campaigns").select("id,name").eq("id",campaignId).eq("user_id",user.id).maybeSingle();
  if(campaignError||!campaign){errorMessage.textContent="Мир не найден или нет доступа.";createButton.disabled=true;return;}
- document.querySelector(".page-header p").textContent="Мир: "+campaign.name+". Заполни лист персонажа по правилам D&D 5e (2014).";
+ document.querySelector(".page-header p").textContent="Мир: "+campaign.name+". Создаём персонажа 1 уровня по D&D 5e (2014); дальнейшее развитие будет вести мастер.";
 }
 form.addEventListener("submit",async event=>{
  event.preventDefault();errorMessage.textContent="";successMessage.textContent="";
