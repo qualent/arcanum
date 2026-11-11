@@ -19,6 +19,8 @@ const elements = {
     characterName: document.getElementById("characterName"),
     characterSubtitle: document.getElementById("characterSubtitle"),
     characterLevel: document.getElementById("characterLevel"),
+    proficiencyList: document.getElementById("proficiencyList"),
+    featureList: document.getElementById("featureList"),
     hpText: document.getElementById("hpText"),
     hpFill: document.getElementById("hpFill"),
     saveStatus: document.getElementById("saveStatus"),
@@ -376,7 +378,52 @@ function renderCharacter() {
         setText(document.getElementById(stat + "Mod"), formatModifier(value));
     }
 
+    renderCharacterDetails();
     renderHealth();
+}
+
+function renderCharacterDetails() {
+    const stats = currentCharacter.stats && typeof currentCharacter.stats === "object" ? currentCharacter.stats : {};
+    const rows = [
+        ["Спасброски", Array.isArray(stats.saving_throw_proficiencies) ? stats.saving_throw_proficiencies.map(key => ({strength:"Сила",dexterity:"Ловкость",constitution:"Телосложение",intelligence:"Интеллект",wisdom:"Мудрость",charisma:"Харизма"}[key] || key)).join(", ") : "Не указаны"],
+        ["Навыки", Array.isArray(stats.skill_proficiencies) ? stats.skill_proficiencies.join(", ") : "Не указаны"],
+        ["Бонус мастерства", stats.proficiency_bonus ? "+" + stats.proficiency_bonus : "+2"],
+        ["Доспехи", stats.armor_proficiencies || "Не указаны"],
+        ["Оружие", stats.weapon_proficiencies || "Не указано"]
+    ];
+    if (elements.proficiencyList) {
+        elements.proficiencyList.replaceChildren();
+        rows.forEach(([title, value]) => {
+            const row = document.createElement("div");
+            row.className = "sheet-detail-item";
+            const strong = document.createElement("strong");
+            strong.textContent = title;
+            const p = document.createElement("p");
+            p.textContent = value;
+            row.append(strong, p);
+            elements.proficiencyList.appendChild(row);
+        });
+    }
+    if (elements.featureList) {
+        elements.featureList.replaceChildren();
+        const features = [
+            ["Особенности расы", stats.racial_traits],
+            ["Особенность класса", stats.class_features],
+            ["Предыстория", stats.background_feature],
+            ["Черта", stats.feat && stats.feat.name ? stats.feat.name + " — " + stats.feat.description : "Нет дополнительной черты"]
+        ];
+        features.forEach(([title, value]) => {
+            if (!value) return;
+            const row = document.createElement("div");
+            row.className = "sheet-detail-item";
+            const strong = document.createElement("strong");
+            strong.textContent = title;
+            const p = document.createElement("p");
+            p.textContent = value;
+            row.append(strong, p);
+            elements.featureList.appendChild(row);
+        });
+    }
 }
 
 function renderHealth() {
