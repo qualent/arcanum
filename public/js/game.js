@@ -107,7 +107,8 @@ function calculateMaxHp(character) {
     const laterLevelsHp = (Math.floor(hitDie / 2) + 1 + constitutionModifier) * (level - 1);
 
     const toughBonus = character.stats && character.stats.feat && character.stats.feat.name === "Крепкий" ? 2 * level : 0;
-    return Math.max(1, firstLevelHp + laterLevelsHp + toughBonus);
+    const hillDwarfBonus = character.stats && character.stats.subrace === "Холмовой дварф" ? level : 0;
+    return Math.max(1, firstLevelHp + laterLevelsHp + toughBonus + hillDwarfBonus);
 }
 
 function getCharacterStat(character, stat) {
