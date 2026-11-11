@@ -376,14 +376,23 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
         return decision;
     }
 
-    const rolls = requests.map(request => resolveServerRoll(request, context));
-    const rollReport = rolls.map(roll =>
-        roll.label + ": " + roll.dice.join(", ") +
-        (roll.dice.length > 1 ? " → выбран " + roll.die : "") +
-        " " + (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) +
-        " = " + roll.total + (roll.dc ? " против СЛ " + roll.dc + (roll.success ? " — успех" : " — неудача") : "") +
-        (roll.death_save_effect ? " (" + roll.death_save_effect + ")" : "")
-    ).join("\n");
+    const rolls = [];
+    for (const request of requests) {
+        if (request.type === "damage") {
+            const previousAttack = rolls.slice().reverse().find(roll => roll.type === "attack");
+            if (previousAttack && previousAttack.success === false) continue;
+        }
+        rolls.push(resolveServerRoll(request, context));
+    }
+    const rollReport = rolls.map(roll => {
+        if (roll.is_damage) return roll.label + ": " + roll.dice.join(", ") + " " +
+            (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) + " = " + roll.total + " урона (" + roll.damage_type + ")";
+        return roll.label + ": " + roll.dice.join(", ") +
+            (roll.dice.length > 1 ? " → выбран " + roll.die : "") +
+            " " + (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) +
+            " = " + roll.total + (roll.dc ? " против СЛ " + roll.dc + (roll.success ? " — успех" : " — неудача") : "") +
+            (roll.death_save_effect ? " (" + roll.death_save_effect + ")" : "");
+    }).join("\n");
 
     const resolutionContext = Object.assign({}, context, {
         messages: (context.messages || []).concat([{
@@ -405,17 +414,18 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
 
 function validateRollRequests(rawRequests, context) {
     if (!Array.isArray(rawRequests)) return [];
-    const allowedTypes = ["ability_check", "saving_throw", "attack", "initiative", "death_save"];
+    const allowedTypes = ["ability_check", "saving_throw", "attack", "initiative", "death_save", "damage"];
     const allowedAbilities = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
     return rawRequests.slice(0, 3).map(request => {
         if (!request || typeof request !== "object") return null;
-        const type = allowedTypes.includes(request.type) ? request.type : "ability_check";
+        if (!allowedTypes.includes(request.type)) return null;
+        const type = request.type;
         const ability = allowedAbilities.includes(request.ability) ? request.ability : "strength";
         const rawDc = request.dc;
         const dc = rawDc === null || rawDc === undefined || rawDc === "" ? (type === "death_save" ? 10 : null) : (Number.isInteger(Number(rawDc)) ? Math.max(1, Math.min(30, Number(rawDc))) : null);
         const skill = typeof request.skill === "string" ? request.skill.slice(0, 40) : "";
         const mode = ["advantage", "disadvantage"].includes(request.mode) ? request.mode : "normal";
-        return { type, ability, dc, skill, mode, weapon: typeof request.weapon === "string" ? request.weapon.slice(0, 60) : "", label: typeof request.label === "string" ? request.label.slice(0, 100) : "" };
+        return { type, ability, dc, skill, mode, weapon: typeof request.weapon === "string" ? request.weapon.slice(0, 60) : "", dice: typeof request.dice === "string" ? request.dice.slice(0, 20) : "", damage_type: typeof request.damage_type === "string" ? request.damage_type.slice(0, 40) : "обычный", label: typeof request.label === "string" ? request.label.slice(0, 100) : "" };
     }).filter(Boolean);
 }
 
@@ -443,6 +453,31 @@ const SKILL_ABILITIES = {
 function resolveServerRoll(request, context) {
     const character = context.character || {};
     const stats = character.stats && typeof character.stats === "object" ? character.stats : {};
+    const randomDie = sides => {
+        const bytes = new Uint32Array(1);
+        crypto.getRandomValues(bytes);
+        return (bytes[0] % sides) + 1;
+    };
+    if (request.type === "damage") {
+        const match = request.dice.match(/^(\d{1,2})d(4|6|8|10|12|20)([+-]\d{1,3})?$/i);
+        if (!match) throw new Error("Мастер запросил неверную формулу урона: " + request.dice);
+        const count = Math.max(1, Math.min(20, Number(match[1])));
+        const sides = Number(match[2]);
+        const bonus = match[3] ? Number(match[3]) : 0;
+        const dice = Array.from({ length: count }, () => randomDie(sides));
+        const subtotal = dice.reduce((sum, value) => sum + value, 0);
+        return { type: "damage", label: request.label || "Урон", dice, die: subtotal, bonus, total: Math.max(0, subtotal + bonus), dc: null, is_damage: true, damage_type: request.damage_type || "обычный", dice_expression: request.dice };
+    }
+
+    const skillAliases = {
+        "acrobatics":"акробатика","animal handling":"уход за животными","arcana":"магия",
+        "athletics":"атлетика","deception":"обман","history":"история","insight":"проницательность",
+        "intimidation":"запугивание","investigation":"расследование","medicine":"медицина",
+        "nature":"природа","perception":"восприятие","performance":"выступление",
+        "persuasion":"убеждение","religion":"религия","sleight of hand":"ловкость рук",
+        "stealth":"скрытность","survival":"выживание"
+    };
+    const normalizedSkill = skillAliases[request.skill.toLowerCase()] || request.skill.toLowerCase();
     const ability = request.type === "ability_check" && request.skill
         ? (SKILL_ABILITIES[request.skill.toLowerCase()] || request.ability)
         : request.ability;
@@ -451,24 +486,26 @@ function resolveServerRoll(request, context) {
     const proficiencyBonus = Math.max(2, Math.min(6, Number(stats.proficiency_bonus) || (Math.ceil((Number(character.level) || 1) / 4) + 1)));
     const skillList = Array.isArray(stats.skill_proficiencies) ? stats.skill_proficiencies.map(value => String(value).toLowerCase()) : [];
     const saveList = Array.isArray(stats.saving_throw_proficiencies) ? stats.saving_throw_proficiencies : [];
-    const proficient = request.type === "saving_throw"
-        ? saveList.includes(ability)
-        : request.type === "attack" ? true
-        : request.skill ? skillList.includes(request.skill.toLowerCase()) : false;
+    const weaponProficiencies = String(stats.weapon_proficiencies || "").toLowerCase();
+    const weapon = String(request.weapon || "").toLowerCase();
+    const simpleWeapons = ["кинжал","дротик","праща","посох","булава","копьё","копье","дубина","серп","ятаган","лёгкий арбалет","легкий арбалет"];
+    const martialWeapons = ["длинный меч","рапира","короткий меч","длинный лук","короткий лук","боевой топор","двуручный топор","молот","трезубец","тяжёлый арбалет","тяжелый арбалет"];
+    let proficient = false;
+    if (request.type === "saving_throw") proficient = saveList.includes(ability);
+    else if (request.type === "attack") {
+        if (weaponProficiencies.includes("простое и воинское")) proficient = true;
+        else if (weaponProficiencies.includes("простое оружие") && simpleWeapons.some(name => weapon.includes(name) || name.includes(weapon))) proficient = true;
+        else if (weaponProficiencies.includes("воинское оружие") && martialWeapons.some(name => weapon.includes(name) || name.includes(weapon))) proficient = true;
+        else if (weapon && weaponProficiencies.includes(weapon)) proficient = true;
+    } else if (request.skill) proficient = skillList.includes(normalizedSkill);
     const bonus = request.type === "death_save" ? 0 : abilityModifier + (proficient ? proficiencyBonus : 0);
-    const sides = 20;
-    const randomDie = () => {
-        const bytes = new Uint32Array(1);
-        crypto.getRandomValues(bytes);
-        return (bytes[0] % sides) + 1;
-    };
-    const dice = request.mode === "normal" ? [randomDie()] : [randomDie(), randomDie()];
+    const dice = request.mode === "normal" ? [randomDie(20)] : [randomDie(20), randomDie(20)];
     const die = request.mode === "advantage" ? Math.max(...dice) :
         request.mode === "disadvantage" ? Math.min(...dice) : dice[0];
     const total = die + bonus;
     return {
         type: request.type, label: request.label || (request.skill || request.type),
-        ability, skill: request.skill, dice, die, bonus, total, dc: request.dc,
+        ability, skill: request.skill, weapon: request.weapon, dice, die, bonus, total, dc: request.dc,
         success: request.type === "death_save" ? die >= 10 : (request.dc === null ? null : total >= request.dc),
         death_save_effect: request.type === "death_save" ? (die === 20 ? "восстановление 1 HP" : die === 1 ? "две неудачи" : die >= 10 ? "одна удача" : "одна неудача") : null,
         natural: die, proficient, mode: request.mode
@@ -653,7 +690,7 @@ function buildSystemInstruction(context) {
         '"state_changes":{"hp_delta":0,"experience_delta":0,"gold_delta":0,"location":null,"game_time":null,"game_day_delta":0},' +
         '"inventory_changes":[{"operation":"add или remove","item_name":"название","quantity":1,"description":"","item_type":"misc","rarity":"common","weight":0,"properties":{}}],' +
         '"memories":[{"scope":"world или character или session","memory_type":"fact/event/secret/relationship/quest/promise/rule/summary","title":"заголовок","content":"точный факт","importance":1,"tags":[]}],' +
-        '"roll_requests":[{"type":"ability_check|saving_throw|attack|initiative|death_save","ability":"strength|dexterity|constitution|intelligence|wisdom|charisma","skill":"название навыка или пусто","weapon":"оружие для атаки или пусто","dc":10,"mode":"normal|advantage|disadvantage","label":"что проверяется"}]}',
+        '"roll_requests":[{"type":"ability_check|saving_throw|attack|initiative|death_save|damage","ability":"strength|dexterity|constitution|intelligence|wisdom|charisma","skill":"название навыка или пусто","weapon":"оружие для атаки или пусто","dice":"1d8+3 для урона или пусто","damage_type":"тип урона","dc":10,"mode":"normal|advantage|disadvantage","label":"что проверяется"}]}',
         "Если изменений нет — нули, null, пустые массивы. narrative обязательно. Не включай в narrative JSON, служебные пояснения или упоминания модели."
     ].join("\n\n");
 }
