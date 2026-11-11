@@ -313,6 +313,31 @@
 
         </section>
 
+        <section class="game-panel">
+
+            <h3 class="panel-title">Проверка характеристики</h3>
+
+            <label class="check-label" for="checkStat">Характеристика</label>
+            <select id="checkStat" class="check-input">
+                <option value="strength">Сила</option>
+                <option value="dexterity">Ловкость</option>
+                <option value="constitution">Телосложение</option>
+                <option value="intelligence">Интеллект</option>
+                <option value="wisdom">Мудрость</option>
+                <option value="charisma">Харизма</option>
+            </select>
+
+            <label class="check-label" for="checkDc">Сложность (СЛ)</label>
+            <input id="checkDc" class="check-input" type="number" min="1" max="30" value="12">
+
+            <button type="button" class="action-button check-button" id="checkButton">
+                Бросить проверку
+            </button>
+
+            <p class="check-result" id="checkResult">Результат проверки появится здесь.</p>
+
+        </section>
+
     </aside>
 
 
