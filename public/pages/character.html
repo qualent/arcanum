@@ -831,6 +831,13 @@ form.addEventListener("submit",async event=>{
    if(chosenSpells.length!==spellCount)throw new Error("Выбери ровно "+spellCount+" заклинаний 1 уровня.");
    spellcasting={ability:spellRules.ability,cantrips,known_spells:spellRules.prepared?[]:chosenSpells,prepared_spells:spellRules.prepared?chosenSpells:[],spell_save_dc:8+Math.ceil(1+level/4)+modifier(abilityScore),spell_attack_bonus:Math.ceil(1+level/4)+modifier(abilityScore),spell_slots_level_1:selectedClass==="Колдун"?1:2,spellcasting_type:spellRules.prepared?"prepared":"known"};
   }
+  const resources={};
+  if(selectedClass==="Варвар")resources.rage={label:"Ярость",current:2,max:2,reset:"long_rest"};
+  if(selectedClass==="Бард"){const uses=Math.max(1,modifier(finalStats.charisma));resources.bardic_inspiration={label:"Вдохновение барда",current:uses,max:uses,reset:"long_rest"};}
+  if(selectedClass==="Воин")resources.second_wind={label:"Второе дыхание",current:1,max:1,reset:"short_or_long_rest"};
+  if(selectedClass==="Паладин")resources.lay_on_hands={label:"Запас наложения рук",current:5,max:5,unit:"HP",reset:"long_rest"};
+  if(selectedClass==="Волшебник")resources.arcane_recovery={label:"Магическое восстановление",current:1,max:1,reset:"long_rest"};
+  if(spellcasting)resources.spell_slots_level_1={label:"Ячейки заклинаний 1 уровня",current:spellcasting.spell_slots_level_1,max:spellcasting.spell_slots_level_1,reset:selectedClass==="Колдун"?"short_or_long_rest":"long_rest"};
   const details={
    ability_scores_base:baseStats,ability_bonuses:racialBonuses,ability_scores:finalStats,
    proficiency_bonus:Math.ceil(1+level/4),
@@ -842,7 +849,7 @@ form.addEventListener("submit",async event=>{
    dragon_breath_shape:dragonAncestry?dragonAncestries[dragonAncestry].split(";")[2].trim():null,
    class_features:clsData?clsData.feature:"Авторские свойства требуют согласования",
    background_feature:bgRules?bgRules.feature:"Авторская особенность требует согласования",
-   hit_die:hitDie,fighting_style:fightingStyle?fightingStyle[0]:null,fighting_style_description:fightingStyle?fightingStyle[1]:null,expertise:expertise,subclass:subclass?subclass[0]:null,subclass_feature:subclass?subclass[1]:null,subclass_bonus_spells:subclass&&subclass[2]?subclass[2]:[],spellcasting:spellcasting,armor_proficiencies:(clsData?clsData.armor:"Требует согласования")+(subrace&&subrace[0]==="Горный дварф"?"; владение средними доспехами":""),
+   hit_die:hitDie,resources:resources,fighting_style:fightingStyle?fightingStyle[0]:null,fighting_style_description:fightingStyle?fightingStyle[1]:null,expertise:expertise,subclass:subclass?subclass[0]:null,subclass_feature:subclass?subclass[1]:null,subclass_bonus_spells:subclass&&subclass[2]?subclass[2]:[],spellcasting:spellcasting,armor_proficiencies:(clsData?clsData.armor:"Требует согласования")+(subrace&&subrace[0]==="Горный дварф"?"; владение средними доспехами":""),
    weapon_proficiencies:(clsData?clsData.weapons:"Требует согласования")+(selectedRace==="Эльф"?"; длинные и короткие мечи, длинные и короткие луки":""),
    tool_proficiencies:[classTools[selectedClass]||"Нет",backgroundTools[selectedBackground]||"Нет"].filter(x=>x!=="Нет").join("; ")||"Нет",
    languages:raceMeta[selectedRace]?raceMeta[selectedRace].languages+((selectedRace==="Человек"||selectedRace==="Полуэльф")?"; "+document.getElementById("extraLanguage").value:""):"Требует согласования",
