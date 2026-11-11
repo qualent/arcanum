@@ -265,21 +265,35 @@ async function handleCharacterInitialize(request, env) {
             "&campaign_id=eq." + encodeURIComponent(body.campaign_id) + "&user_id=eq." + encodeURIComponent(user.id) + "&limit=1", {}, token);
         if (!stateResult.ok) throw new Error("Не удалось проверить состояние персонажа.");
         let gameState = stateResult.data && stateResult.data[0];
-        if (gameState && Number(gameState.max_hp) !== maxHp) {
-            const adjustedHp = Math.max(0, Math.min(maxHp, Number(gameState.current_hp) || 0));
-            const updated = await supabaseAdminRequest(env,
-                "/rest/v1/game_states?id=eq." + encodeURIComponent(gameState.id) + "&user_id=eq." + encodeURIComponent(user.id), {
-                    method: "PATCH", headers: { "Prefer": "return=representation" },
-                    body: JSON.stringify({ max_hp: maxHp, current_hp: adjustedHp, updated_at: new Date().toISOString() })
-                }, token);
-            if (!updated.ok || !updated.data || !updated.data.length) throw new Error("Не удалось пересчитать максимальное здоровье персонажа.");
-            gameState = updated.data[0];
+        if (gameState) {
+            const patch = {};
+            if (gameState.max_hp == null || Number(gameState.max_hp) !== maxHp) patch.max_hp = maxHp;
+            const currentHp = Number(gameState.current_hp);
+            if (gameState.current_hp == null || !Number.isFinite(currentHp)) patch.current_hp = maxHp;
+            else if (currentHp > maxHp) patch.current_hp = maxHp;
+            const minimumExperience = getExperienceForLevel(level);
+            const experience = Number(gameState.experience);
+            if (gameState.experience == null || !Number.isFinite(experience) || experience < minimumExperience) patch.experience = minimumExperience;
+            if (gameState.gold == null || !Number.isFinite(Number(gameState.gold))) patch.gold = 0;
+            if (!gameState.location) patch.location = "Начальная локация";
+            if (gameState.game_day == null || !Number.isFinite(Number(gameState.game_day))) patch.game_day = 1;
+            if (!gameState.game_time) patch.game_time = "Утро";
+            if (Object.keys(patch).length) {
+                patch.updated_at = new Date().toISOString();
+                const updated = await supabaseAdminRequest(env,
+                    "/rest/v1/game_states?id=eq." + encodeURIComponent(gameState.id) + "&user_id=eq." + encodeURIComponent(user.id), {
+                        method: "PATCH", headers: { "Prefer": "return=representation" },
+                        body: JSON.stringify(patch)
+                    }, token);
+                if (!updated.ok || !updated.data || !updated.data.length) throw new Error("Не удалось восстановить игровое состояние персонажа.");
+                gameState = updated.data[0];
+            }
         }
         if (!gameState) {
             gameState = await insertRow(env, token, "game_states", {
                 user_id: user.id, campaign_id: body.campaign_id, character_id: character.id,
                 current_hp: maxHp, max_hp: maxHp, location: "Начальная локация",
-                game_day: 1, game_time: "Утро", experience: 0, gold: 0
+                game_day: 1, game_time: "Утро", experience: getExperienceForLevel(level), gold: 0
             });
         }
 
@@ -328,6 +342,12 @@ async function handleCharacterInitialize(request, env) {
         console.error("Character initialization error:", error);
         return jsonResponse({ success: false, error: error.message || "Не удалось подготовить персонажа." }, error.status || 500);
     }
+}
+
+function getExperienceForLevel(level) {
+    const thresholds = [0, 0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000];
+    const safeLevel = Math.max(1, Math.min(20, Math.floor(Number(level) || 1)));
+    return thresholds[safeLevel] || 0;
 }
 
 function getDefaultCharacterResources(character, stats) {
