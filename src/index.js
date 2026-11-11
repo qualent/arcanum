@@ -167,7 +167,9 @@ async function handleCharacterInitialize(request, env) {
             "&campaign_id=eq." + encodeURIComponent(body.campaign_id) + "&user_id=eq." + encodeURIComponent(user.id) + "&limit=1", {}, token);
         if (!inventoryResult.ok) throw new Error("Не удалось проверить инвентарь персонажа.");
         let inventory = inventoryResult.data || [];
-        if (!inventory.length) {
+        const characterStats = character.stats && typeof character.stats === "object" ? character.stats : {};
+        const needsInitialGear = characterStats.arcanum_initialized !== true;
+        if (!inventory.length && needsInitialGear) {
             const starterItems = getStarterEquipment(character.class);
             for (const item of starterItems) {
                 const created = await insertRow(env, token, "inventory", {
@@ -184,6 +186,15 @@ async function handleCharacterInitialize(request, env) {
                 "/rest/v1/inventory?select=*&character_id=eq." + encodeURIComponent(character.id) +
                 "&campaign_id=eq." + encodeURIComponent(body.campaign_id) + "&user_id=eq." + encodeURIComponent(user.id) + "&order=created_at.asc", {}, token);
             inventory = fullInventory.ok ? fullInventory.data || [] : inventory;
+        }
+        if (needsInitialGear) {
+            const updatedStats = Object.assign({}, characterStats, { arcanum_initialized: true });
+            const marked = await supabaseAdminRequest(env,
+                "/rest/v1/characters?id=eq." + encodeURIComponent(character.id) + "&user_id=eq." + encodeURIComponent(user.id), {
+                    method: "PATCH", headers: { "Prefer": "return=minimal" },
+                    body: JSON.stringify({ stats: updatedStats })
+                }, token);
+            if (!marked.ok) throw new Error("Не удалось отметить первичную настройку персонажа.");
         }
         return jsonResponse({ success: true, state: gameState, inventory: inventory }, 200);
     } catch (error) {
