@@ -7,6 +7,7 @@ export default {
         if (url.pathname === "/api/health" && request.method === "GET") {
             return jsonResponse({ success: true, service: "Arcanum API", status: "online", ai: env.GEMINI_API_KEY ? "configured" : "missing_key", model: env.GEMINI_MODEL || DEFAULT_MODEL, supabase: env.SUPABASE_URL && env.SUPABASE_ANON_KEY ? "configured" : "missing_config", server_writes: (env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY) ? "configured" : "missing_secret_key" });
         }
+        if (url.pathname === "/api/character/initialize" && request.method === "POST") return handleCharacterInitialize(request, env);
         if (url.pathname === "/api/game/action" && request.method === "POST") return handleGameAction(request, env);
         if (url.pathname.startsWith("/api/")) return jsonResponse({ success: false, error: "API endpoint not found" }, 404);
         return env.ASSETS.fetch(request);
@@ -15,6 +16,101 @@ export default {
 
 const DEFAULT_MODEL = "gemini-3.8-flash";
 const MAX_ACTION_LENGTH = 5000;
+
+async function handleCharacterInitialize(request, env) {
+    try {
+        if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY || !(env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY)) {
+            return jsonResponse({ success: false, error: "Сервер не настроен для создания персонажа." }, 503);
+        }
+        const authHeader = request.headers.get("Authorization") || "";
+        if (!authHeader.startsWith("Bearer ")) return jsonResponse({ success: false, error: "Authorization required" }, 401);
+        const token = authHeader.slice(7);
+        const user = await getSupabaseUser(env, token);
+        if (!user) return jsonResponse({ success: false, error: "Сессия истекла. Войди снова." }, 401);
+        const body = await request.json();
+        if (!body.campaign_id || !body.character_id) return jsonResponse({ success: false, error: "Не передан мир или персонаж." }, 400);
+
+        const owned = await getOwnedGame(env, token, user.id, body.campaign_id, body.character_id);
+        if (!owned) return jsonResponse({ success: false, error: "Мир или персонаж не найдены либо нет доступа." }, 404);
+
+        const character = owned.character;
+        const level = Math.max(1, Math.min(20, Number(character.level) || 1));
+        const hitDie = getClassHitDie(character.class);
+        const conModifier = Math.floor(((Number(character.constitution) || 10) - 10) / 2);
+        const maxHp = Math.max(1, hitDie + conModifier + (Math.floor(hitDie / 2) + 1 + conModifier) * (level - 1));
+
+        const stateResult = await supabaseRequest(env,
+            "/rest/v1/game_states?select=*&character_id=eq." + encodeURIComponent(character.id) +
+            "&campaign_id=eq." + encodeURIComponent(body.campaign_id) + "&user_id=eq." + encodeURIComponent(user.id) + "&limit=1", {}, token);
+        if (!stateResult.ok) throw new Error("Не удалось проверить состояние персонажа.");
+        let gameState = stateResult.data && stateResult.data[0];
+        if (!gameState) {
+            gameState = await insertRow(env, token, "game_states", {
+                user_id: user.id, campaign_id: body.campaign_id, character_id: character.id,
+                current_hp: maxHp, max_hp: maxHp, location: "Начальная локация",
+                game_day: 1, game_time: "Утро", experience: 0, gold: 0
+            });
+        }
+
+        const inventoryResult = await supabaseRequest(env,
+            "/rest/v1/inventory?select=id&character_id=eq." + encodeURIComponent(character.id) +
+            "&campaign_id=eq." + encodeURIComponent(body.campaign_id) + "&user_id=eq." + encodeURIComponent(user.id) + "&limit=1", {}, token);
+        if (!inventoryResult.ok) throw new Error("Не удалось проверить инвентарь персонажа.");
+        let inventory = inventoryResult.data || [];
+        if (!inventory.length) {
+            const starterItems = getStarterEquipment(character.class);
+            for (const item of starterItems) {
+                const created = await insertRow(env, token, "inventory", {
+                    user_id: user.id, campaign_id: body.campaign_id, character_id: character.id,
+                    item_name: item.name, description: item.description, quantity: item.quantity || 1,
+                    item_type: item.type, rarity: "common", weight: item.weight || 0,
+                    properties: item.properties || {}, equipped: Boolean(item.equipped),
+                    requires_attunement: false, attuned: false
+                });
+                inventory.push(created);
+            }
+        } else {
+            const fullInventory = await supabaseRequest(env,
+                "/rest/v1/inventory?select=*&character_id=eq." + encodeURIComponent(character.id) +
+                "&campaign_id=eq." + encodeURIComponent(body.campaign_id) + "&user_id=eq." + encodeURIComponent(user.id) + "&order=created_at.asc", {}, token);
+            inventory = fullInventory.ok ? fullInventory.data || [] : inventory;
+        }
+        return jsonResponse({ success: true, state: gameState, inventory: inventory }, 200);
+    } catch (error) {
+        console.error("Character initialization error:", error);
+        return jsonResponse({ success: false, error: error.message || "Не удалось подготовить персонажа." }, error.status || 500);
+    }
+}
+
+function getClassHitDie(className) {
+    const name = String(className || "").toLowerCase();
+    if (name.includes("варвар") || name.includes("barbarian")) return 12;
+    if (["воин", "паладин", "следопыт", "fighter", "paladin", "ranger"].some(x => name.includes(x))) return 10;
+    if (["волшебник", "чародей", "wizard", "sorcerer"].some(x => name.includes(x))) return 6;
+    return 8;
+}
+
+function getStarterEquipment(className) {
+    const name = String(className || "").toLowerCase();
+    const item = (name, type, description, quantity, weight, equipped) => ({ name, type, description, quantity: quantity || 1, weight: weight || 0, equipped: Boolean(equipped) });
+    const commonPack = item("Набор исследователя", "gear", "Рюкзак, спальник, столовый набор, трутница, факелы, рацион и бурдюк.", 1, 25, false);
+    const kits = [
+        { match: ["варвар", "barbarian"], items: [item("Двуручный топор", "weapon", "Воинское рукопашное оружие, 1к12 рубящего урона.", 1, 7, true), item("Ручной топор", "weapon", "Простое рукопашное оружие, 1к6 рубящего урона.", 2, 2, false), commonPack] },
+        { match: ["воин", "fighter"], items: [item("Длинный меч", "weapon", "Воинское оружие, 1к8 рубящего урона; универсальное (1к10).", 1, 3, true), item("Щит", "armor", "Пока экипирован, даёт +2 к КД.", 1, 6, true), item("Кольчуга", "armor", "Средний/тяжёлый доспех, КД 16.", 1, 55, true), item("Лёгкий арбалет", "weapon", "Дальнобойное оружие, 1к8 колющего урона.", 1, 5, false), item("Болты", "ammunition", "Боеприпасы для лёгкого арбалета.", 20, 0, false), commonPack] },
+        { match: ["плут", "rogue"], items: [item("Рапира", "weapon", "Воинское фехтовальное оружие, 1к8 колющего урона.", 1, 2, true), item("Короткий лук", "weapon", "Дальнобойное оружие, 1к6 колющего урона.", 1, 2, false), item("Стрелы", "ammunition", "Боеприпасы для лука.", 20, 0, false), item("Воровские инструменты", "tool", "Инструменты для вскрытия замков и обезвреживания ловушек.", 1, 1, false), item("Кинжал", "weapon", "Простое фехтовальное оружие, 1к4 колющего урона.", 2, 1, false), commonPack] },
+        { match: ["следопыт", "ranger"], items: [item("Два коротких меча", "weapon", "Воинское оружие, 1к6 рубящего урона каждый.", 2, 2, true), item("Длинный лук", "weapon", "Дальнобойное оружие, 1к8 колющего урона.", 1, 2, false), item("Стрелы", "ammunition", "Боеприпасы для лука.", 20, 0, false), item("Чешуйчатый доспех", "armor", "Средний доспех, КД 14 + модификатор Ловкости (макс. +2).", 1, 45, true), commonPack] },
+        { match: ["паладин", "paladin"], items: [item("Длинный меч", "weapon", "Воинское оружие, 1к8 рубящего урона.", 1, 3, true), item("Щит", "armor", "Даёт +2 к КД.", 1, 6, true), item("Кольчуга", "armor", "Тяжёлый доспех, КД 16.", 1, 55, true), item("Священный символ", "focus", "Фокусировка для заклинаний паладина.", 1, 1, false), commonPack] },
+        { match: ["жрец", "cleric"], items: [item("Булава", "weapon", "Простое оружие, 1к6 дробящего урона.", 1, 4, true), item("Щит", "armor", "Даёт +2 к КД.", 1, 6, true), item("Чешуйчатый доспех", "armor", "Средний доспех, КД 14 + Ловкость (макс. +2).", 1, 45, true), item("Священный символ", "focus", "Фокусировка для заклинаний жреца.", 1, 1, false), commonPack] },
+        { match: ["волшебник", "wizard"], items: [item("Боевой посох", "weapon", "Простое оружие, 1к6 дробящего урона; универсальное (1к8).", 1, 4, true), item("Книга заклинаний", "focus", "Содержит начальные заклинания волшебника.", 1, 3, false), item("Компонентная сумка", "focus", "Материалы для заклинаний с материальным компонентом.", 1, 2, false), item("Кинжал", "weapon", "Простое фехтовальное оружие, 1к4 колющего урона.", 1, 1, false), item("Набор учёного", "gear", "Чернила, перо, бумага, книга и мелкие принадлежности.", 1, 10, false)] },
+        { match: ["чародей", "sorcerer"], items: [item("Лёгкий арбалет", "weapon", "Дальнобойное оружие, 1к8 колющего урона.", 1, 5, true), item("Болты", "ammunition", "Боеприпасы для арбалета.", 20, 0, false), item("Компонентная сумка", "focus", "Материалы для заклинаний.", 1, 2, false), item("Кинжал", "weapon", "Простое фехтовальное оружие, 1к4 колющего урона.", 2, 1, false), commonPack] },
+        { match: ["колдун", "warlock"], items: [item("Лёгкий арбалет", "weapon", "Дальнобойное оружие, 1к8 колющего урона.", 1, 5, true), item("Болты", "ammunition", "Боеприпасы для арбалета.", 20, 0, false), item("Компонентная сумка", "focus", "Материалы для заклинаний.", 1, 2, false), item("Кинжал", "weapon", "Простое фехтовальное оружие, 1к4 колющего урона.", 1, 1, false), commonPack] },
+        { match: ["друид", "druid"], items: [item("Ятаган", "weapon", "Простое рукопашное оружие, 1к6 рубящего урона.", 1, 3, true), item("Деревянный щит", "armor", "Даёт +2 к КД.", 1, 6, true), item("Кожаный доспех", "armor", "Лёгкий доспех, КД 11 + модификатор Ловкости.", 1, 10, true), item("Друидический фокус", "focus", "Фокусировка для заклинаний друида.", 1, 1, false), commonPack] },
+        { match: ["монах", "monk"], items: [item("Короткий меч", "weapon", "Простое оружие, 1к6 колющего урона.", 1, 2, true), item("Дротик", "weapon", "Простое метательное оружие, 1к4 колющего урона.", 10, 0.25, false), commonPack] },
+        { match: ["бард", "bard"], items: [item("Рапира", "weapon", "Фехтовальное оружие, 1к8 колющего урона.", 1, 2, true), item("Кожаный доспех", "armor", "Лёгкий доспех, КД 11 + Ловкость.", 1, 10, true), item("Лютня", "tool", "Музыкальный инструмент.", 1, 2, false), item("Кинжал", "weapon", "Простое фехтовальное оружие, 1к4 колющего урона.", 1, 1, false), commonPack] }
+    ];
+    const selected = kits.find(kit => kit.match.some(part => name.includes(part)));
+    return selected ? selected.items : [item("Посох", "weapon", "Простое рукопашное оружие, 1к6 дробящего урона.", 1, 4, true), item("Кинжал", "weapon", "Простое фехтовальное оружие, 1к4 колющего урона.", 1, 1, false), commonPack];
+}
 
 async function handleGameAction(request, env) {
     try {
