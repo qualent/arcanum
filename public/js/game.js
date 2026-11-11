@@ -412,13 +412,14 @@ function renderCharacterDetails() {
         elements.featureList.replaceChildren();
         const features = [
             ["Особенности расы", stats.racial_traits],
+            ["Особенность подкласса", stats.subclass_feature],
             ["Особенность класса", stats.class_features],
             ["Предыстория", stats.background_feature],
             ["Черта", stats.feat && stats.feat.name ? stats.feat.name + " — " + stats.feat.description : "Нет дополнительной черты"]
         ];
         const magic = stats.spellcasting;
         if (magic) {
-            const spells = (magic.cantrips || []).concat(magic.known_spells || [], magic.prepared_spells || []);
+            const spells = (magic.cantrips || []).concat(magic.known_spells || [], magic.prepared_spells || [], stats.subclass_bonus_spells || []);
             const abilityNames = {charisma:"Харизма",wisdom:"Мудрость",intelligence:"Интеллект"};
             const magicText = "Основа: " + (abilityNames[magic.ability] || magic.ability) +
                 " · СЛ " + magic.spell_save_dc + " · атака +" + magic.spell_attack_bonus +
