@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="../css/style.css">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../js/config.js?v=20261111-3"></script>
+    <script src="../js/config.js?v=20261111-4"></script>
     <script src="../js/game.js?v=20261111-3" defer></script>
 <style>.sheet-detail-list{display:grid;gap:9px}.sheet-detail-item{font-size:11px;line-height:1.55;color:var(--muted)}.sheet-detail-item strong{display:block;color:var(--gold-light);font-size:11px;margin-bottom:2px}.sheet-detail-item p{margin:0}</style>
 </head>
@@ -318,6 +318,11 @@
 
             </div>
 
+
+            <div class="dice-count-control">
+                <label for="diceCount">Количество костей</label>
+                <input id="diceCount" type="number" min="1" max="20" value="1" inputmode="numeric">
+            </div>
 
             <div
                 class="dice-result"
