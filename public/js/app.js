@@ -1,7 +1,7 @@
 
 /* =========================================
    ARCANUM — ГЛАВНАЯ СТРАНИЦА
-   Проверка и сохранение авторизации
+   Авторизация и сохранение сессии
 ========================================= */
 
 function loadSupabaseLibrary() {
@@ -15,15 +15,10 @@ function loadSupabaseLibrary() {
         }
 
         const script = document.createElement("script");
-
-        script.src =
-            "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+        script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 
         script.onload = () => {
-            if (
-                window.supabase &&
-                typeof window.supabase.createClient === "function"
-            ) {
+            if (window.supabase) {
                 resolve();
             } else {
                 reject(new Error("Supabase не загрузился."));
@@ -31,7 +26,7 @@ function loadSupabaseLibrary() {
         };
 
         script.onerror = () => {
-            reject(new Error("Не удалось загрузить библиотеку Supabase."));
+            reject(new Error("Ошибка загрузки Supabase CDN."));
         };
 
         document.head.appendChild(script);
@@ -43,53 +38,47 @@ function updatePageForUser(session) {
     const isLoggedIn = Boolean(session && session.user);
 
     const loginButton = document.querySelector(
-        ".nav .nav-button"
+        "#main-site-header .nav-button"
     );
 
     const startButtons = document.querySelectorAll(
         ".hero-buttons .button-primary, .cta .button-primary"
     );
 
-    // Кнопка в шапке
     if (loginButton) {
-        if (isLoggedIn) {
-            loginButton.textContent = "Личный кабинет";
-            loginButton.href = "pages/dashboard.html";
-        } else {
-            loginButton.textContent = "Войти";
-            loginButton.href = "pages/login.html";
-        }
+        loginButton.textContent = isLoggedIn
+            ? "Личный кабинет"
+            : "Войти";
+
+        loginButton.href = isLoggedIn
+            ? "pages/dashboard.html"
+            : "pages/login.html";
     }
 
-    // Основные кнопки страницы
     startButtons.forEach(button => {
         if (isLoggedIn) {
             button.href = "pages/dashboard.html";
 
-            if (button.closest(".hero-buttons")) {
-                button.textContent = "Продолжить приключение";
-            } else {
-                button.textContent = "Открыть кабинет";
-            }
+            button.textContent = button.closest(".hero-buttons")
+                ? "Продолжить приключение"
+                : "Открыть кабинет";
         } else {
             button.href = "pages/register.html";
 
-            if (button.closest(".hero-buttons")) {
-                button.textContent = "Начать приключение";
-            } else {
-                button.textContent = "Создать персонажа";
-            }
+            button.textContent = button.closest(".hero-buttons")
+                ? "Начать приключение"
+                : "Создать персонажа";
         }
     });
 }
 
 
-document.addEventListener("DOMContentLoaded", async function() {
-    console.log("Arcanum loaded");
-
+document.addEventListener("DOMContentLoaded", async () => {
     try {
         await loadSupabaseLibrary();
 
+        // CONFIG объявлен через const в config.js.
+        // Поэтому проверяем именно CONFIG, а не window.CONFIG.
         if (
             typeof CONFIG === "undefined" ||
             !CONFIG.SUPABASE_URL ||
@@ -111,11 +100,9 @@ document.addEventListener("DOMContentLoaded", async function() {
             }
         );
 
-        // Получаем сохранённую сессию
-        const {
-            data,
-            error
-        } = await supabaseClient.auth.getSession();
+        // Получаем текущую сессию
+        const { data, error } =
+            await supabaseClient.auth.getSession();
 
         if (error) {
             throw error;
@@ -123,9 +110,9 @@ document.addEventListener("DOMContentLoaded", async function() {
 
         updatePageForUser(data.session);
 
-        // Следим за изменениями авторизации
+        // Отслеживаем вход и выход
         supabaseClient.auth.onAuthStateChange(
-            function(event, session) {
+            (event, session) => {
                 updatePageForUser(session);
             }
         );
@@ -137,6 +124,6 @@ document.addEventListener("DOMContentLoaded", async function() {
         );
 
     } catch (error) {
-        console.error("Ошибка авторизации Arcanum:", error);
+        console.error("Arcanum auth error:", error);
     }
 });
