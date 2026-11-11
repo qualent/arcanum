@@ -33,6 +33,7 @@ const elements = {
     actionInput: document.getElementById("actionInput"),
     actionButton: document.getElementById("actionButton"),
     diceResult: document.getElementById("diceResult"),
+    diceCount: document.getElementById("diceCount"),
     experienceValue: document.getElementById("experienceValue"),
     goldValue: document.getElementById("goldValue"),
     resourceAmount: document.getElementById("resourceAmount"),
@@ -788,13 +789,22 @@ async function submitAction() {
 }
 
 async function rollDice(sides) {
-    if (!Number.isInteger(sides) || sides < 2 || !currentUser || isSaving) return;
+    if (!Number.isInteger(sides) || ![4, 6, 8, 10, 12, 20].includes(sides) || !currentUser || isSaving) return;
 
-    const bytes = new Uint32Array(1);
-    const limit = Math.floor(0x100000000 / sides) * sides;
-    do { crypto.getRandomValues(bytes); } while (bytes[0] >= limit);
-    const result = (bytes[0] % sides) + 1;
-    setText(elements.diceResult, result);
+    const requestedCount = Number(elements.diceCount && elements.diceCount.value);
+    const count = Math.max(1, Math.min(20, Number.isFinite(requestedCount) ? Math.floor(requestedCount) : 1));
+    if (elements.diceCount) elements.diceCount.value = String(count);
+
+    const rollOne = () => {
+        const bytes = new Uint32Array(1);
+        const limit = Math.floor(0x100000000 / sides) * sides;
+        do { crypto.getRandomValues(bytes); } while (bytes[0] >= limit);
+        return (bytes[0] % sides) + 1;
+    };
+    const results = Array.from({ length: count }, rollOne);
+    const total = results.reduce((sum, value) => sum + value, 0);
+    const display = count === 1 ? String(total) : results.join(" + ") + " = " + total;
+    setText(elements.diceResult, display);
 
     if (elements.diceResult) {
         elements.diceResult.classList.remove("dice-roll-animation");
@@ -802,9 +812,8 @@ async function rollDice(sides) {
         elements.diceResult.classList.add("dice-roll-animation");
     }
 
-    const rollText = "Бросок d" + sides + ": " + result;
+    const rollText = count + "d" + sides + ": " + results.join(", ") + (count > 1 ? " = " + total : "");
     setSaveStatus("Сохранение броска...");
-
     try {
         await saveMessage("player", "Самостоятельный бросок игрока (не проверка мастера): " + rollText);
         setSaveStatus("Сохранено");
