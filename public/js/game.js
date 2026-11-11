@@ -29,10 +29,6 @@ const elements = {
     actionInput: document.getElementById("actionInput"),
     actionButton: document.getElementById("actionButton"),
     diceResult: document.getElementById("diceResult"),
-    checkStat: document.getElementById("checkStat"),
-    checkDc: document.getElementById("checkDc"),
-    checkButton: document.getElementById("checkButton"),
-    checkResult: document.getElementById("checkResult"),
     experienceValue: document.getElementById("experienceValue"),
     goldValue: document.getElementById("goldValue"),
     resourceAmount: document.getElementById("resourceAmount"),
@@ -541,64 +537,6 @@ function appendMessage(message) {
     scrollStoryToBottom();
 }
 
-async function runAbilityCheck() {
-    if (!currentUser || !currentCharacter || isSaving) return;
-
-    const stat = elements.checkStat ? elements.checkStat.value : "strength";
-    const difficulty = Number(elements.checkDc ? elements.checkDc.value : 12);
-
-    if (!Number.isInteger(difficulty) || difficulty < 1 || difficulty > 30) {
-        setText(elements.checkResult, "Укажи сложность от 1 до 30.");
-        return;
-    }
-
-    const statNames = {
-        strength: "Сила",
-        dexterity: "Ловкость",
-        constitution: "Телосложение",
-        intelligence: "Интеллект",
-        wisdom: "Мудрость",
-        charisma: "Харизма"
-    };
-
-    const statValue = getCharacterStat(currentCharacter, stat);
-    const modifier = calculateModifier(statValue);
-    const die = Math.floor(Math.random() * 20) + 1;
-    const total = die + modifier;
-    const success = total >= difficulty;
-    const outcome = success ? "УСПЕХ" : "ПРОВАЛ";
-    const sign = modifier >= 0 ? "+" : "";
-    const resultText = "Проверка: " + statNames[stat] +
-        " — d20 (" + die + ") " + sign + modifier +
-        " = " + total + " против СЛ " + difficulty +
-        " — " + outcome + ".";
-
-    setText(elements.checkResult, resultText);
-    setText(elements.diceResult, die);
-
-    if (elements.diceResult) {
-        elements.diceResult.classList.remove("dice-roll-animation");
-        void elements.diceResult.offsetWidth;
-        elements.diceResult.classList.add("dice-roll-animation");
-    }
-
-    isSaving = true;
-    if (elements.checkButton) elements.checkButton.disabled = true;
-    setSaveStatus("Сохранение проверки...");
-
-    try {
-        await saveMessage("system", resultText);
-        setSaveStatus("Сохранено");
-    } catch (error) {
-        console.error(error);
-        setSaveStatus("Ошибка сохранения");
-        setText(elements.checkResult, resultText + " Не удалось сохранить результат: " + error.message);
-    } finally {
-        isSaving = false;
-        if (elements.checkButton) elements.checkButton.disabled = false;
-    }
-}
-
 async function submitAction() {
     const action = elements.actionInput ? elements.actionInput.value.trim() : "";
     if (!action || !currentUser || !currentCharacter || isSaving) return;
@@ -800,10 +738,6 @@ function bindEvents() {
                 submitAction();
             }
         });
-    }
-
-    if (elements.checkButton) {
-        elements.checkButton.addEventListener("click", runAbilityCheck);
     }
 
     const settingsButton = document.getElementById("settingsButton");
