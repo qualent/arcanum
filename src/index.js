@@ -683,7 +683,10 @@ function resolveServerRoll(request, context) {
             for (let index = 0; index < dice.length; index++) if (dice[index] <= 2) dice[index] = randomDie(sides);
         }
         const subtotal = dice.reduce((sum, value) => sum + value, 0);
-        const oneHandedMelee = weaponItem && !weaponProperties.ranged && !twoHandedMelee;
+        const anotherEquippedWeapon = weaponItem && inventory.some(item =>
+            item.equipped && item.item_type === "weapon" && item.id !== weaponItem.id
+        );
+        const oneHandedMelee = weaponItem && !weaponProperties.ranged && !twoHandedMelee && !anotherEquippedWeapon;
         const duelingBonus = style === "Дуэлянт" && oneHandedMelee ? 2 : 0;
         const abilityBonus = weaponAbilityModifier === null ? bonusFromFormula : weaponAbilityModifier;
         const totalBonus = abilityBonus + duelingBonus;
