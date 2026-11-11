@@ -152,6 +152,7 @@ async function loadGame() {
 
         await loadCampaign();
         await loadCharacter();
+        await initializeCharacterOnServer();
         await loadOrCreateGameState();
         await Promise.all([
             loadInventory(),
@@ -200,6 +201,25 @@ async function loadCharacter() {
     }
 
     currentCharacter = data;
+}
+
+async function initializeCharacterOnServer() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session || !session.access_token) throw new Error("Сессия истекла. Войди снова.");
+    const response = await fetch("/api/character/initialize", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + session.access_token
+        },
+        body: JSON.stringify({ campaign_id: campaignId, character_id: characterId })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        throw new Error(result.error || "Не удалось загрузить лист персонажа и стартовый инвентарь.");
+    }
+    if (result.state) currentGameState = result.state;
+    if (Array.isArray(result.inventory)) currentInventory = result.inventory;
 }
 
 async function loadOrCreateGameState() {
@@ -445,7 +465,7 @@ function renderMessages(messages) {
         label.textContent = "МАСТЕР";
 
         const paragraph = document.createElement("p");
-        paragraph.textContent = "Приключение начинается. Твои действия и результаты бросков будут сохраняться в журнал.";
+        paragraph.textContent = "Приключение начинается. Мастер сам назначает проверки и выполняет необходимые броски.";
 
         welcome.append(label, paragraph);
         elements.storyLog.appendChild(welcome);
@@ -704,7 +724,7 @@ async function rollDice(sides) {
     setSaveStatus("Сохранение броска...");
 
     try {
-        await saveMessage("system", rollText);
+        await saveMessage("player", "Самостоятельный бросок игрока (не проверка мастера): " + rollText);
         setSaveStatus("Сохранено");
     } catch (error) {
         console.error(error);
