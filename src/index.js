@@ -171,9 +171,9 @@ async function handleCharacterInitialize(request, env) {
             "&campaign_id=eq." + encodeURIComponent(body.campaign_id) + "&user_id=eq." + encodeURIComponent(user.id) + "&limit=1", {}, token);
         if (!inventoryResult.ok) throw new Error("Не удалось проверить инвентарь персонажа.");
         let inventory = inventoryResult.data || [];
-        const needsInitialGear = characterStats.arcanum_initialized !== true;
+        const needsStarterGear = characterStats.starter_gear_granted !== true && inventory.length === 0;
         const needsInitialResources = !characterStats.resources || typeof characterStats.resources !== "object";
-        if (!inventory.length && needsInitialGear) {
+        if (needsStarterGear) {
             const starterItems = getStarterEquipment(character.class);
             for (const item of starterItems) {
                 const created = await insertRow(env, token, "inventory", {
@@ -191,8 +191,12 @@ async function handleCharacterInitialize(request, env) {
                 "&campaign_id=eq." + encodeURIComponent(body.campaign_id) + "&user_id=eq." + encodeURIComponent(user.id) + "&order=created_at.asc", {}, token);
             inventory = fullInventory.ok ? fullInventory.data || [] : inventory;
         }
-        if (needsInitialGear || needsInitialResources) {
-            const updatedStats = Object.assign({}, characterStats, { arcanum_initialized: true });
+        let updatedStats = characterStats;
+        if (needsStarterGear || needsInitialResources || characterStats.arcanum_initialized !== true) {
+            updatedStats = Object.assign({}, characterStats, {
+                arcanum_initialized: true,
+                starter_gear_granted: true
+            });
             if (needsInitialResources) updatedStats.resources = getDefaultCharacterResources(character, updatedStats);
             const marked = await supabaseAdminRequest(env,
                 "/rest/v1/characters?id=eq." + encodeURIComponent(character.id) + "&user_id=eq." + encodeURIComponent(user.id), {
@@ -201,7 +205,7 @@ async function handleCharacterInitialize(request, env) {
                 }, token);
             if (!marked.ok) throw new Error("Не удалось отметить первичную настройку персонажа.");
         }
-        return jsonResponse({ success: true, state: gameState, inventory: inventory }, 200);
+        return jsonResponse({ success: true, state: gameState, inventory: inventory, character_stats: updatedStats }, 200);
     } catch (error) {
         console.error("Character initialization error:", error);
         return jsonResponse({ success: false, error: error.message || "Не удалось подготовить персонажа." }, error.status || 500);
@@ -456,7 +460,7 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
             const previousAttack = rolls.slice().reverse().find(roll => roll.type === "attack" || roll.type === "spell_attack");
             if (previousAttack && previousAttack.success === false) continue;
         }
-        const previousAttack = rolls.slice().reverse().find(roll => roll.type === "attack");
+        const previousAttack = rolls.slice().reverse().find(roll => roll.type === "attack" || roll.type === "spell_attack");
         const resolvedRequest = request.type === "damage" && previousAttack && previousAttack.critical
             ? Object.assign({}, request, { critical: true }) : request;
         rolls.push(resolveServerRoll(resolvedRequest, context));
@@ -532,7 +536,8 @@ function resolveServerRoll(request, context) {
     const stats = character.stats && typeof character.stats === "object" ? character.stats : {};
     const randomDie = sides => {
         const bytes = new Uint32Array(1);
-        crypto.getRandomValues(bytes);
+        const limit = Math.floor(0x100000000 / sides) * sides;
+        do { crypto.getRandomValues(bytes); } while (bytes[0] >= limit);
         return (bytes[0] % sides) + 1;
     };
     const inventory = Array.isArray(context.inventory) ? context.inventory : [];
@@ -584,6 +589,7 @@ function resolveServerRoll(request, context) {
     let ability = request.type === "ability_check" && request.skill
         ? (SKILL_ABILITIES[request.skill.toLowerCase()] || request.ability)
         : request.ability;
+    if (request.type === "initiative") ability = "dexterity";
     if (request.type === "spell_attack") ability = stats.spellcasting && stats.spellcasting.ability || stats.racial_spellcasting_ability || request.ability;
     if (request.type === "attack" && weaponItem && weaponProperties.ranged) ability = "dexterity";
     else if (request.type === "attack" && weaponItem && weaponProperties.finesse) {
