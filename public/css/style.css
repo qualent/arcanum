@@ -1,68 +1,67 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
+/* =========================================
+   ARCANUM — GLOBAL DESIGN SYSTEM
+========================================= */
 
 :root {
     --bg: #08090d;
     --bg-light: #101219;
     --card: #11131a;
-    --card-light: #161922;
+    --card-light: #181b24;
 
     --gold: #c9a96a;
     --gold-light: #e4c88a;
+    --gold-dark: #987541;
 
     --text: #eee9df;
     --muted: #8d8c91;
+    --muted-light: #b7b2a9;
 
     --border: rgba(201, 169, 106, 0.18);
-    --border-strong: rgba(201, 169, 106, 0.35);
+    --border-strong: rgba(201, 169, 106, 0.38);
 
-    --danger: #b95c5c;
+    --danger: #c66c6c;
     --success: #78a878;
 
-    --shadow:
-        0 20px 60px rgba(0, 0, 0, 0.45);
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    --radius: 10px;
 }
-
 
 * {
     box-sizing: border-box;
 }
 
-
 html {
     min-height: 100%;
+    scroll-behavior: smooth;
 }
 
-
 body {
-    margin: 0;
     min-height: 100vh;
-
+    margin: 0;
     background:
         radial-gradient(
             circle at 50% 0%,
             rgba(201, 169, 106, 0.07),
-            transparent 40%
+            transparent 42%
         ),
         var(--bg);
-
     color: var(--text);
-
     font-family: "Inter", sans-serif;
+    font-size: 14px;
 }
-
 
 body::selection {
     background: var(--gold);
     color: #08090d;
 }
 
-
 a {
     color: inherit;
     text-decoration: none;
 }
-
 
 button,
 input,
@@ -71,461 +70,842 @@ select {
     font: inherit;
 }
 
-
 button {
     cursor: pointer;
 }
 
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+img {
+    max-width: 100%;
+}
 
 .container {
     width: min(1180px, calc(100% - 40px));
     margin: 0 auto;
 }
 
-
-/* =========================
-   HEADER
-========================= */
-
-
-.site-header {
-    height: 76px;
-
-    border-bottom: 1px solid var(--border);
-
-    background:
-        rgba(8, 9, 13, 0.9);
-
-    backdrop-filter: blur(14px);
-}
-
-
-.header-inner {
-    height: 100%;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-
-.logo,
-.game-logo {
-    font-family: "Cinzel", serif;
-
-    font-size: 23px;
-    font-weight: 800;
-
-    letter-spacing: 0.18em;
-
-    color: var(--gold-light);
-}
-
-
-.nav-link {
-    color: var(--muted);
-
-    transition:
-        color 0.2s ease;
-}
-
-
-.nav-link:hover {
-    color: var(--gold-light);
-}
-
-
-/* =========================
-   LANDING
-========================= */
-
-
-.hero {
-    min-height: 650px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    text-align: center;
-}
-
-
-.hero-content {
-    max-width: 900px;
-}
-
-
-.eyebrow,
-.game-label {
-    display: block;
-
-    margin-bottom: 14px;
-
-    color: var(--gold);
-
-    font-size: 11px;
-    font-weight: 700;
-
-    letter-spacing: 0.22em;
-}
-
-
-.hero h1,
-.page-header h1 {
-    margin: 0;
-
-    font-family: "Cinzel", serif;
-
+h1,
+h2,
+h3,
+h4 {
     color: var(--text);
-
-    font-size: clamp(42px, 7vw, 78px);
-    line-height: 1.05;
 }
 
-
-.hero p,
-.page-header p {
-    max-width: 680px;
-
-    margin: 26px auto;
-
-    color: var(--muted);
-
-    font-size: 17px;
-    line-height: 1.8;
+p {
+    line-height: 1.7;
 }
 
+/* =========================================
+   BUTTONS
+========================================= */
 
+.button,
 .btn {
+    min-height: 46px;
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
-
-    min-height: 48px;
-
-    padding: 0 24px;
+    gap: 10px;
+    padding: 0 22px;
 
     border: 1px solid var(--border-strong);
     border-radius: 6px;
 
     background: transparent;
-
     color: var(--text);
+
+    font-size: 14px;
+    font-weight: 600;
 
     transition:
         background 0.2s ease,
         border-color 0.2s ease,
+        color 0.2s ease,
         transform 0.2s ease;
 }
 
-
+.button:hover,
 .btn:hover {
     transform: translateY(-2px);
-
     border-color: var(--gold);
-
     background: rgba(201, 169, 106, 0.08);
 }
 
-
+.button-primary,
 .btn-primary {
     border-color: var(--gold);
-
     background: var(--gold);
-
     color: #0a0a0c;
-
     font-weight: 700;
 }
 
-
+.button-primary:hover,
 .btn-primary:hover {
+    border-color: var(--gold-light);
     background: var(--gold-light);
+    color: #08090d;
 }
 
+.button-secondary {
+    border-color: var(--border-strong);
+    background: transparent;
+    color: var(--text);
+}
+
+.button-secondary:hover {
+    background: rgba(201, 169, 106, 0.08);
+}
+
+.button span {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.site-header,
+.header {
+    position: relative;
+    z-index: 10;
+    min-height: 76px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8, 9, 13, 0.92);
+    backdrop-filter: blur(14px);
+}
+
+.header-inner {
+    min-height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+}
+
+.logo,
+.game-logo {
+    color: var(--gold-light);
+    font-family: "Cinzel", serif;
+    font-size: 23px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.nav a {
+    color: var(--muted);
+    transition: color 0.2s;
+}
+
+.nav a:hover {
+    color: var(--gold-light);
+}
+
+.nav .nav-button {
+    padding: 11px 22px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    color: var(--gold-light);
+}
+
+.nav .nav-button:hover {
+    background: rgba(201, 169, 106, 0.1);
+}
+
+.nav-link,
+.header-back {
+    color: var(--muted);
+    transition: color 0.2s;
+}
+
+.nav-link:hover,
+.header-back:hover {
+    color: var(--gold-light);
+}
+
+/* =========================================
+   LANDING PAGE
+========================================= */
+
+.hero {
+    min-height: 680px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    align-items: center;
+    gap: 50px;
+    padding-top: 60px;
+    padding-bottom: 60px;
+}
+
+.hero-text {
+    max-width: 720px;
+}
+
+.eyebrow,
+.game-label {
+    display: block;
+    margin-bottom: 15px;
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+}
+
+.hero h1,
+.page-header h1,
+.campaign-heading h1,
+.dashboard-heading h1 {
+    margin: 0;
+    font-family: "Cinzel", serif;
+    font-size: clamp(36px, 5vw, 66px);
+    font-weight: 600;
+    line-height: 1.15;
+}
+
+.hero h1 span {
+    display: block;
+    color: var(--gold-light);
+}
+
+.hero p {
+    max-width: 650px;
+    margin: 25px 0;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.9;
+}
+
+.hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 30px;
+}
+
+.hero-decoration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.magic-circle {
+    width: min(340px, 30vw);
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(201, 169, 106, 0.45);
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(201, 169, 106, 0.13),
+            transparent 65%
+        );
+
+    box-shadow:
+        0 0 50px rgba(201, 169, 106, 0.08),
+        inset 0 0 50px rgba(201, 169, 106, 0.06);
+}
+
+.magic-circle-inner {
+    width: 75%;
+    height: 75%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(201, 169, 106, 0.3);
+    border-radius: 50%;
+    color: var(--gold-light);
+    font-size: 85px;
+    text-shadow: 0 0 30px rgba(201, 169, 106, 0.6);
+}
 
 .features {
     display: grid;
-
-    grid-template-columns:
-        repeat(3, 1fr);
-
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-
-    padding-bottom: 80px;
+    padding: 20px 0 90px;
 }
 
+.features .container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.section-heading {
+    grid-column: 1 / -1;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.section-heading h2 {
+    font-family: "Cinzel", serif;
+    font-size: 34px;
+}
 
 .card {
     padding: 28px;
-
     border: 1px solid var(--border);
-    border-radius: 10px;
-
+    border-radius: var(--radius);
     background:
         linear-gradient(
             145deg,
-            rgba(255,255,255,0.02),
-            rgba(255,255,255,0)
+            rgba(255, 255, 255, 0.025),
+            transparent
         ),
         var(--card);
 }
 
-
 .card h3 {
     margin-top: 0;
-
-    font-family: "Cinzel", serif;
-
     color: var(--gold-light);
+    font-family: "Cinzel", serif;
 }
-
 
 .card p {
     color: var(--muted);
-
-    line-height: 1.7;
+    line-height: 1.8;
 }
 
-
-/* =========================
-   PAGE HEADER
-========================= */
-
+/* =========================================
+   COMMON PAGE HEADINGS
+========================================= */
 
 .page-header {
-    padding: 70px 0 40px;
-
+    padding: 65px 0 40px;
     text-align: center;
 }
 
-
 .page-header h1 {
-    font-size: clamp(34px, 5vw, 56px);
+    font-size: clamp(34px, 5vw, 54px);
 }
-
 
 .page-header p {
-    margin-top: 18px;
+    max-width: 650px;
+    margin: 18px auto 0;
+    color: var(--muted);
 }
 
-
-/* =========================
-   FORMS
-========================= */
-
+/* =========================================
+   COMMON FORMS
+========================================= */
 
 .form-card {
     width: min(900px, 100%);
-
     margin: 0 auto 80px;
-
     padding: 34px;
 
     border: 1px solid var(--border);
     border-radius: 12px;
 
     background: var(--card);
-
     box-shadow: var(--shadow);
 }
 
-
 .form-section {
     padding: 10px 0 35px;
-
     border-bottom: 1px solid var(--border);
 }
-
 
 .form-section + .form-section {
     margin-top: 35px;
 }
 
-
 .form-section h2 {
     margin: 0 0 24px;
-
-    font-family: "Cinzel", serif;
-
     color: var(--gold-light);
+    font-family: "Cinzel", serif;
+    font-size: 21px;
 }
-
 
 .form-grid {
     display: grid;
-
-    grid-template-columns:
-        repeat(2, 1fr);
-
-    gap: 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
 }
 
-
-.form-group {
+.form-group,
+.form-field {
+    min-width: 0;
     display: flex;
-
     flex-direction: column;
-
-    gap: 8px;
+    gap: 9px;
 }
 
+.form-group label,
+.form-field label {
+    color: var(--muted-light);
+    font-size: 13px;
+    font-weight: 500;
+}
 
-.full-width {
+.full-width,
+.form-field-full {
     grid-column: 1 / -1;
 }
-
-
-.form-group label {
-    color: var(--muted);
-
-    font-size: 13px;
-}
-
 
 .form-group input,
 .form-group textarea,
 .form-group select,
-select,
-textarea,
-input {
+.form-field input,
+.form-field textarea,
+.form-field select,
+.form-card input,
+.form-card textarea,
+.form-card select,
+.campaign-form input,
+.campaign-form textarea,
+.campaign-form select {
     width: 100%;
-
+    min-width: 0;
     border: 1px solid var(--border);
     border-radius: 6px;
-
     outline: none;
 
     background: #0c0e13;
-
     color: var(--text);
 
     transition:
         border-color 0.2s ease,
-        background 0.2s ease;
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
-
 
 .form-group input,
 .form-group select,
-select,
-input {
+.form-field input,
+.form-field select,
+.form-card input,
+.campaign-form input,
+.campaign-form select {
     height: 46px;
-
     padding: 0 14px;
 }
 
-
 .form-group textarea,
-textarea {
+.form-field textarea,
+.form-card textarea,
+.campaign-form textarea {
+    min-height: 100px;
     padding: 13px 14px;
-
     resize: vertical;
+    line-height: 1.6;
 }
-
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus,
-input:focus,
-textarea:focus,
-select:focus {
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus,
+.form-card input:focus,
+.form-card textarea:focus,
+.form-card select:focus,
+.campaign-form input:focus,
+.campaign-form textarea:focus,
+.campaign-form select:focus {
     border-color: var(--gold);
-
     background: #101219;
+    box-shadow: 0 0 0 3px rgba(201, 169, 106, 0.08);
 }
 
+input::placeholder,
+textarea::placeholder {
+    color: #68666b;
+}
+
+select option {
+    background: #101219;
+    color: var(--text);
+}
 
 .form-actions {
     display: flex;
-
     justify-content: flex-end;
-
     padding-top: 30px;
 }
 
-
 .form-message {
+    display: none;
     margin-top: 18px;
-
-    font-size: 14px;
+    padding: 12px 15px;
+    border-radius: 6px;
+    font-size: 13px;
 }
 
-
-.form-message.error {
-    color: #d87878;
+.form-message:not(:empty) {
+    display: block;
 }
 
-
-.form-message.success {
-    color: #86bd86;
+.form-message.error,
+.form-message-error {
+    border: 1px solid rgba(198, 108, 108, 0.25);
+    background: rgba(198, 108, 108, 0.08);
+    color: #df8989;
 }
 
+.form-message.success,
+.form-message-success {
+    border: 1px solid rgba(120, 168, 120, 0.25);
+    background: rgba(120, 168, 120, 0.08);
+    color: #91c991;
+}
+
+/* =========================================
+   CHARACTER STATS
+========================================= */
 
 .stats-grid {
     display: grid;
-
-    grid-template-columns:
-        repeat(6, 1fr);
-
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 12px;
 }
 
-
 .stat-card {
+    min-width: 0;
     padding: 15px 10px;
-
     border: 1px solid var(--border);
     border-radius: 8px;
-
     background: #0c0e13;
-
     text-align: center;
 }
 
-
-.stat-card span {
+.stat-card label {
     display: block;
-
-    margin-bottom: 8px;
-
+    margin-bottom: 10px;
     color: var(--gold);
-
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
 }
 
-
 .stat-card input {
-    height: 38px;
-
+    width: 100%;
+    height: 42px;
     padding: 0 5px;
-
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: #08090d;
+    color: var(--text);
     text-align: center;
 }
 
+/* =========================================
+   DASHBOARD
+========================================= */
 
-.stat-card strong {
-    display: block;
-
-    margin-top: 8px;
-
-    color: var(--gold-light);
+.dashboard {
+    min-height: calc(100vh - 76px);
+    padding: 55px 0 90px;
 }
 
+.user-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
-/* =========================
-   GAME
-========================= */
+.user-info {
+    color: var(--muted-light);
+    font-size: 13px;
+}
 
+.user-name {
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-avatar {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    background: rgba(201, 169, 106, 0.1);
+    color: var(--gold-light);
+    font-family: "Cinzel", serif;
+    font-size: 16px;
+}
+
+.logout-button {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: transparent;
+    color: var(--muted);
+    transition: 0.2s;
+}
+
+.logout-button:hover {
+    border-color: var(--danger);
+    color: #e38b8b;
+}
+
+.dashboard-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.dashboard-heading h1 {
+    font-size: clamp(32px, 4vw, 48px);
+}
+
+.dashboard-heading p {
+    max-width: 600px;
+    margin: 15px 0 0;
+    color: var(--muted);
+}
+
+.campaigns-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.campaign-card {
+    min-width: 0;
+    overflow: hidden;
+    display: block;
+
+    border: 1px solid var(--border);
+    border-radius: 11px;
+
+    background: var(--card);
+
+    transition:
+        transform 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.campaign-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--border-strong);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
+}
+
+.campaign-card-image {
+    position: relative;
+    min-height: 190px;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% 40%, rgba(201, 169, 106, 0.2), transparent 50%),
+        linear-gradient(135deg, #25202a, #101219 65%, #08090d);
+}
+
+.campaign-image-one {
+    background:
+        radial-gradient(circle at 70% 30%, rgba(164, 119, 65, 0.22), transparent 35%),
+        linear-gradient(135deg, #29251e, #171820 60%, #08090d);
+}
+
+.campaign-image-two {
+    background:
+        radial-gradient(circle at 35% 35%, rgba(100, 80, 130, 0.25), transparent 40%),
+        linear-gradient(135deg, #211e2c, #12131a 65%, #08090d);
+}
+
+.campaign-card-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 16px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.25), transparent 55%);
+}
+
+.campaign-status {
+    padding: 7px 12px;
+    border: 1px solid rgba(120, 168, 120, 0.35);
+    border-radius: 30px;
+    background: rgba(50, 100, 60, 0.2);
+    color: #9acb9a;
+    font-size: 11px;
+}
+
+.campaign-card-content {
+    padding: 23px;
+}
+
+.campaign-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.campaign-card-top h2 {
+    margin: 0;
+    color: var(--gold-light);
+    font-family: "Cinzel", serif;
+    font-size: 20px;
+}
+
+.campaign-type {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.campaign-arrow {
+    color: var(--gold);
+    font-size: 25px;
+}
+
+.campaign-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 25px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+}
+
+.campaign-meta div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.campaign-meta span {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.campaign-meta strong {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* =========================================
+   CAMPAIGN CREATION
+========================================= */
+
+.campaign-page {
+    min-height: calc(100vh - 76px);
+    padding: 35px 0 90px;
+}
+
+.campaign-heading {
+    max-width: 750px;
+    margin: 0 auto 45px;
+    text-align: center;
+}
+
+.campaign-heading h1 {
+    font-size: clamp(34px, 5vw, 54px);
+}
+
+.campaign-heading p {
+    max-width: 650px;
+    margin: 18px auto 0;
+    color: var(--muted);
+}
+
+.campaign-form {
+    width: min(900px, 100%);
+    margin: 0 auto;
+    padding: 35px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    background: var(--card);
+    box-shadow: var(--shadow);
+}
+
+.form-section-heading {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    margin-bottom: 25px;
+}
+
+.form-section-number {
+    width: 43px;
+    height: 43px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+
+    color: var(--gold);
+    font-family: "Cinzel", serif;
+    font-size: 15px;
+}
+
+.form-section-heading h2 {
+    margin: 0;
+    color: var(--gold-light);
+    font-family: "Cinzel", serif;
+    font-size: 20px;
+}
+
+.form-section-heading p {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.campaign-form .form-section {
+    padding-bottom: 35px;
+}
+
+.campaign-form .form-field {
+    margin-bottom: 0;
+}
+
+.campaign-submit {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.campaign-submit .button {
+    min-width: 140px;
+}
+
+/* =========================================
+   GAME PAGE
+========================================= */
 
 .game-page {
     height: 100vh;
-
+    min-height: 600px;
     overflow: hidden;
-
     background:
         radial-gradient(
             circle at 50% 20%,
@@ -535,496 +915,317 @@ select:focus {
         #07080b;
 }
 
-
 .game-header {
+    position: relative;
+    z-index: 10;
     height: 70px;
 
     display: grid;
-
-    grid-template-columns:
-        1fr auto 1fr;
-
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
 
     padding: 0 22px;
-
     border-bottom: 1px solid var(--border);
-
     background: rgba(8, 9, 13, 0.96);
-
-    position: relative;
-    z-index: 10;
 }
-
 
 .game-header-left,
 .game-header-right {
     display: flex;
-
     align-items: center;
-
     gap: 24px;
 }
-
 
 .game-header-right {
     justify-content: flex-end;
 }
 
-
 .game-header-center {
     text-align: center;
 }
 
+.game-logo {
+    font-size: 20px;
+}
 
 .game-campaign {
     display: flex;
-
     flex-direction: column;
-
     gap: 2px;
 }
 
-
 .game-campaign .game-label {
     margin: 0;
-
     font-size: 9px;
 }
 
-
 .game-campaign strong {
     max-width: 280px;
-
     overflow: hidden;
-
     text-overflow: ellipsis;
-
     white-space: nowrap;
-
     font-family: "Cinzel", serif;
-
     font-size: 14px;
 }
 
-
 .save-status {
     color: var(--success);
-
     font-size: 12px;
 }
 
-
 .game-header-button {
     min-height: 34px;
-
     padding: 0 12px;
-
     border: 1px solid var(--border);
-
     border-radius: 5px;
-
     background: transparent;
-
     color: var(--muted);
-
-    transition:
-        color 0.2s ease,
-        border-color 0.2s ease;
+    transition: 0.2s;
 }
-
 
 .game-header-button:hover {
     color: var(--gold-light);
-
     border-color: var(--border-strong);
 }
 
-
 .game-layout {
     height: calc(100vh - 70px);
-
     display: grid;
-
-    grid-template-columns:
-        270px minmax(400px, 1fr) 290px;
+    grid-template-columns: 270px minmax(400px, 1fr) 290px;
 }
-
-
-/* =========================
-   GAME SIDEBARS
-========================= */
-
 
 .game-sidebar {
     min-width: 0;
-
     overflow-y: auto;
-
     padding: 16px;
-
-    background:
-        rgba(9, 10, 14, 0.88);
+    background: rgba(9, 10, 14, 0.88);
 }
-
 
 .game-sidebar-left {
     border-right: 1px solid var(--border);
 }
 
-
 .game-sidebar-right {
     border-left: 1px solid var(--border);
 }
-
 
 .game-sidebar::-webkit-scrollbar,
 .story-log::-webkit-scrollbar {
     width: 5px;
 }
 
-
 .game-sidebar::-webkit-scrollbar-thumb,
 .story-log::-webkit-scrollbar-thumb {
     border-radius: 5px;
-
     background: rgba(201, 169, 106, 0.25);
 }
 
-
 .game-panel {
     margin-bottom: 14px;
-
     padding: 18px;
-
     border: 1px solid var(--border);
     border-radius: 8px;
-
     background:
-        linear-gradient(
-            145deg,
-            rgba(255,255,255,0.02),
-            transparent
-        ),
+        linear-gradient(145deg, rgba(255,255,255,0.02), transparent),
         var(--card);
 }
 
-
 .panel-title {
     margin: 0 0 15px;
-
-    font-family: "Cinzel", serif;
-
     color: var(--gold-light);
-
+    font-family: "Cinzel", serif;
     font-size: 14px;
 }
 
-
 .panel-heading-row {
     display: flex;
-
     align-items: center;
     justify-content: space-between;
 }
 
-
 .item-count {
     color: var(--muted);
-
     font-size: 12px;
 }
 
-
-/* =========================
-   CHARACTER
-========================= */
-
+/* Character panel */
 
 .character-avatar {
     width: 76px;
     height: 76px;
-
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     margin: 0 auto 15px;
 
     border: 1px solid var(--border-strong);
     border-radius: 50%;
 
-    background:
-        radial-gradient(
-            circle,
-            rgba(201,169,106,0.14),
-            transparent 70%
-        );
-
+    background: radial-gradient(circle, rgba(201,169,106,0.14), transparent 70%);
     color: var(--gold-light);
-
     font-family: "Cinzel", serif;
-
     font-size: 30px;
 }
-
 
 .character-main {
     text-align: center;
 }
 
-
 .character-main h2 {
     margin: 0;
-
     font-family: "Cinzel", serif;
-
     font-size: 19px;
 }
 
-
 .character-main p {
     margin: 6px 0 18px;
-
     color: var(--muted);
-
     font-size: 12px;
 }
 
-
 .level-row {
     display: flex;
-
     justify-content: space-between;
-
     padding: 10px 0;
-
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-
     color: var(--muted);
-
     font-size: 10px;
     letter-spacing: 0.1em;
 }
 
-
 .level-row strong {
     color: var(--gold-light);
-
     font-size: 13px;
 }
-
 
 .hp-section {
     padding-top: 17px;
 }
 
-
 .hp-header {
     display: flex;
-
     justify-content: space-between;
-
     margin-bottom: 8px;
-
     color: var(--muted);
-
     font-size: 10px;
 }
-
 
 .hp-header strong {
     color: var(--text);
 }
 
-
 .hp-bar {
     height: 7px;
-
     overflow: hidden;
-
     border-radius: 10px;
-
     background: #24262c;
 }
 
-
 .hp-fill {
-    height: 100%;
-
     width: 100%;
-
+    height: 100%;
     border-radius: inherit;
-
-    background:
-        linear-gradient(
-            90deg,
-            #8d3e3e,
-            #bf6868
-        );
-
+    background: linear-gradient(90deg, #8d3e3e, #bf6868);
     transition: width 0.3s ease;
 }
 
-
 .game-divider {
     height: 1px;
-
     margin: 20px 0;
-
     background: var(--border);
 }
 
-
 .stats-list {
     display: flex;
-
     flex-direction: column;
-
     gap: 6px;
 }
 
-
 .game-stat {
     display: grid;
-
-    grid-template-columns:
-        35px 1fr 40px;
-
+    grid-template-columns: 35px 1fr 40px;
     align-items: center;
-
     padding: 7px 9px;
-
     border-radius: 5px;
-
     background: rgba(255,255,255,0.02);
-
     font-size: 12px;
 }
-
 
 .game-stat span {
     color: var(--gold);
     font-weight: 700;
 }
 
-
 .game-stat strong {
     color: var(--text);
 }
 
-
 .game-stat em {
     color: var(--muted);
-
     font-style: normal;
-
     text-align: right;
 }
 
-
-/* =========================
-   DICE
-========================= */
-
+/* Dice */
 
 .dice-controls {
     display: grid;
-
-    grid-template-columns:
-        repeat(3, 1fr);
-
+    grid-template-columns: repeat(3, 1fr);
     gap: 6px;
 }
 
-
 .dice-button {
     height: 36px;
-
     border: 1px solid var(--border);
-
     border-radius: 5px;
-
     background: #0c0e13;
-
     color: var(--muted);
-
     font-size: 12px;
-
-    transition:
-        border-color 0.2s ease,
-        color 0.2s ease,
-        background 0.2s ease;
+    transition: 0.2s;
 }
-
 
 .dice-button:hover {
     border-color: var(--gold);
-
     background: rgba(201,169,106,0.07);
-
     color: var(--gold-light);
 }
-
 
 .dice-result {
     height: 65px;
-
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     margin-top: 12px;
-
     border: 1px solid var(--border);
-
     border-radius: 7px;
-
     background: #0c0e13;
-
     color: var(--gold-light);
-
     font-family: "Cinzel", serif;
-
     font-size: 30px;
 }
-
 
 .dice-roll-animation {
     animation: diceRoll 0.35s ease;
 }
 
-
 @keyframes diceRoll {
-
     0% {
         transform: scale(0.7) rotate(-8deg);
         opacity: 0.3;
     }
-
     100% {
         transform: scale(1) rotate(0);
         opacity: 1;
     }
-
 }
 
-
-/* =========================
-   STORY
-========================= */
-
+/* Story */
 
 .game-main {
     min-width: 0;
-
     display: flex;
-
     flex-direction: column;
-
     background:
         radial-gradient(
             circle at 50% 0%,
@@ -1033,647 +1234,752 @@ select:focus {
         );
 }
 
-
 .story-header {
     flex-shrink: 0;
-
     padding: 28px 34px 20px;
-
     border-bottom: 1px solid var(--border);
 }
-
 
 .story-header .game-label {
     margin-bottom: 5px;
 }
 
-
 .story-header h1 {
     margin: 0;
-
     font-family: "Cinzel", serif;
-
     font-size: 25px;
-
     font-weight: 600;
 }
 
-
 .story-log {
     flex: 1;
-
     min-height: 0;
-
     overflow-y: auto;
-
     padding: 32px 12% 50px;
 }
 
-
 .story-message {
     max-width: 760px;
-
     margin: 0 auto 28px;
-
     padding: 22px;
-
     border: 1px solid var(--border);
-
     border-radius: 8px;
-
-    background:
-        rgba(17,19,26,0.75);
-
+    background: rgba(17,19,26,0.75);
     line-height: 1.8;
 }
 
-
 .story-message p {
     margin: 0 0 14px;
-
     color: #d8d4cb;
 }
-
 
 .story-message p:last-child {
     margin-bottom: 0;
 }
 
-
 .message-label {
     margin-bottom: 12px;
-
     color: var(--gold);
-
     font-size: 10px;
     font-weight: 700;
-
     letter-spacing: 0.18em;
 }
-
 
 .dm-message {
     border-left: 2px solid var(--gold);
 }
 
-
 .player-message {
     margin-left: auto;
-
     border-left: 2px solid #777;
-
     background: rgba(25,27,34,0.8);
 }
-
 
 .player-message .message-label {
     color: #aaa;
 }
 
-
 .system-message {
     opacity: 0.65;
-
     border-style: dashed;
 }
 
-
-/* =========================
-   ACTION
-========================= */
-
+/* Action input */
 
 .action-area {
     flex-shrink: 0;
-
     padding: 16px 12% 20px;
-
     border-top: 1px solid var(--border);
-
-    background:
-        rgba(8,9,13,0.94);
+    background: rgba(8,9,13,0.94);
 }
-
 
 .action-hint {
     margin-bottom: 8px;
-
     color: var(--muted);
-
     font-size: 11px;
 }
 
-
 .action-row {
     display: flex;
-
     gap: 10px;
 }
 
-
 .action-row textarea {
+    flex: 1;
+    min-width: 0;
     min-height: 58px;
     max-height: 150px;
-
-    border-color: var(--border);
-
+    padding: 13px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
     background: #0c0e13;
+    color: var(--text);
+    resize: vertical;
 }
 
+.action-row textarea:focus {
+    border-color: var(--gold);
+}
 
 .action-button {
     width: 130px;
-
+    flex-shrink: 0;
     align-self: stretch;
-
     border: 1px solid var(--gold);
-
     border-radius: 6px;
-
     background: var(--gold);
-
     color: #08090d;
-
     font-weight: 700;
-
-    transition:
-        background 0.2s ease;
+    transition: background 0.2s;
 }
-
 
 .action-button:hover {
     background: var(--gold-light);
 }
 
-
 .action-button:disabled {
     cursor: not-allowed;
-
     opacity: 0.5;
 }
 
-
-/* =========================
-   INVENTORY
-========================= */
-
+/* Inventory and journal */
 
 .inventory-list {
     display: flex;
-
     flex-direction: column;
-
     gap: 7px;
 }
 
-
 .empty-state {
     padding: 22px 8px;
-
     color: var(--muted);
-
     font-size: 12px;
-
     text-align: center;
 }
 
-
 .journal-list {
     display: flex;
-
     flex-direction: column;
-
     gap: 14px;
 }
 
-
 .journal-item {
     display: grid;
-
-    grid-template-columns:
-        25px 1fr;
-
+    grid-template-columns: 25px 1fr;
     gap: 8px;
 }
 
-
 .journal-icon {
     color: var(--gold);
-
     font-size: 16px;
 }
 
-
 .journal-item strong {
     display: block;
-
     margin-bottom: 5px;
-
     color: var(--text);
-
     font-size: 12px;
 }
 
-
 .journal-item p {
     margin: 0;
-
     color: var(--muted);
-
     font-size: 11px;
-
     line-height: 1.6;
 }
 
-
 .world-status {
     display: flex;
-
     flex-direction: column;
-
     gap: 10px;
 }
-
 
 .world-status div {
     display: flex;
-
     justify-content: space-between;
-
     gap: 10px;
 }
 
-
 .world-status span {
     color: var(--muted);
-
     font-size: 11px;
 }
-
 
 .world-status strong {
     max-width: 130px;
-
     overflow: hidden;
-
     text-overflow: ellipsis;
-
     white-space: nowrap;
-
     color: var(--text);
-
     font-size: 11px;
-
     text-align: right;
 }
 
-
-/* =========================
-   MODAL
-========================= */
-
+/* Game modal */
 
 .game-modal {
     position: fixed;
-
     inset: 0;
-
     z-index: 100;
-
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     padding: 20px;
-
     background: rgba(0,0,0,0.7);
-
     backdrop-filter: blur(6px);
 }
-
 
 .game-modal[hidden] {
     display: none;
 }
 
-
 .game-modal-content {
     width: min(480px, 100%);
-
     padding: 28px;
-
     border: 1px solid var(--border-strong);
     border-radius: 10px;
-
     background: var(--card);
-
     box-shadow: var(--shadow);
 }
 
-
 .modal-header {
     display: flex;
-
     align-items: center;
     justify-content: space-between;
-
     margin-bottom: 20px;
 }
 
-
 .modal-header h2 {
     margin: 0;
-
     font-family: "Cinzel", serif;
 }
-
 
 .modal-close {
     border: 0;
-
     background: transparent;
-
     color: var(--muted);
-
     font-size: 25px;
 }
 
-
 .game-modal-content p {
     margin-bottom: 25px;
-
     color: var(--muted);
-
     line-height: 1.7;
 }
 
-
-/* =========================
-   LOADING
-========================= */
-
+/* Loading */
 
 .game-loading {
     position: fixed;
-
     inset: 0;
-
     z-index: 200;
-
     display: flex;
-
     flex-direction: column;
-
     align-items: center;
     justify-content: center;
-
     background: #08090d;
-
-    transition:
-        opacity 0.3s ease,
-        visibility 0.3s ease;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
-
 
 .game-loading.hidden {
     opacity: 0;
-
     visibility: hidden;
-
     pointer-events: none;
 }
 
-
 .loading-symbol {
     margin-bottom: 15px;
-
     color: var(--gold);
-
     font-family: "Cinzel", serif;
-
     font-size: 38px;
-
-    animation:
-        loadingPulse 1.3s infinite ease-in-out;
+    animation: loadingPulse 1.3s infinite ease-in-out;
 }
-
 
 .game-loading p {
     color: var(--muted);
-
     font-size: 13px;
 }
 
-
 @keyframes loadingPulse {
-
-    0%,
-    100% {
+    0%, 100% {
         transform: scale(0.9);
-
         opacity: 0.5;
     }
-
     50% {
         transform: scale(1.1);
-
         opacity: 1;
     }
-
 }
 
+/* =========================================
+   AUTH PAGE COMPATIBILITY
+========================================= */
 
-/* =========================
-   RESPONSIVE
-========================= */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 35px 20px;
+}
 
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 40px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+}
+
+.auth-logo {
+    color: var(--gold-light);
+    font-family: "Cinzel", serif;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    text-align: center;
+}
+
+.auth-card h1 {
+    margin: 15px 0 10px;
+    font-family: "Cinzel", serif;
+    font-size: 25px;
+    text-align: center;
+}
+
+.auth-card > p {
+    color: var(--muted);
+    text-align: center;
+}
+
+.auth-card form {
+    margin-top: 28px;
+}
+
+.auth-card label {
+    display: block;
+    margin: 17px 0 8px;
+    color: var(--gold);
+    font-size: 13px;
+}
+
+.auth-card input {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    background: #0c0e13;
+    color: var(--text);
+}
+
+.auth-card input:focus {
+    border-color: var(--gold);
+}
+
+.auth-card button {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 24px;
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    background: var(--gold);
+    color: #08090d;
+    font-weight: 700;
+}
+
+.auth-card button:hover {
+    background: var(--gold-light);
+}
+
+.auth-footer {
+    margin-top: 22px;
+    color: var(--muted);
+    text-align: center;
+}
+
+.auth-card a {
+    color: var(--gold-light);
+}
+
+.auth-card a:hover {
+    text-decoration: underline;
+}
+
+.auth-error,
+.auth-success {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.auth-error {
+    border: 1px solid rgba(198,108,108,0.3);
+    background: rgba(198,108,108,0.08);
+    color: #df8989;
+}
+
+.auth-success {
+    border: 1px solid rgba(120,168,120,0.3);
+    background: rgba(120,168,120,0.08);
+    color: #91c991;
+}
+
+/* =========================================
+   RESPONSIVE — TABLETS
+========================================= */
 
 @media (max-width: 1100px) {
-
     .game-layout {
-        grid-template-columns:
-            230px minmax(350px, 1fr) 240px;
+        grid-template-columns: 230px minmax(300px, 1fr) 240px;
     }
 
     .story-log {
-        padding-left: 7%;
         padding-right: 7%;
+        padding-left: 7%;
     }
 
     .action-area {
-        padding-left: 7%;
         padding-right: 7%;
+        padding-left: 7%;
     }
 
+    .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
-
 @media (max-width: 850px) {
-
     .game-page {
         height: auto;
-
+        min-height: 100vh;
         overflow: auto;
     }
 
-
     .game-header {
+        position: sticky;
+        top: 0;
         grid-template-columns: 1fr auto;
-
-        height: auto;
-
-        min-height: 65px;
-
-        padding: 12px 15px;
+        gap: 10px;
+        padding: 0 14px;
     }
-
 
     .game-header-center {
         display: none;
     }
 
+    .game-header-left {
+        gap: 12px;
+    }
+
+    .game-campaign strong {
+        max-width: 150px;
+    }
 
     .game-layout {
         height: auto;
-
         display: flex;
-
         flex-direction: column;
     }
 
-
     .game-main {
         order: 1;
-
         min-height: 650px;
     }
 
-
     .game-sidebar-left {
         order: 2;
-
-        border-top: 1px solid var(--border);
         border-right: 0;
+        border-top: 1px solid var(--border);
     }
-
 
     .game-sidebar-right {
         order: 3;
-
-        border-top: 1px solid var(--border);
         border-left: 0;
+        border-top: 1px solid var(--border);
     }
-
 
     .game-sidebar {
         overflow: visible;
     }
 
-
     .story-log {
-        min-height: 400px;
-
-        max-height: 600px;
-
-        padding: 25px 20px;
+        min-height: 350px;
+        max-height: 65vh;
     }
 
-
-    .action-area {
-        padding: 14px 20px 18px;
-    }
-
-
-    .stats-grid {
-        grid-template-columns:
-            repeat(3, 1fr);
-    }
-
-}
-
-
-@media (max-width: 600px) {
-
-    .container {
-        width: min(
-            100% - 24px,
-            1180px
-        );
-    }
-
-
-    .features {
+    .hero-content {
         grid-template-columns: 1fr;
+        text-align: center;
     }
 
-
-    .form-card {
-        padding: 20px;
+    .hero-text {
+        margin: 0 auto;
     }
 
-
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-
-    .full-width {
-        grid-column: auto;
-    }
-
-
-    .stats-grid {
-        grid-template-columns:
-            repeat(2, 1fr);
-    }
-
-
-    .game-logo {
-        font-size: 18px;
-    }
-
-
-    .game-campaign {
+    .hero-decoration {
         display: none;
     }
 
+    .features .container {
+        grid-template-columns: 1fr 1fr;
+    }
+}
 
-    .game-header-left,
-    .game-header-right {
-        gap: 10px;
+/* =========================================
+   RESPONSIVE — PHONES
+========================================= */
+
+@media (max-width: 600px) {
+    .container {
+        width: min(100% - 28px, 1180px);
     }
 
+    .site-header,
+    .header {
+        min-height: 65px;
+    }
+
+    .header-inner {
+        min-height: 65px;
+    }
+
+    .logo {
+        font-size: 19px;
+    }
+
+    .nav {
+        gap: 12px;
+    }
+
+    .nav a:not(.nav-button) {
+        display: none;
+    }
+
+    .hero {
+        min-height: 600px;
+    }
+
+    .hero-content {
+        padding-top: 45px;
+        padding-bottom: 45px;
+    }
+
+    .hero h1 {
+        font-size: 37px;
+    }
+
+    .hero p {
+        font-size: 14px;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+    }
+
+    .hero-buttons .button {
+        width: 100%;
+    }
+
+    .features .container {
+        grid-template-columns: 1fr;
+    }
+
+    .features {
+        padding-bottom: 55px;
+    }
+
+    .page-header {
+        padding: 45px 0 30px;
+    }
+
+    .page-header h1 {
+        font-size: 34px;
+    }
+
+    .form-card,
+    .campaign-form {
+        padding: 22px 17px;
+        margin-bottom: 45px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .full-width,
+    .form-field-full {
+        grid-column: auto;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .dashboard {
+        padding: 35px 0 55px;
+    }
+
+    .dashboard-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        margin-bottom: 28px;
+    }
+
+    .dashboard-heading h1 {
+        font-size: 32px;
+    }
+
+    .campaigns-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .campaign-card-image {
+        min-height: 155px;
+    }
+
+    .campaign-meta {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .campaign-heading h1 {
+        font-size: 34px;
+    }
+
+    .campaign-submit {
+        flex-direction: column-reverse;
+    }
+
+    .campaign-submit .button {
+        width: 100%;
+    }
+
+    .user-area {
+        gap: 8px;
+    }
+
+    .user-name {
+        max-width: 105px;
+        font-size: 10px;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .logout-button {
+        min-height: 32px;
+        padding: 0 8px;
+        font-size: 11px;
+    }
+
+    .auth-card {
+        padding: 30px 22px;
+    }
+
+    .auth-logo {
+        font-size: 29px;
+    }
 
     .game-header {
-        grid-template-columns: 1fr auto;
+        height: 62px;
     }
 
+    .game-logo {
+        font-size: 15px;
+    }
+
+    .game-header-left {
+        gap: 8px;
+    }
+
+    .game-header-right {
+        gap: 6px;
+    }
+
+    .game-header-button {
+        min-height: 32px;
+        padding: 0 8px;
+        font-size: 11px;
+    }
 
     .story-header {
         padding: 22px 18px 16px;
     }
 
-
     .story-header h1 {
-        font-size: 21px;
+        font-size: 20px;
     }
 
+    .story-log {
+        padding: 20px 14px 30px;
+    }
 
     .story-message {
-        padding: 17px;
+        padding: 16px;
+        margin-bottom: 18px;
+        font-size: 13px;
     }
 
+    .action-area {
+        padding: 14px;
+    }
 
     .action-row {
         flex-direction: column;
     }
 
-
     .action-button {
         width: 100%;
-
-        min-height: 46px;
+        min-height: 45px;
     }
 
+    .game-panel {
+        padding: 15px;
+    }
+}
+
+/* =========================================
+   ACCESSIBILITY AND SMALL DETAILS
+========================================= */
+
+[hidden] {
+    display: none !important;
+}
+
+:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+}
+
+::selection {
+    background: var(--gold);
+    color: #08090d;
 }
