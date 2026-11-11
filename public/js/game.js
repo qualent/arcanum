@@ -3,740 +3,606 @@ const supabaseClient = supabase.createClient(
     CONFIG.SUPABASE_ANON_KEY
 );
 
-
-const campaignId =
-    localStorage.getItem("arcanum_campaign_id");
-
-const characterId =
-    localStorage.getItem("arcanum_character_id");
-
+const campaignId = localStorage.getItem("arcanum_campaign_id");
+const characterId = localStorage.getItem("arcanum_character_id");
 
 let currentUser = null;
 let currentCampaign = null;
 let currentCharacter = null;
-
+let currentGameState = null;
+let currentInventory = [];
+let isSaving = false;
 
 const elements = {
-
-    campaignName:
-        document.getElementById("campaignName"),
-
-    characterInitial:
-        document.getElementById("characterInitial"),
-
-    characterName:
-        document.getElementById("characterName"),
-
-    characterSubtitle:
-        document.getElementById("characterSubtitle"),
-
-    characterLevel:
-        document.getElementById("characterLevel"),
-
-    hpText:
-        document.getElementById("hpText"),
-
-    hpFill:
-        document.getElementById("hpFill"),
-
-    saveStatus:
-        document.getElementById("saveStatus"),
-
-    systemMessage:
-        document.getElementById("systemMessage"),
-
-    storyTitle:
-        document.getElementById("storyTitle"),
-
-    goalText:
-        document.getElementById("goalText"),
-
-    backgroundText:
-        document.getElementById("backgroundText"),
-
-    actionInput:
-        document.getElementById("actionInput"),
-
-    actionButton:
-        document.getElementById("actionButton"),
-
-    diceResult:
-        document.getElementById("diceResult"),
-
-    settingsModal:
-        document.getElementById("settingsModal")
-
+    campaignName: document.getElementById("campaignName"),
+    characterInitial: document.getElementById("characterInitial"),
+    characterName: document.getElementById("characterName"),
+    characterSubtitle: document.getElementById("characterSubtitle"),
+    characterLevel: document.getElementById("characterLevel"),
+    hpText: document.getElementById("hpText"),
+    hpFill: document.getElementById("hpFill"),
+    saveStatus: document.getElementById("saveStatus"),
+    systemMessage: document.getElementById("systemMessage"),
+    storyTitle: document.getElementById("storyTitle"),
+    goalText: document.getElementById("goalText"),
+    backgroundText: document.getElementById("backgroundText"),
+    actionInput: document.getElementById("actionInput"),
+    actionButton: document.getElementById("actionButton"),
+    diceResult: document.getElementById("diceResult"),
+    settingsModal: document.getElementById("settingsModal"),
+    storyLog: document.getElementById("storyLog"),
+    inventoryList: document.getElementById("inventoryList"),
+    inventoryCount: document.querySelector(".item-count"),
+    locationText: document.getElementById("locationText"),
+    timeText: document.getElementById("timeText"),
+    dayText: document.getElementById("dayText")
 };
 
-
 function calculateModifier(value) {
-
-    return Math.floor((Number(value) - 10) / 2);
-
+    return Math.floor((Number(value ?? 10) - 10) / 2);
 }
-
 
 function formatModifier(value) {
-
-    const modifier =
-        calculateModifier(value);
-
-    return modifier >= 0
-        ? "+" + modifier
-        : modifier.toString();
-
+    const modifier = calculateModifier(value);
+    return modifier >= 0 ? "+" + modifier : String(modifier);
 }
 
-
-function setText(id, value) {
-
-    const element =
-        document.getElementById(id);
-
+function setText(element, value, fallback = "—") {
     if (element) {
-        element.textContent =
-            value ?? "—";
+        element.textContent = value ?? fallback;
+    }
+}
+
+function setSaveStatus(status) {
+    setText(elements.saveStatus, status);
+}
+
+function showLoading(show) {
+    const loader = document.getElementById("gameLoading");
+    if (loader) {
+        loader.classList.toggle("hidden", !show);
+    }
+}
+
+function getHitDie(character) {
+    const className = String(character.class || "").toLowerCase();
+
+    if (className.includes("варвар") || className.includes("barbarian")) return 12;
+
+    if (
+        className.includes("воин") ||
+        className.includes("паладин") ||
+        className.includes("следопыт") ||
+        className.includes("fighter") ||
+        className.includes("paladin") ||
+        className.includes("ranger")
+    ) return 10;
+
+    if (
+        className.includes("волшебник") ||
+        className.includes("маг") ||
+        className.includes("чародей") ||
+        className.includes("sorcerer") ||
+        className.includes("wizard")
+    ) return 6;
+
+    return 8;
+}
+
+function calculateMaxHp(character) {
+    const level = Math.max(1, Number(character.level) || 1);
+    const constitutionModifier = calculateModifier(character.constitution);
+    const hitDie = getHitDie(character);
+    const firstLevelHp = hitDie + constitutionModifier;
+    const laterLevelsHp = (Math.floor(hitDie / 2) + 1 + constitutionModifier) * (level - 1);
+
+    return Math.max(1, firstLevelHp + laterLevelsHp);
+}
+
+function getCharacterStat(character, stat) {
+    const flatValue = character[stat];
+    if (flatValue !== null && flatValue !== undefined) {
+        return Number(flatValue);
     }
 
+    const stats = character.stats || {};
+    const aliases = {
+        strength: ["strength", "str", "СИЛ"],
+        dexterity: ["dexterity", "dex", "ЛОВ"],
+        constitution: ["constitution", "con", "ТЕЛ"],
+        intelligence: ["intelligence", "int", "ИНТ"],
+        wisdom: ["wisdom", "wis", "МДР"],
+        charisma: ["charisma", "cha", "ХАР"]
+    };
+
+    for (const key of aliases[stat] || []) {
+        if (stats[key] !== undefined && stats[key] !== null) {
+            return Number(stats[key]);
+        }
+    }
+
+    return 10;
 }
 
-
 async function loadGame() {
-
     showLoading(true);
+    setSaveStatus("Загрузка...");
 
     try {
-
-        const {
-            data: {
-                user
-            },
-            error: userError
-        } = await supabaseClient.auth.getUser();
-
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
         if (userError || !user) {
-
-            window.location.href =
-                "login.html";
-
+            window.location.href = "login.html";
             return;
         }
 
-
         currentUser = user;
 
-
-        if (!campaignId) {
-
-            throw new Error(
-                "ID кампании отсутствует."
-            );
+        if (!campaignId || !characterId) {
+            throw new Error("Не найдены ID кампании или персонажа. Вернись в личный кабинет и открой игру оттуда.");
         }
-
-
-        if (!characterId) {
-
-            throw new Error(
-                "ID персонажа отсутствует."
-            );
-        }
-
 
         await loadCampaign();
-
         await loadCharacter();
-
+        await loadOrCreateGameState();
+        await Promise.all([
+            loadInventory(),
+            loadMessages()
+        ]);
 
         renderGame();
-
-
-        elements.saveStatus.textContent =
-            "Сохранено";
-
-
-        elements.systemMessage.textContent =
-            "Кампания и персонаж успешно загружены из Supabase.";
-
-
+        setSaveStatus("Сохранено");
+        setText(elements.systemMessage, "Игровое состояние загружено. Прогресс сохраняется в Supabase.");
     } catch (error) {
-
-        console.error(error);
-
-        elements.saveStatus.textContent =
-            "Ошибка";
-
-
-        elements.systemMessage.textContent =
-            error.message ||
-            "Не удалось загрузить игру.";
-
-
+        console.error("Arcanum game loading error:", error);
+        setSaveStatus("Ошибка загрузки");
+        setText(elements.systemMessage, error.message || "Не удалось загрузить игру.");
     } finally {
-
         showLoading(false);
-
     }
-
 }
 
-
 async function loadCampaign() {
-
-    const {
-        data,
-        error
-    } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from("campaigns")
         .select("*")
         .eq("id", campaignId)
         .eq("user_id", currentUser.id)
         .maybeSingle();
 
-
-    if (error) {
-
-        throw new Error(
-            "Ошибка загрузки кампании: " +
-            error.message
-        );
-
-    }
-
-
-    if (!data) {
-
-        throw new Error(
-            "Кампания не найдена."
-        );
-
-    }
-
+    if (error) throw new Error("Ошибка загрузки кампании: " + error.message);
+    if (!data) throw new Error("Кампания не найдена или у тебя нет к ней доступа.");
 
     currentCampaign = data;
-
 }
 
-
 async function loadCharacter() {
-
-    const {
-        data,
-        error
-    } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from("characters")
         .select("*")
         .eq("id", characterId)
         .eq("user_id", currentUser.id)
         .maybeSingle();
 
+    if (error) throw new Error("Ошибка загрузки персонажа: " + error.message);
+    if (!data) throw new Error("Персонаж не найден или у тебя нет к нему доступа.");
 
-    if (error) {
-
-        throw new Error(
-            "Ошибка загрузки персонажа: " +
-            error.message
-        );
-
+    if (data.campaign_id !== currentCampaign.id) {
+        throw new Error("Выбранный персонаж не принадлежит этой кампании.");
     }
-
-
-    if (!data) {
-
-        throw new Error(
-            "Персонаж не найден."
-        );
-
-    }
-
-
-    if (
-        data.campaign_id !==
-        currentCampaign.id
-    ) {
-
-        throw new Error(
-            "Персонаж не принадлежит этой кампании."
-        );
-
-    }
-
 
     currentCharacter = data;
-
 }
 
+async function loadOrCreateGameState() {
+    const { data: existingState, error: loadError } = await supabaseClient
+        .from("game_states")
+        .select("*")
+        .eq("character_id", characterId)
+        .eq("campaign_id", campaignId)
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
 
-function renderGame() {
-
-    renderCampaign();
-
-    renderCharacter();
-
-    renderJournal();
-
-}
-
-
-function renderCampaign() {
-
-    elements.campaignName.textContent =
-        currentCampaign.name ||
-        "Без названия";
-
-
-    if (currentCampaign.setting) {
-
-        elements.storyTitle.textContent =
-            currentCampaign.setting;
-
+    if (loadError) {
+        throw new Error("Ошибка загрузки игрового состояния: " + loadError.message);
     }
 
-
-    document.title =
-        "Arcanum — " +
-        (currentCampaign.name || "Игра");
-
-}
-
-
-function renderCharacter() {
-
-    const character =
-        currentCharacter;
-
-
-    const firstLetter =
-        character.name
-            ? character.name.charAt(0).toUpperCase()
-            : "?";
-
-
-    elements.characterInitial.textContent =
-        firstLetter;
-
-
-    elements.characterName.textContent =
-        character.name;
-
-
-    elements.characterSubtitle.textContent =
-        `${character.race || "Неизвестная раса"} · ${character.class || "Без класса"}`;
-
-
-    elements.characterLevel.textContent =
-        character.level || 1;
-
-
-    const maxHp =
-        calculateMaxHp(character);
-
-
-    const currentHp =
-        maxHp;
-
-
-    elements.hpText.textContent =
-        `${currentHp} / ${maxHp}`;
-
-
-    elements.hpFill.style.width =
-        "100%";
-
-
-    setText(
-        "strengthValue",
-        character.strength
-    );
-
-    setText(
-        "dexterityValue",
-        character.dexterity
-    );
-
-    setText(
-        "constitutionValue",
-        character.constitution
-    );
-
-    setText(
-        "intelligenceValue",
-        character.intelligence
-    );
-
-    setText(
-        "wisdomValue",
-        character.wisdom
-    );
-
-    setText(
-        "charismaValue",
-        character.charisma
-    );
-
-
-    setText(
-        "strengthMod",
-        formatModifier(character.strength)
-    );
-
-    setText(
-        "dexterityMod",
-        formatModifier(character.dexterity)
-    );
-
-    setText(
-        "constitutionMod",
-        formatModifier(character.constitution)
-    );
-
-    setText(
-        "intelligenceMod",
-        formatModifier(character.intelligence)
-    );
-
-    setText(
-        "wisdomMod",
-        formatModifier(character.wisdom)
-    );
-
-    setText(
-        "charismaMod",
-        formatModifier(character.charisma
-        )
-    );
-
-}
-
-
-function calculateMaxHp(character) {
-
-    const constitutionModifier =
-        calculateModifier(
-            character.constitution
-        );
-
-
-    const level =
-        Number(character.level) || 1;
-
-
-    const className =
-        String(character.class || "")
-            .toLowerCase();
-
-
-    let hitDie = 8;
-
-
-    if (
-        className.includes("варвар")
-    ) {
-
-        hitDie = 12;
-
-    } else if (
-        className.includes("воин") ||
-        className.includes("паладин")
-    ) {
-
-        hitDie = 10;
-
-    } else if (
-        className.includes("волшебник") ||
-        className.includes("маг") ||
-        className.includes("чародей") ||
-        className.includes("колдун")
-    ) {
-
-        hitDie = 6;
-
-    }
-
-
-    const hp =
-        hitDie +
-        constitutionModifier +
-        ((level - 1) *
-        (Math.floor(hitDie / 2) + 1 +
-        constitutionModifier));
-
-
-    return Math.max(
-        hp,
-        1
-    );
-
-}
-
-
-function renderJournal() {
-
-    elements.goalText.textContent =
-        currentCharacter.goals ||
-        "Цель персонажа ещё не определена.";
-
-
-    elements.backgroundText.textContent =
-        currentCharacter.background ||
-        "—";
-
-}
-
-
-function rollDice(sides) {
-
-    const result =
-        Math.floor(
-            Math.random() * sides
-        ) + 1;
-
-
-    elements.diceResult.textContent =
-        result;
-
-
-    elements.diceResult.classList.remove(
-        "dice-roll-animation"
-    );
-
-
-    void elements.diceResult.offsetWidth;
-
-
-    elements.diceResult.classList.add(
-        "dice-roll-animation"
-    );
-
-}
-
-
-document.querySelectorAll(
-    ".dice-button"
-).forEach(button => {
-
-    button.addEventListener(
-        "click",
-        () => {
-
-            const sides =
-                Number(
-                    button.dataset.dice
-                );
-
-
-            rollDice(sides);
-
-        }
-    );
-
-});
-
-
-elements.actionButton.addEventListener(
-    "click",
-    submitAction
-);
-
-
-elements.actionInput.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key === "Enter" &&
-            !event.shiftKey
-        ) {
-
-            event.preventDefault();
-
-            submitAction();
-
+    if (existingState) {
+        currentGameState = existingState;
+        const calculatedMaxHp = calculateMaxHp(currentCharacter);
+
+        if (Number(currentGameState.max_hp) !== calculatedMaxHp) {
+            const adjustedHp = Math.min(
+                Number(currentGameState.current_hp),
+                calculatedMaxHp
+            );
+
+            const { data, error } = await supabaseClient
+                .from("game_states")
+                .update({
+                    max_hp: calculatedMaxHp,
+                    current_hp: Math.max(0, adjustedHp),
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", currentGameState.id)
+                .eq("user_id", currentUser.id)
+                .select()
+                .single();
+
+            if (error) {
+                throw new Error("Не удалось обновить максимальное здоровье: " + error.message);
+            }
+
+            currentGameState = data;
         }
 
-    }
-);
-
-
-function submitAction() {
-
-    const text =
-        elements.actionInput.value.trim();
-
-
-    if (!text) {
         return;
     }
 
+    const maxHp = calculateMaxHp(currentCharacter);
+    const newState = {
+        user_id: currentUser.id,
+        campaign_id: campaignId,
+        character_id: characterId,
+        current_hp: maxHp,
+        max_hp: maxHp,
+        location: "Неизвестно",
+        game_day: 1,
+        game_time: "Утро",
+        experience: 0,
+        gold: 0
+    };
 
-    addPlayerMessage(text);
+    const { data, error } = await supabaseClient
+        .from("game_states")
+        .upsert(newState, { onConflict: "character_id" })
+        .select()
+        .single();
 
+    if (error) {
+        throw new Error("Не удалось создать игровое состояние: " + error.message);
+    }
 
-    elements.actionInput.value = "";
+    currentGameState = data;
+}
 
+async function loadInventory() {
+    const { data, error } = await supabaseClient
+        .from("inventory")
+        .select("*")
+        .eq("character_id", characterId)
+        .eq("campaign_id", campaignId)
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: true });
 
-    addSystemMessage(
-        "Игровой движок пока не подключён. Следующий этап — обработка действий персонажа и генерация ответа мастера."
+    if (error) throw new Error("Ошибка загрузки инвентаря: " + error.message);
+    currentInventory = data || [];
+}
+
+async function loadMessages() {
+    const { data, error } = await supabaseClient
+        .from("game_messages")
+        .select("*")
+        .eq("character_id", characterId)
+        .eq("campaign_id", campaignId)
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: true })
+        .limit(150);
+
+    if (error) throw new Error("Ошибка загрузки истории игры: " + error.message);
+
+    renderMessages(data || []);
+}
+
+function renderGame() {
+    renderCampaign();
+    renderCharacter();
+    renderGameState();
+    renderInventory();
+    renderJournal();
+}
+
+function renderCampaign() {
+    setText(elements.campaignName, currentCampaign.name, "Без названия");
+
+    if (currentCampaign.setting) {
+        setText(elements.storyTitle, currentCampaign.setting);
+    }
+
+    document.title = "Arcanum — " + (currentCampaign.name || "Игра");
+}
+
+function renderCharacter() {
+    const character = currentCharacter;
+    const name = character.name || "Без имени";
+
+    setText(elements.characterInitial, name.charAt(0).toUpperCase(), "?");
+    setText(elements.characterName, name);
+    setText(
+        elements.characterSubtitle,
+        (character.race || "Неизвестная раса") + " · " + (character.class || "Без класса")
     );
+    setText(elements.characterLevel, character.level || 1);
 
+    const stats = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
+
+    for (const stat of stats) {
+        const value = getCharacterStat(character, stat);
+        setText(document.getElementById(stat + "Value"), value);
+        setText(document.getElementById(stat + "Mod"), formatModifier(value));
+    }
+
+    renderHealth();
 }
 
+function renderHealth() {
+    if (!currentGameState) return;
 
-function addPlayerMessage(text) {
+    const currentHp = Number(currentGameState.current_hp) || 0;
+    const maxHp = Math.max(1, Number(currentGameState.max_hp) || 1);
+    const percentage = Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
 
-    const article =
-        document.createElement("article");
+    setText(elements.hpText, currentHp + " / " + maxHp);
+    if (elements.hpFill) {
+        elements.hpFill.style.width = percentage + "%";
+    }
+}
 
+function renderGameState() {
+    if (!currentGameState) return;
 
-    article.className =
-        "story-message player-message";
+    setText(elements.locationText, currentGameState.location, "Неизвестно");
+    setText(elements.timeText, currentGameState.game_time, "Утро");
+    setText(elements.dayText, currentGameState.game_day, "1");
+}
 
+function renderInventory() {
+    if (!elements.inventoryList) return;
 
-    article.innerHTML = `
+    elements.inventoryList.replaceChildren();
 
-        <div class="message-label">
-            ${escapeHtml(currentCharacter.name)}
-        </div>
+    if (elements.inventoryCount) {
+        const totalItems = currentInventory.reduce(
+            (sum, item) => sum + (Number(item.quantity) || 0),
+            0
+        );
+        elements.inventoryCount.textContent = String(totalItems);
+    }
 
-        <p>
-            ${escapeHtml(text)}
-        </p>
+    if (!currentInventory.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "Инвентарь пока пуст.";
+        elements.inventoryList.appendChild(empty);
+        return;
+    }
 
-    `;
+    currentInventory.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "inventory-item";
 
+        const details = document.createElement("div");
+        details.className = "inventory-item-details";
 
-    document
-        .getElementById("storyLog")
-        .appendChild(article);
+        const name = document.createElement("strong");
+        name.textContent = item.item_name || "Предмет";
 
+        const description = document.createElement("p");
+        description.textContent = item.description || "";
+
+        const quantity = document.createElement("span");
+        quantity.className = "inventory-item-quantity";
+        quantity.textContent = "×" + (Number(item.quantity) || 1);
+
+        details.append(name, description);
+        row.append(details, quantity);
+        elements.inventoryList.appendChild(row);
+    });
+}
+
+function renderJournal() {
+    setText(elements.goalText, currentCharacter.goals, "Цель персонажа ещё не определена.");
+    setText(elements.backgroundText, currentCharacter.background || currentCharacter.history, "—");
+}
+
+function renderMessages(messages) {
+    if (!elements.storyLog) return;
+
+    elements.storyLog.replaceChildren();
+
+    if (!messages.length) {
+        const welcome = document.createElement("article");
+        welcome.className = "story-message dm-message";
+
+        const label = document.createElement("div");
+        label.className = "message-label";
+        label.textContent = "МАСТЕР";
+
+        const paragraph = document.createElement("p");
+        paragraph.textContent = "Приключение начинается. Твои действия и результаты бросков будут сохраняться в журнале.";
+
+        welcome.append(label, paragraph);
+        elements.storyLog.appendChild(welcome);
+        return;
+    }
+
+    messages.forEach(message => {
+        const article = document.createElement("article");
+        article.className = "story-message " + getMessageClass(message.role);
+
+        const label = document.createElement("div");
+        label.className = "message-label";
+        label.textContent = getMessageLabel(message.role);
+
+        const paragraph = document.createElement("p");
+        paragraph.textContent = message.content || "";
+
+        article.append(label, paragraph);
+        elements.storyLog.appendChild(article);
+    });
 
     scrollStoryToBottom();
-
 }
 
+function getMessageClass(role) {
+    if (role === "player") return "player-message";
+    if (role === "assistant") return "dm-message";
+    return "system-message";
+}
 
-function addSystemMessage(text) {
+function getMessageLabel(role) {
+    if (role === "player") return currentCharacter ? currentCharacter.name : "ИГРОК";
+    if (role === "assistant") return "МАСТЕР";
+    return "СИСТЕМА";
+}
 
-    const article =
-        document.createElement("article");
+async function saveMessage(role, content) {
+    const message = {
+        user_id: currentUser.id,
+        campaign_id: campaignId,
+        character_id: characterId,
+        role,
+        content
+    };
 
+    const { data, error } = await supabaseClient
+        .from("game_messages")
+        .insert(message)
+        .select()
+        .single();
 
-    article.className =
-        "story-message system-message";
+    if (error) {
+        throw new Error("Не удалось сохранить запись в журнал: " + error.message);
+    }
 
+    appendMessage(data);
+    return data;
+}
 
-    article.innerHTML = `
+function appendMessage(message) {
+    if (!elements.storyLog) return;
 
-        <div class="message-label">
-            СИСТЕМА
-        </div>
+    const article = document.createElement("article");
+    article.className = "story-message " + getMessageClass(message.role);
 
-        <p>
-            ${escapeHtml(text)}
-        </p>
+    const label = document.createElement("div");
+    label.className = "message-label";
+    label.textContent = getMessageLabel(message.role);
 
-    `;
+    const paragraph = document.createElement("p");
+    paragraph.textContent = message.content || "";
 
-
-    document
-        .getElementById("storyLog")
-        .appendChild(article);
-
-
+    article.append(label, paragraph);
+    elements.storyLog.appendChild(article);
     scrollStoryToBottom();
-
 }
 
+async function submitAction() {
+    const action = elements.actionInput ? elements.actionInput.value.trim() : "";
+
+    if (!action || !currentUser || !currentCharacter || isSaving) return;
+
+    if (action.length > 5000) {
+        setText(elements.systemMessage, "Сообщение слишком длинное. Максимум — 5000 символов.");
+        return;
+    }
+
+    isSaving = true;
+    if (elements.actionButton) elements.actionButton.disabled = true;
+    setSaveStatus("Сохранение...");
+
+    try {
+        await saveMessage("player", action);
+        elements.actionInput.value = "";
+        setSaveStatus("Сохранено");
+    } catch (error) {
+        console.error(error);
+        setSaveStatus("Ошибка сохранения");
+        setText(elements.systemMessage, error.message);
+    } finally {
+        isSaving = false;
+        if (elements.actionButton) elements.actionButton.disabled = false;
+    }
+}
+
+async function rollDice(sides) {
+    if (!Number.isInteger(sides) || sides < 2 || !currentUser || isSaving) return;
+
+    const result = Math.floor(Math.random() * sides) + 1;
+    setText(elements.diceResult, result);
+
+    if (elements.diceResult) {
+        elements.diceResult.classList.remove("dice-roll-animation");
+        void elements.diceResult.offsetWidth;
+        elements.diceResult.classList.add("dice-roll-animation");
+    }
+
+    const rollText = "Бросок d" + sides + ": " + result;
+    setSaveStatus("Сохранение броска...");
+
+    try {
+        await saveMessage("system", rollText);
+        setSaveStatus("Сохранено");
+    } catch (error) {
+        console.error(error);
+        setSaveStatus("Ошибка сохранения");
+        setText(elements.systemMessage, "Бросок состоялся, но не удалось сохранить его: " + error.message);
+    }
+}
 
 function scrollStoryToBottom() {
-
-    const log =
-        document.getElementById("storyLog");
-
-
-    log.scrollTop =
-        log.scrollHeight;
-
+    if (elements.storyLog) {
+        elements.storyLog.scrollTop = elements.storyLog.scrollHeight;
+    }
 }
 
+function bindEvents() {
+    document.querySelectorAll(".dice-button").forEach(button => {
+        button.addEventListener("click", () => {
+            const sides = Number(button.dataset.dice);
+            rollDice(sides);
+        });
+    });
 
-function escapeHtml(text) {
+    if (elements.actionButton) {
+        elements.actionButton.addEventListener("click", submitAction);
+    }
 
-    const div =
-        document.createElement("div");
+    if (elements.actionInput) {
+        elements.actionInput.addEventListener("keydown", event => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                submitAction();
+            }
+        });
+    }
 
-    div.textContent =
-        text;
+    const settingsButton = document.getElementById("settingsButton");
+    const closeSettings = document.getElementById("closeSettings");
+    const closeSettingsButton = document.getElementById("closeSettingsButton");
 
-    return div.innerHTML;
+    if (settingsButton && elements.settingsModal) {
+        settingsButton.addEventListener("click", () => {
+            elements.settingsModal.hidden = false;
+        });
+    }
 
+    if (closeSettings) closeSettings.addEventListener("click", closeSettingsModal);
+    if (closeSettingsButton) closeSettingsButton.addEventListener("click", closeSettingsModal);
+
+    const exitButton = document.getElementById("exitButton");
+    if (exitButton) {
+        exitButton.addEventListener("click", () => {
+            window.location.href = "dashboard.html";
+        });
+    }
 }
 
-
-document
-    .getElementById("settingsButton")
-    .addEventListener(
-        "click",
-        () => {
-
-            elements.settingsModal.hidden =
-                false;
-
-        }
-    );
-
-
-document
-    .getElementById("closeSettings")
-    .addEventListener(
-        "click",
-        closeSettings
-    );
-
-
-document
-    .getElementById("closeSettingsButton")
-    .addEventListener(
-        "click",
-        closeSettings
-    );
-
-
-function closeSettings() {
-
-    elements.settingsModal.hidden =
-        true;
-
+function closeSettingsModal() {
+    if (elements.settingsModal) {
+        elements.settingsModal.hidden = true;
+    }
 }
 
-
-document
-    .getElementById("exitButton")
-    .addEventListener(
-        "click",
-        async () => {
-
-            await supabaseClient.auth.signOut();
-
-            window.location.href =
-                "login.html";
-
-        }
-    );
-
-
-function showLoading(show) {
-
-    const loader =
-        document.getElementById("gameLoading");
-
-
-    loader.classList.toggle(
-        "hidden",
-        !show
-    );
-
-}
-
-
+bindEvents();
 loadGame();
