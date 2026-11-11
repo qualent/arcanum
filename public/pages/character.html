@@ -282,6 +282,11 @@
                 <div class="form-group"><label for="dragonAncestry">Тип дракона-предка</label><select id="dragonAncestry"></select></div>
                 <p id="dragonAncestryInfo" class="builder-note"></p>
             </div>
+            <div class="builder-subsection" id="racialCantripField" hidden>
+                <h3>Расовый заговор</h3>
+                <div class="form-group"><label for="racialCantrip">Выбери заговор высшего эльфа</label><select id="racialCantrip"></select></div>
+                <p id="racialCantripInfo" class="builder-note"></p>
+            </div>
             <div class="builder-subsection" id="halfElfChoices" hidden>
                 <h3>Наследие полуэльфа</h3>
                 <p>Выбери две разные характеристики (кроме Харизмы), которые получат +1, и два навыка.</p>
@@ -614,17 +619,36 @@ const dragonAncestries={
 "Серебряный":"Холод; сопротивление холоду; конус 15 футов.",
 "Белый":"Холод; сопротивление холоду; конус 15 футов."
 };
+function renderRacialCantrip(){
+ const field=document.getElementById("racialCantripField"),select=document.getElementById("racialCantrip");
+ const subraceOptions=subraceData[raceSelect.value]||[];
+ const selectedSubrace=subraceOptions[Number(document.getElementById("subrace").value)];
+ const isHighElf=raceSelect.value==="Эльф"&&selectedSubrace&&selectedSubrace[0]==="Высший эльф";
+ const isDrow=raceSelect.value==="Эльф"&&selectedSubrace&&selectedSubrace[0]==="Тёмный эльф (дроу)";
+ const isTiefling=raceSelect.value==="Тифлинг";
+ field.hidden=!(isHighElf||isDrow||isTiefling);
+ select.required=Boolean(isHighElf);
+ if(isHighElf){
+  select.innerHTML='<option value="" selected disabled>Выбери заговор волшебника</option>'+spellData["Волшебник"].cantripList.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
+  document.getElementById("racialCantripInfo").textContent="Высший эльф изучает один заговор волшебника. Характеристика для него — Интеллект.";
+ }else if(isDrow){
+  select.replaceChildren();document.getElementById("racialCantripInfo").textContent="Дроу автоматически знает заговор «Танцующие огоньки»; характеристика — Харизма.";
+ }else if(isTiefling){
+  select.replaceChildren();document.getElementById("racialCantripInfo").textContent="Тифлинг автоматически знает заговор «Тауматургия»; характеристика — Харизма.";
+ }else{select.replaceChildren();document.getElementById("racialCantripInfo").textContent="";}
+}
 function renderRaceChoices(){
  const options=subraceData[raceSelect.value],field=document.getElementById("subraceField"),select=document.getElementById("subrace");
  field.hidden=!options;select.required=Boolean(options);
  if(options){select.innerHTML='<option value="" selected disabled>Выбери подрасу</option>'+options.map((x,i)=>'<option value="'+i+'">'+x[0]+'</option>').join("");document.getElementById("subraceInfo").textContent="Подраса добавляет дополнительные бонусы и особенности.";}
  else{select.replaceChildren();document.getElementById("subraceInfo").textContent="";}
+ renderRacialCantrip();
  const dragonField=document.getElementById("dragonAncestryField"),dragonSelect=document.getElementById("dragonAncestry");
  dragonField.hidden=raceSelect.value!=="Драконорождённый";dragonSelect.required=!dragonField.hidden;
  if(!dragonField.hidden){dragonSelect.innerHTML='<option value="" selected disabled>Выбери дракона</option>'+Object.keys(dragonAncestries).map(x=>'<option value="'+x+'">'+x+'</option>').join("");document.getElementById("dragonAncestryInfo").textContent="Наследие определяет тип урона дыхания и сопротивление.";}
  else{dragonSelect.replaceChildren();document.getElementById("dragonAncestryInfo").textContent="";}
 }
-document.getElementById("subrace").addEventListener("change",()=>{const options=subraceData[raceSelect.value];if(options)document.getElementById("subraceInfo").textContent=options[Number(document.getElementById("subrace").value)][2];});
+document.getElementById("subrace").addEventListener("change",()=>{const options=subraceData[raceSelect.value];if(options)document.getElementById("subraceInfo").textContent=options[Number(document.getElementById("subrace").value)][2];renderRacialCantrip();});
 document.getElementById("dragonAncestry").addEventListener("change",()=>{document.getElementById("dragonAncestryInfo").textContent=dragonAncestries[document.getElementById("dragonAncestry").value]||"";});
 const raceMeta={"Человек":{languages:"Общий",speed:30,size:"Средний"},"Эльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Полуэльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Дварф":{languages:"Общий и дварфийский",speed:25,size:"Средний"},"Полурослик":{languages:"Общий и язык полуросликов",speed:25,size:"Маленький"},"Тифлинг":{languages:"Общий и инфернальный",speed:30,size:"Средний"},"Драконорождённый":{languages:"Общий и драконий",speed:30,size:"Средний"},"Полуорк":{languages:"Общий и орочий",speed:30,size:"Средний"}};
 function renderSubclassChoices(){
@@ -765,6 +789,14 @@ form.addEventListener("submit",async event=>{
   }
   if(dragonAncestry)racialTraits+=" Драконье наследие "+dragonAncestry+": "+dragonAncestries[dragonAncestry];
   let racialSkills=[];
+  let racialCantrips=[];
+  let racialSpellcastingAbility=null;
+  const chosenSubraceName=subrace?subrace[0]:null;
+  if(selectedRace==="Эльф"&&chosenSubraceName==="Высший эльф"){
+   const cantrip=document.getElementById("racialCantrip").value;if(!cantrip)throw new Error("Выбери расовый заговор высшего эльфа.");
+   racialCantrips=[cantrip];racialSpellcastingAbility="intelligence";
+  }else if(selectedRace==="Эльф"&&chosenSubraceName==="Тёмный эльф (дроу)"){racialCantrips=["Танцующие огоньки"];racialSpellcastingAbility="charisma";}
+  else if(selectedRace==="Тифлинг"){racialCantrips=["Тауматургия"];racialSpellcastingAbility="charisma";}
   if(selectedRace==="Полуэльф"){
    const first=document.getElementById("halfElfBonus1").value,second=document.getElementById("halfElfBonus2").value;
    if(first===second)throw new Error("Полуэльф получает +1 к двум разным характеристикам.");
@@ -804,7 +836,7 @@ form.addEventListener("submit",async event=>{
    proficiency_bonus:Math.ceil(1+level/4),
    saving_throw_proficiencies:clsData?clsData.saves:[],
    skill_proficiencies:allSkills,class_skill_choices:selectedSkills,background_skill_proficiencies:backgroundSkills,
-   racial_traits:racialTraits,racial_skill_proficiencies:racialSkills,subrace:subrace?subrace[0]:null,dragon_ancestry:dragonAncestry||null,
+   racial_traits:racialTraits,racial_skill_proficiencies:racialSkills,racial_cantrips:racialCantrips,racial_spellcasting_ability:racialSpellcastingAbility,subrace:subrace?subrace[0]:null,dragon_ancestry:dragonAncestry||null,
    dragon_damage_type:dragonAncestry?dragonAncestries[dragonAncestry].split(";")[0]:null,
    dragon_resistance:dragonAncestry?dragonAncestries[dragonAncestry].split(";")[1].trim():null,
    dragon_breath_shape:dragonAncestry?dragonAncestries[dragonAncestry].split(";")[2].trim():null,
