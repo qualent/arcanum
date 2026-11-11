@@ -253,7 +253,8 @@ async function handleCharacterInitialize(request, env) {
         const characterStats = character.stats && typeof character.stats === "object" ? character.stats : {};
         const toughBonus = characterStats.feat && characterStats.feat.name === "Крепкий" ? 2 * level : 0;
         const hillDwarfBonus = characterStats.subrace === "Холмовой дварф" ? level : 0;
-        const maxHp = Math.max(1, hitDie + conModifier + (Math.floor(hitDie / 2) + 1 + conModifier) * (level - 1) + toughBonus + hillDwarfBonus);
+        const draconicResilienceBonus = characterStats.subclass === "Драконья кровь" ? level : 0;
+        const maxHp = Math.max(1, hitDie + conModifier + (Math.floor(hitDie / 2) + 1 + conModifier) * (level - 1) + toughBonus + hillDwarfBonus + draconicResilienceBonus);
 
         const stateResult = await supabaseRequest(env,
             "/rest/v1/game_states?select=*&character_id=eq." + encodeURIComponent(character.id) +
