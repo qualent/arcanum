@@ -73,7 +73,7 @@ async function handleGameAction(request, env) {
 
         return jsonResponse({
             success: true,
-            result: { text: dmContent, model: context.aiSettings.model || env.GEMINI_MODEL || DEFAULT_MODEL },
+            result: { text: dmContent, model: getGeminiModel(env, context.aiSettings) },
             messages: { player: playerMessage, assistant: assistantMessage },
             state: updatedState,
             inventory: updatedInventory
@@ -118,14 +118,14 @@ async function loadGameContext(env, token, userId, campaignId, characterId, owne
         rules: results[5].ok ? results[5].data || [] : [],
         aiSettings: results[6].ok && results[6].data && results[6].data[0]
             ? results[6].data[0]
-            : { provider: "gemini", model: env.GEMINI_MODEL || DEFAULT_MODEL, temperature: 0.8, response_style: "immersive", rules_profile: "dnd5e_2014" }
+            : { provider: "gemini", model: DEFAULT_MODEL, temperature: 0.8, response_style: "immersive", rules_profile: "dnd5e_2014" }
     };
 }
 
 async function askGemini(env, context, playerAction) {
-    const model = context.aiSettings.model || env.GEMINI_MODEL || DEFAULT_MODEL;
+    const model = getGeminiModel(env, context.aiSettings);
     const userPayload = {
-        player_action: playerAction, recent_history: context.messages,
+        campaign_details: context.campaign, player_action: playerAction, recent_history: context.messages,
         current_character: context.character, current_game_state: context.gameState,
         current_inventory: context.inventory, known_memories: context.memories,
         known_world_entities: context.entities, enabled_campaign_rules: context.rules
@@ -162,6 +162,12 @@ async function askGemini(env, context, playerAction) {
     } catch (error) {
         throw new Error("Gemini вернул ответ в неверном формате. Повтори действие.");
     }
+}
+
+function getGeminiModel(env, settings) {
+    if (env.GEMINI_MODEL) return env.GEMINI_MODEL;
+    if (settings && settings.provider === "gemini" && settings.model) return settings.model;
+    return DEFAULT_MODEL;
 }
 
 function buildSystemInstruction(context) {
