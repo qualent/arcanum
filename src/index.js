@@ -403,7 +403,10 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
     }
 
     const rolls = [];
-    for (const request of requests) {
+    const orderedRequests = requests.slice().sort((left, right) =>
+        (left.type === "damage" ? 1 : 0) - (right.type === "damage" ? 1 : 0)
+    );
+    for (const request of orderedRequests) {
         if (request.type === "damage") {
             const previousAttack = rolls.slice().reverse().find(roll => roll.type === "attack");
             if (previousAttack && previousAttack.success === false) continue;
