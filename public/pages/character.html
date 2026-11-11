@@ -545,12 +545,16 @@ function signed(v){return v>=0?"+"+v:String(v);}
 function updateModifiers(){statNames.forEach(k=>{const el=document.getElementById(k+"Mod");if(el)el.textContent=signed(modifier(document.getElementById(k).value));});}
 document.querySelectorAll(".stat-card input").forEach(el=>el.addEventListener("input",updateModifiers));
 const raceSelect=document.getElementById("race"),classSelect=document.getElementById("characterClass"),backgroundSelect=document.getElementById("background");
+const classTools={"Бард":"Три музыкальных инструмента на выбор","Друид":"Набор травника","Монах":"Один ремесленный инструмент или музыкальный инструмент на выбор","Плут":"Воровские инструменты","остальные":"Нет автоматического владения инструментами от класса"};
+const backgroundTools={"Солдат":"Один игровой набор и наземный транспорт","Преступник":"Воровские инструменты и один игровой набор","Дворянин":"Один игровой набор","Послушник":"Нет","Шарлатан":"Набор для грима и набор для подделки документов","Народный герой":"Один ремесленный инструмент и наземный транспорт","Гильдейский ремесленник":"Один набор ремесленника на выбор","Отшельник":"Набор травника","Моряк":"Инструменты навигации и водный транспорт","Артист":"Набор для грима и один музыкальный инструмент","Странник":"Один музыкальный инструмент","Мудрец":"Нет","Учёный":"Нет","Изгнанник":"Набор травника","Авантюрист":"Нет"};
+const raceMeta={"Человек":{languages:"Общий и один дополнительный язык на выбор",speed:30,size:"Средний"},"Эльф":{languages:"Общий и эльфийский",speed:30,size:"Средний"},"Полуэльф":{languages:"Общий, эльфийский и один дополнительный язык",speed:30,size:"Средний"},"Дварф":{languages:"Общий и дварфийский",speed:25,size:"Средний"},"Полурослик":{languages:"Общий и язык полуросликов",speed:25,size:"Маленький"},"Тифлинг":{languages:"Общий и инфернальный",speed:30,size:"Средний"},"Драконорождённый":{languages:"Общий и драконий",speed:30,size:"Средний"},"Полуорк":{languages:"Общий и орочий",speed:30,size:"Средний"}};
 function updateDescriptions(){
  const race=raceData[raceSelect.value],cls=classData[classSelect.value],bg=backgroundData[backgroundSelect.value];
  document.getElementById("halfElfChoices").hidden=raceSelect.value!=="Полуэльф";
- document.getElementById("raceInfo").textContent=race?Object.entries(race.bonus).map(([k,v])=>abilityLabels[k]+" "+signed(v)).join(", ")+". "+race.traits:"Авторская раса: её игровые свойства нужно согласовать с мастером.";
- document.getElementById("classInfo").textContent=cls?"Кость хитов d"+cls.die+". Спасброски: "+cls.saves.map(x=>abilityLabels[x]).join(" и ")+". Владения: "+cls.armor+". Оружие: "+cls.weapons+". Особенность: "+cls.feature:"Авторский класс не имеет автоматических правил — согласуй кость хитов, владения и способности.";
- document.getElementById("backgroundInfo").textContent=bg?"Навыки: "+bg.skills.join(", ")+". Особенность: "+bg.feature:"Авторская предыстория: навыки и особенность нужно задать вручную с мастером.";
+ const meta=raceMeta[raceSelect.value];
+ document.getElementById("raceInfo").textContent=race?Object.entries(race.bonus).map(([k,v])=>abilityLabels[k]+" "+signed(v)).join(", ")+". "+race.traits+(meta?" Скорость "+meta.speed+" фт.; размер: "+meta.size+"; языки: "+meta.languages+".":""):"Авторская раса: её игровые свойства нужно согласовать с мастером.";
+ document.getElementById("classInfo").textContent=cls?"Кость хитов d"+cls.die+". Спасброски: "+cls.saves.map(x=>abilityLabels[x]).join(" и ")+". Владения: "+cls.armor+". Оружие: "+cls.weapons+". Инструменты: "+(classTools[classSelect.value]||classTools.остальные)+". Особенность: "+cls.feature:"Авторский класс не имеет автоматических правил — согласуй кость хитов, владения и способности.";
+ document.getElementById("backgroundInfo").textContent=bg?"Навыки: "+bg.skills.join(", ")+". Инструменты/транспорт: "+(backgroundTools[backgroundSelect.value]||"Нет")+". Особенность: "+bg.feature:"Авторская предыстория: навыки и особенность нужно задать вручную с мастером.";
  document.getElementById("skillInstruction").textContent=cls?"Выбери ровно "+cls.count+" навыка из списка класса. Навыки предыстории добавятся автоматически: "+(bg?bg.skills.join(", "):"нет")+".":"Для авторского класса выбери навыки вручную после согласования.";
  document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent;
  renderSkillChoices();
@@ -655,6 +659,10 @@ form.addEventListener("submit",async event=>{
    background_feature:bgRules?bgRules.feature:"Авторская особенность требует согласования",
    hit_die:hitDie,armor_proficiencies:clsData?clsData.armor:"Требует согласования",
    weapon_proficiencies:clsData?clsData.weapons:"Требует согласования",
+   tool_proficiencies:[classTools[selectedClass]||"Нет",backgroundTools[selectedBackground]||"Нет"].filter(x=>x!=="Нет").join("; ")||"Нет",
+   languages:raceMeta[selectedRace]?raceMeta[selectedRace].languages:"Требует согласования",
+   speed:raceMeta[selectedRace]?raceMeta[selectedRace].speed:30,
+   size:raceMeta[selectedRace]?raceMeta[selectedRace].size:"Средний",
    feat:feat?{name:feat,description:document.getElementById("featInfo").textContent}:null,
    ruleset:"dnd5e_2014"
   };
