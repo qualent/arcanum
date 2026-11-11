@@ -22,6 +22,8 @@ const elements = {
     proficiencyList: document.getElementById("proficiencyList"),
     featureList: document.getElementById("featureList"),
     hpText: document.getElementById("hpText"),
+    armorClassValue: document.getElementById("armorClassValue"),
+    initiativeValue: document.getElementById("initiativeValue"),
     hpFill: document.getElementById("hpFill"),
     saveStatus: document.getElementById("saveStatus"),
     systemMessage: document.getElementById("systemMessage"),
@@ -354,7 +356,47 @@ function renderCharacter() {
     }
 
     renderCharacterDetails();
+    renderCombatStats();
     renderHealth();
+}
+
+function renderCombatStats() {
+    const character = currentCharacter || {};
+    const stats = character.stats && typeof character.stats === "object" ? character.stats : {};
+    const dexterityModifier = calculateModifier(character.dexterity);
+    const constitutionModifier = calculateModifier(character.constitution);
+    const wisdomModifier = calculateModifier(character.wisdom);
+    const equippedArmor = currentInventory.filter(item => item.equipped && item.item_type === "armor");
+    const bodyArmor = equippedArmor.find(item => !(item.properties && item.properties.shield));
+    const shield = equippedArmor.find(item => item.properties && item.properties.shield) ||
+        equippedArmor.find(item => String(item.item_name || "").toLowerCase().includes("щит"));
+    let armorClass = 10 + dexterityModifier;
+    if (bodyArmor) {
+        const properties = bodyArmor.properties || {};
+        let baseArmor = Number(properties.armor_class) || 0;
+        if (!baseArmor) {
+            const match = String(bodyArmor.description || "").match(/КД\s*(\d+)/i);
+            baseArmor = match ? Number(match[1]) : 10;
+        }
+        const category = properties.armor_category || (/кольчуг|латы|панцир/i.test(bodyArmor.item_name || "") ? "heavy" : /чешуйчат|нагрудник|полулаты/i.test(bodyArmor.item_name || "") ? "medium" : "light");
+        armorClass = baseArmor;
+        if (category === "light") armorClass += dexterityModifier;
+        if (category === "medium") armorClass += Math.min(2, dexterityModifier);
+    } else {
+        const className = String(character.class || "").toLowerCase();
+        if (className.includes("варвар")) armorClass += constitutionModifier;
+        if (className.includes("монах")) armorClass += wisdomModifier;
+        if (stats.subclass === "Драконья кровь") armorClass = Math.max(armorClass, 13 + dexterityModifier);
+    }
+    if (shield) armorClass += Number(shield.properties && shield.properties.armor_class_bonus) || 2;
+    setText(elements.armorClassValue, armorClass, "10");
+    let initiative = dexterityModifier;
+    if (stats.feat && stats.feat.name === "Бдительный") initiative += 5;
+    setText(elements.initiativeValue, formatSigned(initiative), "+0");
+}
+
+function formatSigned(value) {
+    return value >= 0 ? "+" + value : String(value);
 }
 
 function renderCharacterDetails() {
