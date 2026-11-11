@@ -735,7 +735,22 @@ form.addEventListener("submit",async event=>{
   const selectedSkills=Array.from(document.querySelectorAll('input[name="classSkill"]:checked')).map(x=>x.value);
   const required=clsData?clsData.count:2;if(selectedSkills.length!==required)throw new Error("Выбери ровно "+required+" навыка от класса.");
   if((selectedRace==="Человек"||selectedRace==="Полуэльф")&&!document.getElementById("extraLanguage").value)throw new Error("Выбери дополнительный язык для этой расы.");
+  const subraceOptions=subraceData[selectedRace]||[];
+  const subraceIndex=document.getElementById("subrace").value;
+  const subrace=subraceOptions.length?subraceOptions[Number(subraceIndex)]:null;
+  if(subraceOptions.length&&!subrace)throw new Error("Выбери подрасу.");
+  const dragonAncestry=selectedRace==="Драконорождённый"?document.getElementById("dragonAncestry").value:"";
+  if(selectedRace==="Драконорождённый"&&!dragonAncestry)throw new Error("Выбери драконье наследие.");
   let racialBonuses=raceRules?Object.assign({},raceRules.bonus):{};
+  let racialTraits=raceRules?raceRules.traits:"Авторские свойства требуют согласования";
+  let raceSpeed=raceMeta[selectedRace]?raceMeta[selectedRace].speed:30;
+  if(subrace){
+   Object.entries(subrace[1]).forEach(([key,value])=>racialBonuses[key]=(racialBonuses[key]||0)+value);
+   racialTraits+=" "+subrace[1]&&subrace[1];
+   racialTraits+=" "+subrace[1];
+   raceSpeed=subrace[2];
+  }
+  if(dragonAncestry)racialTraits+=" Драконье наследие "+dragonAncestry+": "+dragonAncestries[dragonAncestry];
   let racialSkills=[];
   if(selectedRace==="Полуэльф"){
    const first=document.getElementById("halfElfBonus1").value,second=document.getElementById("halfElfBonus2").value;
@@ -771,14 +786,14 @@ form.addEventListener("submit",async event=>{
    proficiency_bonus:Math.ceil(1+level/4),
    saving_throw_proficiencies:clsData?clsData.saves:[],
    skill_proficiencies:allSkills,class_skill_choices:selectedSkills,background_skill_proficiencies:backgroundSkills,
-   racial_traits:raceRules?raceRules.traits:"Авторские свойства требуют согласования",racial_skill_proficiencies:racialSkills,
+   racial_traits:racialTraits,racial_skill_proficiencies:racialSkills,subrace:subrace?subrace[0]:null,dragon_ancestry:dragonAncestry||null,
    class_features:clsData?clsData.feature:"Авторские свойства требуют согласования",
    background_feature:bgRules?bgRules.feature:"Авторская особенность требует согласования",
-   hit_die:hitDie,subclass:subclass?subclass[0]:null,subclass_feature:subclass?subclass[1]:null,subclass_bonus_spells:subclass&&subclass[2]?subclass[2]:[],spellcasting:spellcasting,armor_proficiencies:clsData?clsData.armor:"Требует согласования",
-   weapon_proficiencies:clsData?clsData.weapons:"Требует согласования",
+   hit_die:hitDie,subclass:subclass?subclass[0]:null,subclass_feature:subclass?subclass[1]:null,subclass_bonus_spells:subclass&&subclass[2]?subclass[2]:[],spellcasting:spellcasting,armor_proficiencies:(clsData?clsData.armor:"Требует согласования")+(subrace&&subrace[0]==="Горный дварф"?"; владение средними доспехами":""),
+   weapon_proficiencies:(clsData?clsData.weapons:"Требует согласования")+(selectedRace==="Эльф"?"; длинные и короткие мечи, длинные и короткие луки":""),
    tool_proficiencies:[classTools[selectedClass]||"Нет",backgroundTools[selectedBackground]||"Нет"].filter(x=>x!=="Нет").join("; ")||"Нет",
    languages:raceMeta[selectedRace]?raceMeta[selectedRace].languages+((selectedRace==="Человек"||selectedRace==="Полуэльф")?"; "+document.getElementById("extraLanguage").value:""):"Требует согласования",
-   speed:raceMeta[selectedRace]?raceMeta[selectedRace].speed:30,
+   speed:raceSpeed,
    size:raceMeta[selectedRace]?raceMeta[selectedRace].size:"Средний",
    feat:feat?{name:feat,description:document.getElementById("featInfo").textContent}:null,
    ruleset:"dnd5e_2014"
