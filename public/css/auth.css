@@ -1,1 +1,166 @@
 
+/* ========================================
+   ARCANUM — AUTHENTICATION STYLES
+======================================== */
+
+.auth-page {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    box-sizing: border-box;
+    background:
+        radial-gradient(ellipse at 50% 30%, rgba(116, 75, 35, 0.13), transparent 55%),
+        #08090d;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 45px 40px;
+    box-sizing: border-box;
+    background: linear-gradient(145deg, #171820, #101116);
+    border: 1px solid rgba(201, 169, 106, 0.25);
+    border-radius: 14px;
+    box-shadow: 0 15px 60px rgba(0, 0, 0, 0.55);
+}
+
+.auth-logo {
+    margin-bottom: 12px;
+    color: #d5b477;
+    font-family: 'Cinzel', serif;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    text-align: center;
+}
+
+.auth-card h1 {
+    margin: 0 0 12px;
+    color: #eee9df;
+    font-family: 'Cinzel', serif;
+    font-size: 25px;
+    text-align: center;
+}
+
+.auth-card p {
+    color: #99969a;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.auth-card form {
+    margin-top: 30px;
+}
+
+.auth-card label {
+    display: block;
+    margin: 18px 0 8px;
+    color: #c9a96a;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+.auth-card input {
+    display: block;
+    width: 100%;
+    height: 48px;
+    padding: 0 15px;
+    box-sizing: border-box;
+    background: #0b0c11;
+    border: 1px solid rgba(201, 169, 106, 0.25);
+    border-radius: 6px;
+    outline: none;
+    color: #eee9df;
+    font-size: 15px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-card input:focus {
+    border-color: #c9a96a;
+    box-shadow: 0 0 0 3px rgba(201, 169, 106, 0.1);
+}
+
+.auth-card input::placeholder {
+    color: #68666b;
+}
+
+.auth-card button {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 25px;
+    padding: 12px;
+    background: linear-gradient(135deg, #c9a96a, #a78345);
+    border: none;
+    border-radius: 6px;
+    color: #111116;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.auth-card button:hover {
+    background: linear-gradient(135deg, #e4c88a, #c9a96a);
+    transform: translateY(-2px);
+}
+
+.auth-card button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.auth-footer {
+    margin-top: 25px;
+    color: #99969a;
+    font-size: 14px;
+    text-align: center;
+}
+
+.auth-card a {
+    color: #d5b477;
+    text-decoration: none;
+}
+
+.auth-card a:hover {
+    color: #f0d69c;
+    text-decoration: underline;
+}
+
+.auth-error {
+    margin-top: 15px;
+    padding: 12px;
+    background: rgba(180, 55, 55, 0.12);
+    border: 1px solid rgba(220, 75, 75, 0.3);
+    border-radius: 6px;
+    color: #ed8888;
+    font-size: 13px;
+}
+
+.auth-success {
+    margin-top: 15px;
+    padding: 12px;
+    background: rgba(70, 160, 100, 0.12);
+    border: 1px solid rgba(70, 160, 100, 0.3);
+    border-radius: 6px;
+    color: #8bd5a0;
+    font-size: 13px;
+}
+
+@media (max-width: 500px) {
+    .auth-page {
+        padding: 20px 15px;
+    }
+
+    .auth-card {
+        padding: 35px 24px;
+    }
+
+    .auth-logo {
+        font-size: 30px;
+    }
+}
+
