@@ -393,7 +393,7 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
     }
     const rollReport = rolls.map(roll => {
         if (roll.is_damage) return roll.label + ": " + roll.dice.join(", ") + " " +
-            (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) + " = " + roll.total + " урона (" + roll.damage_type + ")";
+            (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) + " = " + roll.total + " урона (" + roll.damage_type + ")" + (roll.critical ? " — критическое попадание" : "");
         return roll.label + ": " + roll.dice.join(", ") +
             (roll.dice.length > 1 ? " → выбран " + roll.die : "") +
             " " + (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) +
