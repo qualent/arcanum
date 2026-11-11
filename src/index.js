@@ -279,7 +279,7 @@ async function askGemini(env, context, playerAction, onNarrativeDelta) {
 }
 
 function extractPartialNarrative(jsonText) {
-    const match = jsonText.match(/"narrative"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)/s);
+    const match = jsonText.match(/"narrative"\s*:\s*"((?:\\.|[^"\\])*)/s);
     if (!match) return "";
     let raw = match[1];
     while (raw.length) {
