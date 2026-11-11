@@ -271,7 +271,7 @@ async function applyInventoryChanges(env, token, userId, campaignId, characterId
             }
         } else if (index >= 0) {
             const existing = inventory[index];
-            const updated = await supabaseRequest(env, "/rest/v1/inventory?id=eq." + encodeURIComponent(existing.id) + "&user_id=eq." + encodeURIComponent(userId), {
+            const updated = await supabaseAdminRequest(env, "/rest/v1/inventory?id=eq." + encodeURIComponent(existing.id) + "&user_id=eq." + encodeURIComponent(userId), {
                 method: "PATCH", headers: { "Prefer": "return=representation" },
                 body: JSON.stringify({ quantity: Math.min(999, Number(existing.quantity || 1) + change.quantity), updated_at: new Date().toISOString() })
             }, token);
