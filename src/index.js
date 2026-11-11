@@ -137,16 +137,16 @@ async function askGemini(env, context, playerAction) {
         systemInstruction: { parts: [{ text: buildSystemInstruction(context) }] },
         contents: [{ role: "user", parts: [{ text: JSON.stringify(userPayload) }] }],
         generationConfig: {
-            temperature: clampNumber(context.aiSettings.temperature, 0.2, 1.2, 0.8),
             responseMimeType: "application/json",
-            maxOutputTokens: 3000
+            maxOutputTokens: 3000,
+            thinkingConfig: { thinkingLevel: "low" }
         }
     };
 
     let lastError = null;
     for (let modelIndex = 0; modelIndex < models.length; modelIndex++) {
         const model = models[modelIndex];
-        const attempts = modelIndex === 0 ? 2 : 1;
+        const attempts = 1;
         for (let attempt = 0; attempt < attempts; attempt++) {
             let response;
             let data = {};
@@ -157,7 +157,7 @@ async function askGemini(env, context, playerAction) {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(requestBody),
-                    signal: AbortSignal.timeout(45000)
+                    signal: AbortSignal.timeout(30000)
                 });
                 responseText = await response.text();
                 try { data = responseText ? JSON.parse(responseText) : {}; } catch (parseError) { data = {}; }
