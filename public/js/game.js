@@ -29,6 +29,10 @@ const elements = {
     actionInput: document.getElementById("actionInput"),
     actionButton: document.getElementById("actionButton"),
     diceResult: document.getElementById("diceResult"),
+    checkStat: document.getElementById("checkStat"),
+    checkDc: document.getElementById("checkDc"),
+    checkButton: document.getElementById("checkButton"),
+    checkResult: document.getElementById("checkResult"),
     settingsModal: document.getElementById("settingsModal"),
     storyLog: document.getElementById("storyLog"),
     inventoryList: document.getElementById("inventoryList"),
@@ -255,9 +259,25 @@ async function loadOrCreateGameState() {
 
     const { data, error } = await supabaseClient
         .from("game_states")
-        .upsert(newState, { onConflict: "character_id" })
+        .insert(newState)
         .select()
         .single();
+
+    if (error && error.code === "23505") {
+        const { data: racedState, error: racedError } = await supabaseClient
+            .from("game_states")
+            .select("*")
+            .eq("character_id", characterId)
+            .eq("user_id", currentUser.id)
+            .maybeSingle();
+
+        if (racedError || !racedState) {
+            throw new Error("Не удалось получить созданное игровое состояние: " + (racedError?.message || error.message));
+        }
+
+        currentGameState = racedState;
+        return;
+    }
 
     if (error) {
         throw new Error("Не удалось создать игровое состояние: " + error.message);
@@ -419,42 +439,41 @@ function renderMessages(messages) {
         label.textContent = "МАСТЕР";
 
         const paragraph = document.createElement("p");
-        paragraph.textContent = "Приключение начинается. Твои действия и результаты бросков будут сохраняться в журнале.";
+        paragraph.textContent = "Приключение начинается. Твои действия и результаты бросков будут сохраняться в журнал.";
 
         welcome.append(label, paragraph);
         elements.storyLog.appendChild(welcome);
+    } else {
+        messages.forEach(message => {
+            const article = document.createElement("article");
+            article.className = "story-message " + getMessageClass(message.role);
 
-        const system = document.createElement("article");
-        system.className = "story-message system-message";
+            const label = document.createElement("div");
+            label.className = "message-label";
+            label.textContent = getMessageLabel(message.role);
 
-        const systemLabel = document.createElement("div");
-        systemLabel.className = "message-label";
-        systemLabel.textContent = "СИСТЕМА";
+            const paragraph = document.createElement("p");
+            paragraph.textContent = message.content || "";
 
-        const systemText = document.createElement("p");
-        systemText.id = "systemMessage";
-        systemText.textContent = "Игровое состояние загружено.";
-
-        system.append(systemLabel, systemText);
-        elements.storyLog.appendChild(system);
-        elements.systemMessage = systemText;
-        return;
+            article.append(label, paragraph);
+            elements.storyLog.appendChild(article);
+        });
     }
 
-    messages.forEach(message => {
-        const article = document.createElement("article");
-        article.className = "story-message " + getMessageClass(message.role);
+    const system = document.createElement("article");
+    system.className = "story-message system-message";
 
-        const label = document.createElement("div");
-        label.className = "message-label";
-        label.textContent = getMessageLabel(message.role);
+    const systemLabel = document.createElement("div");
+    systemLabel.className = "message-label";
+    systemLabel.textContent = "СИСТЕМА";
 
-        const paragraph = document.createElement("p");
-        paragraph.textContent = message.content || "";
+    const systemText = document.createElement("p");
+    systemText.id = "systemMessage";
+    systemText.textContent = "Игровое состояние загружено.";
 
-        article.append(label, paragraph);
-        elements.storyLog.appendChild(article);
-    });
+    system.append(systemLabel, systemText);
+    elements.storyLog.appendChild(system);
+    elements.systemMessage = systemText;
 
     scrollStoryToBottom();
 }
@@ -590,6 +609,10 @@ function bindEvents() {
                 submitAction();
             }
         });
+    }
+
+    if (elements.checkButton) {
+        elements.checkButton.addEventListener("click", runAbilityCheck);
     }
 
     const settingsButton = document.getElementById("settingsButton");
