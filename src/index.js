@@ -501,7 +501,7 @@ function resolveServerRoll(request, context) {
         const bonus = match[3] ? Number(match[3]) : 0;
         const dice = Array.from({ length: count }, () => randomDie(sides));
         const style = stats.fighting_style;
-        const twoHandedWeapons = ["двуручный топор","двуручный меч","алебарда","глефа","пика","боевой посох","длинный лук","тяжёлый арбалет"];
+        const twoHandedWeapons = ["двуручный топор","двуручный меч","алебарда","глефа","пика","боевой посох","молот"];
         const weapon = String(request.weapon || "").toLowerCase();
         if (style === "Сражение большим оружием" && twoHandedWeapons.some(name => weapon.includes(name))) {
             for (let index = 0; index < dice.length; index++) if (dice[index] <= 2) dice[index] = randomDie(sides);
@@ -548,6 +548,7 @@ function resolveServerRoll(request, context) {
     const expertise = request.skill && expertiseList.includes(normalizedSkill);
     let bonus = request.type === "death_save" ? 0 : abilityModifier + (proficient ? proficiencyBonus * (expertise ? 2 : 1) : 0);
     if (request.type === "initiative" && stats.feat && stats.feat.name === "Бдительный") bonus += 5;
+    if (request.type === "attack" && stats.fighting_style === "Стрельба" && ["лук","арбалет"].some(part => weapon.includes(part))) bonus += 2;
     if (request.type === "saving_throw" && stats.feat && stats.feat.name === "Боевой заклинатель" && /концентрац/i.test(request.label || "")) request.mode = "advantage";
     const dice = request.mode === "normal" ? [randomDie(20)] : [randomDie(20), randomDie(20)];
     const die = request.mode === "advantage" ? Math.max(...dice) :
