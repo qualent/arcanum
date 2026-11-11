@@ -330,6 +330,11 @@
                 <div class="form-group"><label for="subclass">Выбери специализацию 1 уровня</label><select id="subclass"></select></div>
                 <p id="subclassInfo" class="builder-note"></p>
             </div>
+            <div class="builder-subsection" id="classFeatureChoices" hidden>
+                <h3>Особый выбор класса</h3>
+                <div id="fightingStyleField" class="form-group" hidden><label for="fightingStyle">Боевой стиль воина</label><select id="fightingStyle"></select><p id="fightingStyleInfo" class="builder-note"></p></div>
+                <div id="expertiseField" class="form-group" hidden><strong>Компетентность плута — выбери два владения</strong><div id="expertiseChoices" class="skill-choice-grid"></div><p id="expertiseStatus" class="builder-note"></p></div>
+            </div>
             <div class="builder-subsection" id="spellcastingSection" hidden>
                 <h3>Заклинания</h3>
                 <p id="spellcastingInfo" class="builder-note"></p>
@@ -576,6 +581,40 @@ const subclassData={
 "Колдун":[["Архифея","Присутствие фей: очаровываешь или пугаешь существ рядом."],["Исчадие","Благословение тёмного: получаешь временные HP, когда сводишь врага к 0 HP."],["Великий Древний","Пробуждённый разум: телепатическая связь с существами рядом."]],
 "Чародей":[["Драконья кровь","Драконья устойчивость: дополнительный максимум HP и природный КД без доспехов."],["Дикая магия","Всплеск дикой магии: заклинание может вызвать случайный магический эффект."]]
 };
+const fightingStyles=[
+["Стрельба","+2 к броскам атаки дальнобойным оружием."],
+["Защита","+1 к КД, пока носишь доспех."],
+["Дуэлянт","+2 к урону рукопашным оружием в одной руке, если в другой нет другого оружия."],
+["Сражение большим оружием","При броске урона двуручным или универсальным оружием можешь перебросить 1 или 2 на кости урона (один раз за кость)."],
+["Оборона","Реакцией можешь наложить помеху атаке по союзнику рядом, если держишь щит."],
+["Сражение двумя оружиями","Добавляешь модификатор характеристики к урону второй атаки при сражении двумя оружиями."]
+];
+function renderClassFeatureChoices(){
+ const section=document.getElementById("classFeatureChoices"),fighter=classSelect.value==="Воин",rogue=classSelect.value==="Плут";
+ section.hidden=!(fighter||rogue);
+ const styleField=document.getElementById("fightingStyleField"),styleSelect=document.getElementById("fightingStyle");
+ styleField.hidden=!fighter;styleSelect.required=fighter;
+ if(fighter){
+  const old=styleSelect.value;styleSelect.innerHTML='<option value="" selected disabled>Выбери боевой стиль</option>'+fightingStyles.map((x,i)=>'<option value="'+i+'">'+x[0]+'</option>').join("");
+  if(old!==""&&fightingStyles[Number(old)])styleSelect.value=old;else styleSelect.value="";
+  document.getElementById("fightingStyleInfo").textContent=styleSelect.value?fightingStyles[Number(styleSelect.value)][1]:"Боевой стиль влияет на атаки или защиту.";
+ }else{styleSelect.replaceChildren();}
+ const expertiseField=document.getElementById("expertiseField"),expertiseBox=document.getElementById("expertiseChoices");
+ expertiseField.hidden=!rogue;
+ if(rogue){
+  const old=Array.from(expertiseBox.querySelectorAll('input:checked')).map(x=>x.value);
+  const bg=backgroundData[backgroundSelect.value];
+  const options=Array.from(new Set(Array.from(document.querySelectorAll('input[name="classSkill"]:checked')).map(x=>x.value).concat(bg?bg.skills:[],"Воровские инструменты")));
+  expertiseBox.replaceChildren();
+  options.forEach(value=>{const label=document.createElement("label");label.className="skill-choice";const input=document.createElement("input");input.type="checkbox";input.name="expertise";input.value=value;input.checked=old.includes(value);input.addEventListener("change",updateExpertiseStatus);const span=document.createElement("span");span.textContent=value;label.append(input,span);expertiseBox.append(label);});
+  updateExpertiseStatus();
+ }
+}
+function updateExpertiseStatus(){
+ const count=document.querySelectorAll('input[name="expertise"]:checked').length;
+ document.getElementById("expertiseStatus").textContent="Выбрано компетентностей: "+count+" / 2.";
+}
+document.getElementById("fightingStyle").addEventListener("change",()=>{const style=fightingStyles[Number(document.getElementById("fightingStyle").value)];document.getElementById("fightingStyleInfo").textContent=style?style[1]:"";});
 const spellData={
 "Бард":{ability:"charisma",cantrips:2,spells:4,cantripList:["Злая насмешка","Волшебная рука","Малая иллюзия","Фокусы","Свет"],spellList:["Лечащее слово","Диссонирующий шёпот","Волшебный огонь","Громовая волна","Очарование личности","Усыпление","Лечение ран","Героизм"]},
 "Жрец":{ability:"wisdom",cantrips:3,prepared:true,cantripList:["Священное пламя","Наставление","Свет","Сохранение умирающего","Тауматургия"],spellList:["Благословение","Лечение ран","Направляющий снаряд","Лечащее слово","Щит веры","Убежище","Приказ","Обнаружение магии","Защита от зла и добра"]},
@@ -667,6 +706,7 @@ function renderSkillChoices(){
   const span=document.createElement("span");span.textContent=skill;label.append(input,span);box.append(label);
  });
  updateSkillStatus();
+ if(typeof renderClassFeatureChoices==="function")renderClassFeatureChoices();
 }
 function updateSkillStatus(){
  const cls=classData[classSelect.value],count=document.querySelectorAll('input[name="classSkill"]:checked').length,required=cls?cls.count:2;
@@ -678,8 +718,8 @@ document.getElementById("standardArrayButton").addEventListener("click",()=>{
  updateModifiers();document.getElementById("abilityScoreStatus").textContent="Массив распределён. Можешь менять числа местами, сохраняя набор.";
 });
 raceSelect.addEventListener("change",()=>{updateDescriptions();renderRaceChoices();});
-backgroundSelect.addEventListener("change",updateDescriptions);
-classSelect.addEventListener("change",()=>{updateDescriptions();renderSkillChoices();renderSubclassChoices();renderSpellChoices();});
+backgroundSelect.addEventListener("change",()=>{updateDescriptions();renderClassFeatureChoices();});
+classSelect.addEventListener("change",()=>{updateDescriptions();renderSkillChoices();renderSubclassChoices();renderSpellChoices();renderClassFeatureChoices();});
 document.getElementById("feat").addEventListener("change",()=>document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent);
 document.getElementById("halfElfSkill1").innerHTML=skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
 document.getElementById("halfElfSkill2").innerHTML=skillNames.map(x=>'<option value="'+x+'">'+x+'</option>').join("");
@@ -698,7 +738,7 @@ async function suggestCharacter(){
   document.getElementById("level").value="1";document.getElementById("alignment").value=c.alignment||"Истинно нейтральный";
   statNames.forEach(k=>document.getElementById(k).value=c.stats[k]);
   ["history","personality","appearance","goals"].forEach(k=>document.getElementById(k).value=c[k]||"");
-  updateDescriptions();renderRaceChoices();renderSkillChoices();renderSubclassChoices();renderSpellChoices();
+  updateDescriptions();renderRaceChoices();renderSkillChoices();renderSubclassChoices();renderSpellChoices();renderClassFeatureChoices();
   (c.class_skill_choices||[]).forEach(skill=>{const input=Array.from(document.querySelectorAll('input[name="classSkill"]')).find(el=>el.value===skill);if(input)input.checked=true;});
   updateSkillStatus();updateModifiers();
   document.getElementById("abilityScoreStatus").textContent="ИИ распределил стандартный массив 15, 14, 13, 12, 10, 8. Проверь распределение.";
@@ -766,6 +806,11 @@ form.addEventListener("submit",async event=>{
   const level=Number(document.getElementById("level").value);
   const hitDie=clsData?clsData.die:8;
   const feat=document.getElementById("feat").value;
+  const fightingStyleIndex=document.getElementById("fightingStyle").value;
+  const fightingStyle=fightingStyles[Number(fightingStyleIndex)];
+  if(selectedClass==="Воин"&&!fightingStyle)throw new Error("Выбери боевой стиль воина.");
+  const expertise=Array.from(document.querySelectorAll('input[name="expertise"]:checked')).map(x=>x.value);
+  if(selectedClass==="Плут"&&expertise.length!==2)throw new Error("Плут выбирает две компетентности.");
   const subclassOptions=subclassData[selectedClass]||[];
   const subclassIndex=document.getElementById("subclass").value;
   const subclass=subclassOptions.length?subclassOptions[Number(subclassIndex)]:null;
@@ -791,7 +836,7 @@ form.addEventListener("submit",async event=>{
    dragon_breath_shape:dragonAncestry?dragonAncestries[dragonAncestry].split(";")[2].trim():null,
    class_features:clsData?clsData.feature:"Авторские свойства требуют согласования",
    background_feature:bgRules?bgRules.feature:"Авторская особенность требует согласования",
-   hit_die:hitDie,subclass:subclass?subclass[0]:null,subclass_feature:subclass?subclass[1]:null,subclass_bonus_spells:subclass&&subclass[2]?subclass[2]:[],spellcasting:spellcasting,armor_proficiencies:(clsData?clsData.armor:"Требует согласования")+(subrace&&subrace[0]==="Горный дварф"?"; владение средними доспехами":""),
+   hit_die:hitDie,fighting_style:fightingStyle?fightingStyle[0]:null,fighting_style_description:fightingStyle?fightingStyle[1]:null,expertise:expertise,subclass:subclass?subclass[0]:null,subclass_feature:subclass?subclass[1]:null,subclass_bonus_spells:subclass&&subclass[2]?subclass[2]:[],spellcasting:spellcasting,armor_proficiencies:(clsData?clsData.armor:"Требует согласования")+(subrace&&subrace[0]==="Горный дварф"?"; владение средними доспехами":""),
    weapon_proficiencies:(clsData?clsData.weapons:"Требует согласования")+(selectedRace==="Эльф"?"; длинные и короткие мечи, длинные и короткие луки":""),
    tool_proficiencies:[classTools[selectedClass]||"Нет",backgroundTools[selectedBackground]||"Нет"].filter(x=>x!=="Нет").join("; ")||"Нет",
    languages:raceMeta[selectedRace]?raceMeta[selectedRace].languages+((selectedRace==="Человек"||selectedRace==="Полуэльф")?"; "+document.getElementById("extraLanguage").value:""):"Требует согласования",
