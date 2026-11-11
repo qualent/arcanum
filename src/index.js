@@ -506,7 +506,8 @@ function resolveServerRoll(request, context) {
             for (let index = 0; index < dice.length; index++) if (dice[index] <= 2) dice[index] = randomDie(sides);
         }
         const subtotal = dice.reduce((sum, value) => sum + value, 0);
-        const duelingBonus = style === "Дуэлянт" && weapon && !twoHandedWeapons.some(name => weapon.includes(name)) ? 2 : 0;
+        const oneHandedMelee = ["длинный меч","рапира","короткий меч","булава","кинжал","боевой топор","копьё","копье","ятаган","молот"];
+        const duelingBonus = style === "Дуэлянт" && oneHandedMelee.some(name => weapon.includes(name)) ? 2 : 0;
         const totalBonus = bonus + duelingBonus;
         return { type: "damage", label: request.label || "Урон", dice, die: subtotal, bonus: totalBonus, total: Math.max(0, subtotal + totalBonus), dc: null, is_damage: true, critical: Boolean(request.critical), damage_type: request.damage_type || "обычный", dice_expression: request.dice, weapon: request.weapon };
     }
