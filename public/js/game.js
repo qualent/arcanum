@@ -737,7 +737,7 @@ async function submitAction() {
 
         showPlayerMessage(completedResult.messages && completedResult.messages.player);
         if (Array.isArray(completedResult.rolls) && completedResult.rolls.length) {
-            const rollText = completedResult.rolls.map(roll => "Бросок мастера — " + roll.label + ": d20 (" + roll.dice.join(", ") + ")" + (roll.dice.length > 1 ? ", выбран " + roll.die : "") + " " + (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) + " = " + roll.total + (roll.dc ? " против СЛ " + roll.dc + (roll.success ? " — успех" : " — неудача") : "") + (roll.death_save_effect ? " (" + roll.death_save_effect + ")" : "")).join("\n");
+            const rollText = completedResult.rolls.map(roll => roll.is_damage ? "Урон мастера — " + roll.label + ": " + roll.dice.join(", ") + " " + (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) + " = " + roll.total + " (" + roll.damage_type + ")" + (roll.critical ? " — критическое попадание" : "") : "Бросок мастера — " + roll.label + ": d20 (" + roll.dice.join(", ") + ")" + (roll.dice.length > 1 ? ", выбран " + roll.die : "") + " " + (roll.bonus >= 0 ? "+ " : "− ") + Math.abs(roll.bonus) + " = " + roll.total + (roll.dc ? " против СЛ " + roll.dc + (roll.success ? " — успех" : " — неудача") : "") + (roll.critical ? " — критическое попадание" : "") + (roll.death_save_effect ? " (" + roll.death_save_effect + ")" : "")).join("\n");
             appendMessage({ role: "system", content: rollText });
         }
         const finalText = completedResult.result && completedResult.result.text
