@@ -307,7 +307,7 @@ function validateRollRequests(rawRequests, context) {
     return rawRequests.slice(0, 3).map(request => {
         const type = allowedTypes.includes(request.type) ? request.type : "ability_check";
         const ability = allowedAbilities.includes(request.ability) ? request.ability : "strength";
-        const dc = Number.isInteger(Number(request.dc)) ? Math.max(1, Math.min(30, Number(request.dc))) : null;
+        const dc = request.dc === null || request.dc === undefined || request.dc === "" ? null : (Number.isInteger(Number(request.dc)) ? Math.max(1, Math.min(30, Number(request.dc))) : null);
         const skill = typeof request.skill === "string" ? request.skill.slice(0, 40) : "";
         const mode = ["advantage", "disadvantage"].includes(request.mode) ? request.mode : "normal";
         return { type, ability, dc, skill, mode, label: typeof request.label === "string" ? request.label.slice(0, 100) : "" };
@@ -342,14 +342,15 @@ function resolveServerRoll(request, context) {
         ? (SKILL_ABILITIES[request.skill.toLowerCase()] || request.ability)
         : request.ability;
     const score = Number(character[ability] ?? (stats.ability_scores && stats.ability_scores[ability]) ?? 10);
-    const abilityModifier = Math.floor((score - 10) / 2);
+    const abilityModifier = request.type === "death_save" ? 0 : Math.floor((score - 10) / 2);
     const proficiencyBonus = Math.max(2, Math.min(6, Number(stats.proficiency_bonus) || (Math.ceil((Number(character.level) || 1) / 4) + 1)));
     const skillList = Array.isArray(stats.skill_proficiencies) ? stats.skill_proficiencies.map(value => String(value).toLowerCase()) : [];
     const saveList = Array.isArray(stats.saving_throw_proficiencies) ? stats.saving_throw_proficiencies : [];
     const proficient = request.type === "saving_throw"
         ? saveList.includes(ability)
+        : request.type === "attack" ? true
         : request.skill ? skillList.includes(request.skill.toLowerCase()) : false;
-    const bonus = abilityModifier + (proficient ? proficiencyBonus : 0);
+    const bonus = request.type === "death_save" ? 0 : abilityModifier + (proficient ? proficiencyBonus : 0);
     const sides = 20;
     const randomDie = () => {
         const bytes = new Uint32Array(1);
@@ -363,7 +364,8 @@ function resolveServerRoll(request, context) {
     return {
         type: request.type, label: request.label || (request.skill || request.type),
         ability, skill: request.skill, dice, die, bonus, total, dc: request.dc,
-        success: request.dc === null ? null : total >= request.dc,
+        success: request.type === "death_save" ? die >= 10 : (request.dc === null ? null : total >= request.dc),
+        death_save_effect: request.type === "death_save" ? (die === 20 ? "восстановление 1 HP" : die === 1 ? "две неудачи" : die >= 10 ? "одна удача" : "одна неудача") : null,
         natural: die, proficient, mode: request.mode
     };
 }
