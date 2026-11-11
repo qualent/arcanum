@@ -10,6 +10,20 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
+<style>
+.builder-section{border:1px solid rgba(201,169,106,.25);border-radius:8px;padding:22px;margin:22px 0;background:rgba(201,169,106,.025)}
+.builder-note{color:var(--muted);font-size:13px;line-height:1.65;margin:8px 0}
+.builder-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
+.builder-info{padding:14px;border:1px solid var(--border);border-radius:6px;background:rgba(255,255,255,.025)}
+.builder-info strong{color:var(--gold-light)}.builder-info p{font-size:12px;line-height:1.6;color:var(--muted);margin:8px 0 0}
+.builder-subsection{padding:17px 0;border-top:1px solid var(--border);margin-top:14px}
+.builder-subsection h3{font-family:'Cinzel',serif;color:var(--gold-light);font-size:16px;margin:0 0 10px}
+.skill-choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.skill-choice{display:flex;gap:8px;align-items:center;padding:9px;border:1px solid var(--border);border-radius:5px;font-size:12px}
+.skill-choice input{width:auto}.skill-choice.disabled{opacity:.55}
+@media(max-width:700px){.builder-grid{grid-template-columns:1fr}.skill-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+
 </head>
 
 <body>
@@ -181,8 +195,8 @@
                         type="number"
                         id="strength"
                         value="10"
-                        min="1"
-                        max="30"
+                        min="8"
+                        max="15"
                     >
 
                     <strong id="strengthMod">+0</strong>
@@ -195,8 +209,8 @@
                         type="number"
                         id="dexterity"
                         value="10"
-                        min="1"
-                        max="30"
+                        min="8"
+                        max="15"
                     >
 
                     <strong id="dexterityMod">+0</strong>
@@ -262,6 +276,49 @@
 
         </div>
 
+
+        <div class="form-section builder-section">
+            <h2>Правила и особенности персонажа</h2>
+            <p class="builder-note">Основа — D&D 5e (редакция 2014). Здесь выбираются реальные игровые параметры, а не только описание героя.</p>
+            <div class="builder-grid">
+                <div class="builder-info"><strong>Раса и происхождение</strong><p id="raceInfo">Выбери расу, чтобы увидеть её бонусы и особенности.</p></div>
+                <div class="builder-info"><strong>Класс</strong><p id="classInfo">Класс определяет кость хитов, спасброски, владения и умения.</p></div>
+                <div class="builder-info"><strong>Предыстория</strong><p id="backgroundInfo">Предыстория добавляет навыки, владения и особенность.</p></div>
+            </div>
+            <div class="builder-subsection">
+                <h3>Распределение характеристик</h3>
+                <p>Для стандартного создания используй массив <b>15, 14, 13, 12, 10, 8</b> — каждое число ровно один раз. Нажми кнопку, чтобы расставить значения автоматически, затем можешь поменять их местами вручную.</p>
+                <button type="button" class="button button-secondary" id="standardArrayButton">Распределить стандартный массив</button>
+                <p id="abilityScoreStatus" class="builder-note">Стандартный массив ещё не распределён.</p>
+            </div>
+            <div class="builder-subsection">
+                <h3>Владение навыками от класса</h3>
+                <p id="skillInstruction">Выбери навыки, в которых персонаж обучен. Предыстория добавит свои навыки автоматически.</p>
+                <div id="skillChoices" class="skill-choice-grid"></div>
+                <p id="skillStatus" class="builder-note"></p>
+            </div>
+            <div class="builder-subsection">
+                <h3>Черта персонажа</h3>
+                <div class="form-group">
+                    <label for="feat">Дополнительная черта (необязательно)</label>
+                    <select id="feat">
+                        <option value="">Без дополнительной черты</option>
+                        <option value="Счастливчик">Счастливчик — 3 раза за долгий отдых можешь перебросить собственный d20 или заставить перебросить атаку по тебе.</option>
+                        <option value="Бдительный">Бдительный — +5 к инициативе, тебя нельзя застать врасплох, пока ты в сознании.</option>
+                        <option value="Крепкий">Крепкий — максимум HP увеличивается на 2 за каждый уровень, включая текущий.</option>
+                        <option value="Боевой заклинатель">Боевой заклинатель — преимущество на проверки концентрации и возможность выполнять некоторые заклинания при оружии в руках.</option>
+                        <option value="Мастер большого оружия">Мастер большого оружия — особые возможности при критическом попадании и добивании; силовая атака тяжёлым оружием.</option>
+                        <option value="Меткий стрелок">Меткий стрелок — дальние атаки игнорируют часть укрытий и штрафы дальности; особая силовая атака.</option>
+                        <option value="Посвящённый в магию">Посвящённый в магию — два заговора и заклинание 1 уровня из выбранного класса магии.</option>
+                    </select>
+                </div>
+                <p id="featInfo" class="builder-note">Черта необязательна. В обычной D&D она появляется по правилам повышения характеристик или особенностям расы/кампании.</p>
+            </div>
+            <div class="builder-subsection">
+                <h3>Начальное снаряжение</h3>
+                <p id="equipmentInfo">Стартовый комплект будет выдан по выбранному классу. Он попадёт в настоящий инвентарь, а не останется только в описании.</p>
+            </div>
+        </div>
 
         <div class="form-section">
 
@@ -418,350 +475,155 @@
 
 
 <script>
-
-const supabaseClient = supabase.createClient(
-    CONFIG.SUPABASE_URL,
-    CONFIG.SUPABASE_ANON_KEY
-);
-
-const form = document.getElementById("characterForm");
-
-const errorMessage = document.getElementById("characterError");
-const successMessage = document.getElementById("characterSuccess");
-
-const createButton = document.getElementById("createCharacterButton");
-
-const campaignId = localStorage.getItem("arcanum_campaign_id");
-
-let currentUser = null;
-
-
-async function checkUserAndCampaign() {
-
-    const {
-        data: {
-            user
-        },
-        error: userError
-    } = await supabaseClient.auth.getUser();
-
-    if (userError || !user) {
-        window.location.href = "login.html";
-        return;
-    }
-
-    currentUser = user;
-
-    if (!campaignId) {
-
-        errorMessage.textContent =
-            "Кампания не найдена. Сначала создай кампанию.";
-
-        createButton.disabled = true;
-
-        return;
-    }
-
-
-    const {
-        data: campaign,
-        error: campaignError
-    } = await supabaseClient
-        .from("campaigns")
-        .select("id, name")
-        .eq("id", campaignId)
-        .maybeSingle();
-
-
-    if (campaignError) {
-
-        console.error(campaignError);
-
-        errorMessage.textContent =
-            "Не удалось загрузить кампанию.";
-
-        createButton.disabled = true;
-
-        return;
-    }
-
-
-    if (!campaign) {
-
-        errorMessage.textContent =
-            "Кампания не найдена или у тебя нет к ней доступа.";
-
-        createButton.disabled = true;
-
-        return;
-    }
+const supabaseClient=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
+const form=document.getElementById("characterForm");
+const errorMessage=document.getElementById("characterError");
+const successMessage=document.getElementById("characterSuccess");
+const createButton=document.getElementById("createCharacterButton");
+const campaignId=localStorage.getItem("arcanum_campaign_id");
+let currentUser=null;
+const statNames=["strength","dexterity","constitution","intelligence","wisdom","charisma"];
+const skillNames=["Акробатика","Анализ","Атлетика","Восприятие","Выживание","Выступление","Запугивание","История","Ловкость рук","Магия","Медицина","Обман","Природа","Проницательность","Религия","Скрытность","Убеждение","Уход за животными"];
+const classData={
+"Варвар":{die:12,saves:["strength","constitution"],count:2,skills:["Атлетика","Выживание","Запугивание","Природа","Восприятие","Уход за животными"],feature:"Ярость: бонусный урон и сопротивление дробящему, колющему и рубящему урону в ярости.",armor:"Лёгкие и средние доспехи, щиты",weapons:"Простое и воинское оружие"},
+"Бард":{die:8,saves:["dexterity","charisma"],count:3,skills:["Акробатика","Анализ","Атлетика","Восприятие","Выступление","Запугивание","История","Ловкость рук","Магия","Медицина","Обман","Проницательность","Природа","Религия","Скрытность","Убеждение","Уход за животными"],feature:"Вдохновение барда: бонусным действием даёт союзнику кость d6 для проверки, атаки или спасброска.",armor:"Лёгкие доспехи",weapons:"Простое оружие, ручные арбалеты, длинные и короткие мечи, рапиры"},
+"Жрец":{die:8,saves:["wisdom","charisma"],count:2,skills:["История","Медицина","Проницательность","Убеждение","Религия"],feature:"Божественный домен определяет дополнительные умения и заклинания; магия основана на Мудрости.",armor:"Лёгкие и средние доспехи, щиты",weapons:"Простое оружие"},
+"Друид":{die:8,saves:["intelligence","wisdom"],count:2,skills:["Восприятие","Выживание","Медицина","Природа","Проницательность","Религия","Уход за животными"],feature:"Друидический язык и заклинания природы; круг друида выбирается на 2 уровне.",armor:"Лёгкие и средние доспехи (не металлические), щиты",weapons:"Дубины, кинжалы, дротики, копья, булавы, посохи, ятаганы, серпы, пращи"},
+"Воин":{die:10,saves:["strength","constitution"],count:2,skills:["Акробатика","Анализ","Атлетика","Восприятие","Выживание","История","Запугивание","Проницательность","Уход за животными"],feature:"Боевой стиль и Второе дыхание: восстановление 1к10 + уровень HP бонусным действием.",armor:"Все доспехи, щиты",weapons:"Простое и воинское оружие"},
+"Монах":{die:8,saves:["strength","dexterity"],count:2,skills:["Акробатика","Атлетика","История","Проницательность","Религия","Скрытность"],feature:"Боевые искусства: использует Ловкость для безоружных атак и монашеского оружия; защита без доспехов.",armor:"Нет",weapons:"Простое оружие, короткие мечи"},
+"Паладин":{die:10,saves:["wisdom","charisma"],count:2,skills:["Атлетика","Запугивание","Медицина","Проницательность","Религия","Убеждение"],feature:"Божественное чувство и Наложение рук: запас лечения равен 5 × уровень.",armor:"Все доспехи, щиты",weapons:"Простое и воинское оружие"},
+"Следопыт":{die:10,saves:["strength","dexterity"],count:3,skills:["Атлетика","Восприятие","Выживание","Исследование","Природа","Проницательность","Скрытность","Уход за животными"],feature:"Избранный враг и Исследователь природы; заклинания появляются на 2 уровне.",armor:"Лёгкие и средние доспехи, щиты",weapons:"Простое и воинское оружие"},
+"Плут":{die:8,saves:["dexterity","intelligence"],count:4,skills:["Акробатика","Атлетика","Восприятие","Выступление","Запугивание","Ловкость рук","Обман","Проницательность","Расследование","Скрытность","Убеждение"],feature:"Компетентность в двух навыках и Скрытая атака 1к6 при соблюдении условий.",armor:"Лёгкие доспехи",weapons:"Простое оружие, ручные арбалеты, длинные и короткие мечи, рапиры"},
+"Волшебник":{die:6,saves:["intelligence","wisdom"],count:2,skills:["Анализ","История","Магия","Медицина","Проницательность","Религия"],feature:"Магическое восстановление и книга заклинаний; базовая характеристика магии — Интеллект.",armor:"Нет",weapons:"Кинжалы, дротики, пращи, боевые посохи, лёгкие арбалеты"},
+"Чародей":{die:6,saves:["constitution","charisma"],count:2,skills:["Запугивание","Магия","Обман","Проницательность","Убеждение","Религия"],feature:"Источник магии и врождённая магия; базовая характеристика заклинаний — Харизма.",armor:"Нет",weapons:"Кинжалы, дротики, пращи, боевые посохи, лёгкие арбалеты"},
+"Колдун":{die:8,saves:["wisdom","charisma"],count:2,skills:["История","Запугивание","Магия","Обман","Природа","Расследование","Религия"],feature:"Потусторонний покровитель, магические воззвания и договорная магия; характеристика — Харизма.",armor:"Лёгкие доспехи",weapons:"Простое оружие"},
+};
+const raceData={
+"Человек":{bonus:{strength:1,dexterity:1,constitution:1,intelligence:1,wisdom:1,charisma:1},traits:"Увеличение всех характеристик на +1; базовая скорость 30 футов."},
+"Эльф":{bonus:{dexterity:2},traits:"Ловкость +2, тёмное зрение 60 футов, владение Восприятием, сопротивление очарованию и иммунитет ко сну от магии, транс вместо сна."},
+"Полуэльф":{bonus:{charisma:2,dexterity:1,constitution:1},traits:"Харизма +2 и две другие характеристики +1; тёмное зрение, наследие фей, два дополнительных навыка."},
+"Дварф":{bonus:{constitution:2},traits:"Телосложение +2, тёмное зрение 60 футов, устойчивость дварфов к яду, владение боевыми топорами/молотами и знание камня."},
+"Полурослик":{bonus:{dexterity:2},traits:"Ловкость +2, удачливость (переброс натуральной 1 на d20), храбрость и проворство полурослика."},
+"Тифлинг":{bonus:{charisma:2,intelligence:1},traits:"Харизма +2, Интеллект +1, тёмное зрение 60 футов, сопротивление огню, врождённая магия Ада."},
+"Драконорождённый":{bonus:{strength:2,charisma:1},traits:"Сила +2, Харизма +1, драконье наследие, оружие дыхания и сопротивление типу урона предка."},
+"Полуорк":{bonus:{strength:2,constitution:1},traits:"Сила +2, Телосложение +1, тёмное зрение, Угрожающий вид, Непоколебимая стойкость и Неистовые атаки."}
+};
+const backgroundData={
+"Авантюрист":{skills:["Атлетика","Выживание"],feature:"Полевой опыт: умеешь находить безопасные стоянки и ориентироваться в незнакомой местности."},
+"Солдат":{skills:["Атлетика","Запугивание"],feature:"Воинское звание: можешь рассчитывать на поддержку солдат и узнаваем среди военных."},
+"Преступник":{skills:["Обман","Скрытность"],feature:"Криминальные связи: знаешь, где искать подполье и как передавать сообщения преступному миру."},
+"Учёный":{skills:["Магия","История"],feature:"Исследователь: знаешь, где искать библиотеки, архивы и других учёных."},
+"Дворянин":{skills:["История","Убеждение"],feature:"Привилегированное положение: можешь рассчитывать на уважение знати и доступ к высшему обществу."},
+"Изгнанник":{skills:["Медицина","Выживание"],feature:"Выживший: умеешь добывать пищу и находить укрытие в дикой местности."},
+"Странник":{skills:["Атлетика","Восприятие"],feature:"Память на маршруты: хорошо ориентируешься в знакомой местности и помнишь карты."}
+};
+const abilityLabels={strength:"Сила",dexterity:"Ловкость",constitution:"Телосложение",intelligence:"Интеллект",wisdom:"Мудрость",charisma:"Харизма"};
+function modifier(v){return Math.floor((Number(v)-10)/2);}
+function signed(v){return v>=0?"+"+v:String(v);}
+function updateModifiers(){statNames.forEach(k=>{const el=document.getElementById(k+"Mod");if(el)el.textContent=signed(modifier(document.getElementById(k).value));});}
+document.querySelectorAll(".stat-card input").forEach(el=>el.addEventListener("input",updateModifiers));
+const raceSelect=document.getElementById("race"),classSelect=document.getElementById("characterClass"),backgroundSelect=document.getElementById("background");
+function updateDescriptions(){
+ const race=raceData[raceSelect.value],cls=classData[classSelect.value],bg=backgroundData[backgroundSelect.value];
+ document.getElementById("raceInfo").textContent=race?Object.entries(race.bonus).map(([k,v])=>abilityLabels[k]+" "+signed(v)).join(", ")+". "+race.traits:"Авторская раса: её игровые свойства нужно согласовать с мастером.";
+ document.getElementById("classInfo").textContent=cls?"Кость хитов d"+cls.die+". Спасброски: "+cls.saves.map(x=>abilityLabels[x]).join(" и ")+". Владения: "+cls.armor+". Оружие: "+cls.weapons+". Особенность: "+cls.feature:"Авторский класс не имеет автоматических правил — согласуй кость хитов, владения и способности.";
+ document.getElementById("backgroundInfo").textContent=bg?"Навыки: "+bg.skills.join(", ")+". Особенность: "+bg.feature:"Авторская предыстория: навыки и особенность нужно задать вручную с мастером.";
+ document.getElementById("skillInstruction").textContent=cls?"Выбери ровно "+cls.count+" навыка из списка класса. Навыки предыстории добавятся автоматически: "+(bg?bg.skills.join(", "):"нет")+".":"Для авторского класса выбери навыки вручную после согласования.";
+ document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent;
+ renderSkillChoices();
 }
-
-
-function calculateModifier(value) {
-
-    return Math.floor((Number(value) - 10) / 2);
-
+function renderSkillChoices(){
+ const box=document.getElementById("skillChoices"),cls=classData[classSelect.value];box.replaceChildren();
+ const options=cls?cls.skills:skillNames;
+ options.forEach(skill=>{
+  const label=document.createElement("label");label.className="skill-choice";
+  const input=document.createElement("input");input.type="checkbox";input.name="classSkill";input.value=skill;
+  input.addEventListener("change",updateSkillStatus);
+  const span=document.createElement("span");span.textContent=skill;label.append(input,span);box.append(label);
+ });
+ updateSkillStatus();
 }
-
-
-function modifierText(value) {
-
-    const modifier = calculateModifier(value);
-
-    if (modifier >= 0) {
-        return "+" + modifier;
-    }
-
-    return modifier.toString();
-
+function updateSkillStatus(){
+ const cls=classData[classSelect.value],count=document.querySelectorAll('input[name="classSkill"]:checked').length,required=cls?cls.count:2;
+ document.getElementById("skillStatus").textContent="Выбрано: "+count+" / "+required+".";
+ document.getElementById("skillStatus").style.color=count===required?"#8fbd8f":"var(--muted)";
 }
-
-
-function updateModifiers() {
-
-    document.getElementById("strengthMod").textContent =
-        modifierText(document.getElementById("strength").value);
-
-    document.getElementById("dexterityMod").textContent =
-        modifierText(document.getElementById("dexterity").value);
-
-    document.getElementById("constitutionMod").textContent =
-        modifierText(document.getElementById("constitution").value);
-
-    document.getElementById("intelligenceMod").textContent =
-        modifierText(document.getElementById("intelligence").value);
-
-    document.getElementById("wisdomMod").textContent =
-        modifierText(document.getElementById("wisdom").value);
-
-    document.getElementById("charismaMod").textContent =
-        modifierText(document.getElementById("charisma").value);
-}
-
-
-document.querySelectorAll(".stat-card input").forEach(input => {
-
-    input.addEventListener("input", updateModifiers);
-
+document.getElementById("standardArrayButton").addEventListener("click",()=>{
+ [15,14,13,12,10,8].forEach((v,i)=>document.getElementById(statNames[i]).value=v);
+ updateModifiers();document.getElementById("abilityScoreStatus").textContent="Массив распределён. Можешь менять числа местами, сохраняя набор.";
 });
-
-
-const raceSelect = document.getElementById("race");
-const classSelect = document.getElementById("characterClass");
-const backgroundSelect = document.getElementById("background");
-
-const customFields = document.getElementById("customFields");
-
-
-function updateCustomFields() {
-
-    const showCustom =
-        raceSelect.value === "custom" ||
-        classSelect.value === "custom" ||
-        backgroundSelect.value === "custom";
-
-    customFields.style.display =
-        showCustom ? "grid" : "none";
+[raceSelect,classSelect,backgroundSelect].forEach(el=>el.addEventListener("change",updateDescriptions));
+document.getElementById("feat").addEventListener("change",()=>document.getElementById("featInfo").textContent=document.getElementById("feat").selectedOptions[0].textContent);
+async function checkUserAndCampaign(){
+ const {data:{user},error}=await supabaseClient.auth.getUser();if(error||!user){window.location.href="login.html";return;}
+ currentUser=user;
+ if(!campaignId){errorMessage.textContent="Сначала выбери или создай мир.";createButton.disabled=true;return;}
+ const {data:campaign,error:campaignError}=await supabaseClient.from("campaigns").select("id,name").eq("id",campaignId).eq("user_id",user.id).maybeSingle();
+ if(campaignError||!campaign){errorMessage.textContent="Мир не найден или нет доступа.";createButton.disabled=true;return;}
+ document.querySelector(".page-header p").textContent="Мир: "+campaign.name+". Заполни лист персонажа по правилам D&D 5e (2014).";
 }
-
-
-raceSelect.addEventListener("change", updateCustomFields);
-classSelect.addEventListener("change", updateCustomFields);
-backgroundSelect.addEventListener("change", updateCustomFields);
-
-
-form.addEventListener("submit", async (event) => {
-
-    event.preventDefault();
-
-    errorMessage.textContent = "";
-    successMessage.textContent = "";
-
-    createButton.disabled = true;
-    createButton.textContent = "Создаём...";
-
-
-    let race = raceSelect.value;
-
-    let characterClass = classSelect.value;
-
-    let background = backgroundSelect.value;
-
-
-    if (race === "custom") {
-
-        race =
-            document.getElementById("customRace").value.trim();
-
-        if (!race) {
-            errorMessage.textContent =
-                "Укажи свою расу.";
-
-            createButton.disabled = false;
-            createButton.textContent = "Создать персонажа";
-
-            return;
-        }
-    }
-
-
-    if (characterClass === "custom") {
-
-        characterClass =
-            document.getElementById("customClass").value.trim();
-
-        if (!characterClass) {
-            errorMessage.textContent =
-                "Укажи свой класс.";
-
-            createButton.disabled = false;
-            createButton.textContent = "Создать персонажа";
-
-            return;
-        }
-    }
-
-
-    if (background === "custom") {
-
-        background =
-            document.getElementById("customBackground").value.trim();
-
-        if (!background) {
-            errorMessage.textContent =
-                "Укажи свою предысторию.";
-
-            createButton.disabled = false;
-            createButton.textContent = "Создать персонажа";
-
-            return;
-        }
-    }
-
-
-    const character = {
-
-        user_id: currentUser.id,
-
-        campaign_id: campaignId,
-
-        name:
-            document.getElementById("characterName").value.trim(),
-
-        race: race,
-
-        class:
-            characterClass,
-
-        level:
-            Number(document.getElementById("level").value),
-
-        background:
-            background,
-
-        strength:
-            Number(document.getElementById("strength").value),
-
-        dexterity:
-            Number(document.getElementById("dexterity").value),
-
-        constitution:
-            Number(document.getElementById("constitution").value),
-
-        intelligence:
-            Number(document.getElementById("intelligence").value),
-
-        wisdom:
-            Number(document.getElementById("wisdom").value),
-
-        charisma:
-            Number(document.getElementById("charisma").value),
-
-        alignment:
-            document.getElementById("alignment").value,
-
-        history:
-            document.getElementById("history").value.trim(),
-
-        personality:
-            document.getElementById("personality").value.trim(),
-
-        appearance:
-            document.getElementById("appearance").value.trim(),
-
-        goals:
-            document.getElementById("goals").value.trim(),
-
-        preferences:
-            document.getElementById("preferences").value.trim()
-
-    };
-
-
-    if (!character.name) {
-
-        errorMessage.textContent =
-            "Введи имя персонажа.";
-
-        createButton.disabled = false;
-        createButton.textContent = "Создать персонажа";
-
-        return;
-    }
-
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from("characters")
-        .insert(character)
-        .select()
-        .single();
-
-
-    if (error) {
-
-        console.error(error);
-
-        errorMessage.textContent =
-            "Не удалось создать персонажа: " + error.message;
-
-        createButton.disabled = false;
-        createButton.textContent = "Создать персонажа";
-
-        return;
-    }
-
-
-    localStorage.setItem(
-        "arcanum_character_id",
-        data.id
-    );
-
-    localStorage.removeItem(
-        "arcanum_character"
-    );
-
-
-    successMessage.textContent =
-        "Персонаж создан. Переходим к игре...";
-
-
-    setTimeout(() => {
-
-        window.location.href = "game.html";
-
-    }, 500);
-
+form.addEventListener("submit",async event=>{
+ event.preventDefault();errorMessage.textContent="";successMessage.textContent="";
+ createButton.disabled=true;createButton.textContent="Проверяем лист...";
+ try{
+  const selectedRace=raceSelect.value,selectedClass=classSelect.value,selectedBackground=backgroundSelect.value;
+  const race=selectedRace==="custom"?document.getElementById("customRace").value.trim():selectedRace;
+  const cls=selectedClass==="custom"?document.getElementById("customClass").value.trim():selectedClass;
+  const bg=selectedBackground==="custom"?document.getElementById("customBackground").value.trim():selectedBackground;
+  if(!race||!cls||!bg)throw new Error("Заполни собственную расу, класс или предысторию.");
+  const name=document.getElementById("characterName").value.trim();if(!name)throw new Error("Введи имя персонажа.");
+  const baseStats={};statNames.forEach(k=>baseStats[k]=Number(document.getElementById(k).value));
+  if(statNames.some(k=>!Number.isInteger(baseStats[k])||baseStats[k]<8||baseStats[k]>15))throw new Error("Для стандартного массива характеристики должны быть от 8 до 15.");
+  const sorted=Object.values(baseStats).sort((a,b)=>a-b).join(",");
+  if(sorted!=="8,10,12,13,14,15")throw new Error("Используй стандартный массив: 15, 14, 13, 12, 10, 8 — каждое значение один раз.");
+  const clsData=classData[selectedClass],raceRules=raceData[selectedRace],bgRules=backgroundData[selectedBackground];
+  const selectedSkills=Array.from(document.querySelectorAll('input[name="classSkill"]:checked')).map(x=>x.value);
+  const required=clsData?clsData.count:2;if(selectedSkills.length!==required)throw new Error("Выбери ровно "+required+" навыка от класса.");
+  const racialBonuses=raceRules?raceRules.bonus:{};
+  const finalStats={};statNames.forEach(k=>finalStats[k]=baseStats[k]+(racialBonuses[k]||0));
+  const backgroundSkills=bgRules?bgRules.skills:[];
+  const allSkills=Array.from(new Set(selectedSkills.concat(backgroundSkills)));
+  const level=Number(document.getElementById("level").value);
+  const hitDie=clsData?clsData.die:8;
+  const feat=document.getElementById("feat").value;
+  const details={
+   ability_scores_base:baseStats,ability_bonuses:racialBonuses,ability_scores:finalStats,
+   proficiency_bonus:Math.ceil(1+level/4),
+   saving_throw_proficiencies:clsData?clsData.saves:[],
+   skill_proficiencies:allSkills,class_skill_choices:selectedSkills,background_skill_proficiencies:backgroundSkills,
+   racial_traits:raceRules?raceRules.traits:"Авторские свойства требуют согласования",
+   class_features:clsData?clsData.feature:"Авторские свойства требуют согласования",
+   background_feature:bgRules?bgRules.feature:"Авторская особенность требует согласования",
+   hit_die:hitDie,armor_proficiencies:clsData?clsData.armor:"Требует согласования",
+   weapon_proficiencies:clsData?clsData.weapons:"Требует согласования",
+   feat:feat?{name:feat,description:document.getElementById("featInfo").textContent}:null,
+   ruleset:"dnd5e_2014"
+  };
+  const character={
+   user_id:currentUser.id,campaign_id:campaignId,name,race,class:cls,level,background:bg,
+   strength:finalStats.strength,dexterity:finalStats.dexterity,constitution:finalStats.constitution,
+   intelligence:finalStats.intelligence,wisdom:finalStats.wisdom,charisma:finalStats.charisma,
+   alignment:document.getElementById("alignment").value,
+   history:document.getElementById("history").value.trim(),
+   personality:document.getElementById("personality").value.trim(),
+   appearance:document.getElementById("appearance").value.trim(),
+   goals:document.getElementById("goals").value.trim(),
+   preferences:document.getElementById("preferences").value.trim(),
+   stats:details
+  };
+  const {data,error}=await supabaseClient.from("characters").insert(character).select().single();
+  if(error)throw new Error("Не удалось создать персонажа: "+error.message);
+  localStorage.setItem("arcanum_character_id",data.id);
+  createButton.textContent="Подготавливаем лист и снаряжение...";
+  const {data:{session}}=await supabaseClient.auth.getSession();
+  const response=await fetch("/api/character/initialize",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},body:JSON.stringify({campaign_id:campaignId,character_id:data.id})});
+  const result=await response.json();
+  if(!response.ok||!result.success)throw new Error(result.error||"Не удалось создать стартовое состояние и снаряжение.");
+  successMessage.textContent="Персонаж создан. Стартовые HP, владения и снаряжение сохранены.";
+  window.location.href="game.html";
+ }catch(error){console.error(error);errorMessage.textContent=error.message||"Не удалось создать персонажа.";createButton.disabled=false;createButton.textContent="Создать персонажа";}
 });
-
-
-checkUserAndCampaign();
-
-updateModifiers();
-
+checkUserAndCampaign();updateModifiers();updateDescriptions();
 </script>
 
 </body>
