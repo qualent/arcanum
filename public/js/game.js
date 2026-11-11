@@ -722,22 +722,78 @@ async function submitAction() {
 
     isSaving = true;
     if (elements.actionButton) elements.actionButton.disabled = true;
-    setSaveStatus("Сохранение...");
+    setSaveStatus("Мастер думает...");
+    setText(elements.systemMessage, "Gemini обрабатывает твоё действие...");
 
     try {
-        await saveMessage("player", action);
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        const accessToken = sessionData && sessionData.session ? sessionData.session.access_token : null;
+
+        if (sessionError || !accessToken) {
+            throw new Error("Сессия истекла. Войди в аккаунт заново.");
+        }
+
+        const response = await fetch("/api/game/action", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + accessToken
+            },
+            body: JSON.stringify({
+                campaign_id: campaignId,
+                character_id: characterId,
+                action: action
+            })
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || "Не удалось получить ответ мастера.");
+        }
+
         elements.actionInput.value = "";
+
+        if (result.messages && result.messages.player) {
+            appendMessage(result.messages.player);
+        } else {
+            appendMessage({
+                role: "player",
+                content: action
+            });
+        }
+
+        if (result.messages && result.messages.assistant) {
+            appendMessage(result.messages.assistant);
+        } else if (result.result && result.result.text) {
+            appendMessage({
+                role: "assistant",
+                content: result.result.text
+            });
+        }
+
+        if (result.state) {
+            currentGameState = result.state;
+            renderHealth();
+            renderGameState();
+        }
+
+        if (Array.isArray(result.inventory)) {
+            currentInventory = result.inventory;
+            renderInventory();
+        }
+
         setSaveStatus("Сохранено");
+        setText(elements.systemMessage, "Ответ получен от " + ((result.result && result.result.model) || "Gemini") + ". Изменения кампании сохранены.");
     } catch (error) {
-        console.error(error);
-        setSaveStatus("Ошибка сохранения");
-        setText(elements.systemMessage, error.message);
+        console.error("Gemini action error:", error);
+        setSaveStatus("Ошибка мастера");
+        setText(elements.systemMessage, error.message || "Не удалось связаться с ИИ-мастером.");
     } finally {
         isSaving = false;
         if (elements.actionButton) elements.actionButton.disabled = false;
     }
 }
-
 async function rollDice(sides) {
     if (!Number.isInteger(sides) || sides < 2 || !currentUser || isSaving) return;
 
