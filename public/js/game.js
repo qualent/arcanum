@@ -367,9 +367,9 @@ function renderCombatStats() {
     const constitutionModifier = calculateModifier(character.constitution);
     const wisdomModifier = calculateModifier(character.wisdom);
     const equippedArmor = currentInventory.filter(item => item.equipped && item.item_type === "armor");
-    const bodyArmor = equippedArmor.find(item => !(item.properties && item.properties.shield));
-    const shield = equippedArmor.find(item => item.properties && item.properties.shield) ||
-        equippedArmor.find(item => String(item.item_name || "").toLowerCase().includes("щит"));
+    const isShield = item => Boolean(item.properties && item.properties.shield) || String(item.item_name || "").toLowerCase().includes("щит");
+    const bodyArmor = equippedArmor.find(item => !isShield(item));
+    const shield = equippedArmor.find(isShield);
     let armorClass = 10 + dexterityModifier;
     if (bodyArmor) {
         const properties = bodyArmor.properties || {};
