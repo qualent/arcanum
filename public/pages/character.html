@@ -807,6 +807,7 @@ form.addEventListener("submit",async event=>{
   }
   const finalStats={};statNames.forEach(k=>finalStats[k]=baseStats[k]+(racialBonuses[k]||0));
   const backgroundSkills=bgRules?bgRules.skills:[];
+  if(selectedSkills.some(skill=>backgroundSkills.includes(skill)))throw new Error("Навыки класса не должны дублировать навыки предыстории. Выбери другой навык класса.");
   if(racialSkills.some(skill=>selectedSkills.includes(skill)||backgroundSkills.includes(skill)))throw new Error("Дополнительные навыки полуэльфа не должны повторять навыки класса или предыстории.");
   const allSkills=Array.from(new Set(selectedSkills.concat(backgroundSkills,racialSkills)));
   const level=Number(document.getElementById("level").value);
