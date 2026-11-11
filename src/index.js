@@ -105,6 +105,7 @@ async function handleCharacterSuggestion(request, env) {
             "Чародей":["Запугивание","Магия","Обман","Проницательность","Убеждение","Религия"],
             "Колдун":["История","Запугивание","Магия","Обман","Природа","Расследование","Религия"]
         };
+        const allSkillNames = Array.from(new Set(Object.values(classSkillOptions).flat()));
         if (skills.length !== required || new Set(skills).size !== required || skills.some(skill => !(classSkillOptions[suggestion.class] || []).includes(skill))) throw new Error("ИИ выбрал навыки, не подходящие классу по правилам. Попробуй ещё раз.");
         const backgroundSkillMap = {
             "Авантюрист":["Атлетика","Выживание"],"Солдат":["Атлетика","Запугивание"],"Преступник":["Обман","Скрытность"],
@@ -136,7 +137,7 @@ async function handleCharacterSuggestion(request, env) {
                 throw new Error("ИИ неверно выбрал расовые бонусы характеристик.");
             }
             if (racialSkillChoices.length !== neededSkills || new Set(racialSkillChoices).size !== neededSkills ||
-                racialSkillChoices.some(skill => !skillNames.includes(skill) || skills.includes(skill) || backgroundSkills.includes(skill))) {
+                racialSkillChoices.some(skill => !allSkillNames.includes(skill) || skills.includes(skill) || backgroundSkills.includes(skill))) {
                 throw new Error("ИИ выбрал недопустимые дополнительные расовые навыки.");
             }
         }
