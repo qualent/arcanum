@@ -683,6 +683,7 @@ form.addEventListener("submit",async event=>{
  createButton.disabled=true;createButton.textContent="Проверяем лист...";
  try{
   const selectedRace=raceSelect.value,selectedClass=classSelect.value,selectedBackground=backgroundSelect.value;
+  if(selectedRace==="custom"||selectedClass==="custom")throw new Error("Авторские расы и классы пока не поддерживаются проверенным листом 5e. Выбери официальный вариант, чтобы мастер не придумывал правила.");
   const race=selectedRace==="custom"?document.getElementById("customRace").value.trim():selectedRace;
   const cls=selectedClass==="custom"?document.getElementById("customClass").value.trim():selectedClass;
   const bg=selectedBackground==="custom"?document.getElementById("customBackground").value.trim():selectedBackground;
