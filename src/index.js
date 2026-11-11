@@ -7,6 +7,7 @@ export default {
         if (url.pathname === "/api/health" && request.method === "GET") {
             return jsonResponse({ success: true, service: "Arcanum API", status: "online", ai: env.GEMINI_API_KEY ? "configured" : "missing_key", model: env.GEMINI_MODEL || DEFAULT_MODEL, supabase: env.SUPABASE_URL && env.SUPABASE_ANON_KEY ? "configured" : "missing_config", server_writes: (env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY) ? "configured" : "missing_secret_key" });
         }
+        if (url.pathname === "/api/character/suggest" && request.method === "POST") return handleCharacterSuggestion(request, env);
         if (url.pathname === "/api/character/initialize" && request.method === "POST") return handleCharacterInitialize(request, env);
         if (url.pathname === "/api/game/action" && request.method === "POST") return handleGameAction(request, env);
         if (url.pathname.startsWith("/api/")) return jsonResponse({ success: false, error: "API endpoint not found" }, 404);
@@ -16,6 +17,91 @@ export default {
 
 const DEFAULT_MODEL = "gemini-3.8-flash";
 const MAX_ACTION_LENGTH = 5000;
+
+async function handleCharacterSuggestion(request, env) {
+    try {
+        if (!env.GEMINI_API_KEY) return jsonResponse({ success: false, error: "Gemini API не настроен." }, 503);
+        const authHeader = request.headers.get("Authorization") || "";
+        if (!authHeader.startsWith("Bearer ")) return jsonResponse({ success: false, error: "Authorization required" }, 401);
+        const token = authHeader.slice(7);
+        const user = await getSupabaseUser(env, token);
+        if (!user) return jsonResponse({ success: false, error: "Сессия истекла. Войди снова." }, 401);
+        const body = await request.json();
+        const campaignId = body.campaign_id;
+        const concept = typeof body.concept === "string" ? body.concept.trim().slice(0, 2500) : "";
+        if (!campaignId || !concept) return jsonResponse({ success: false, error: "Укажи мир и краткую идею персонажа." }, 400);
+        const campaignResult = await supabaseRequest(env,
+            "/rest/v1/campaigns?select=id,name,setting,genre,rules,preferences&id=eq." + encodeURIComponent(campaignId) +
+            "&user_id=eq." + encodeURIComponent(user.id) + "&limit=1", {}, token);
+        if (!campaignResult.ok || !campaignResult.data || !campaignResult.data.length) {
+            return jsonResponse({ success: false, error: "Мир не найден или нет доступа." }, 404);
+        }
+
+        const systemText = [
+            "Ты — помощник по созданию персонажа Dungeons & Dragons 5e редакции 2014. Отвечай строго на русском и верни только JSON.",
+            "Создай только корректного персонажа 1 уровня. Используй только эти расы: Человек, Эльф, Полуэльф, Дварф, Полурослик, Тифлинг, Драконорождённый, Полуорк.",
+            "Используй только классы: Варвар, Бард, Жрец, Друид, Воин, Монах, Паладин, Следопыт, Плут, Волшебник, Чародей, Колдун.",
+            "Используй только предыстории: Авантюрист, Солдат, Преступник, Учёный, Дворянин, Изгнанник, Странник.",
+            "Распредели стандартный массив характеристик 15,14,13,12,10,8: каждое число ровно один раз. Это базовые значения до расовых бонусов.",
+            "Выбери допустимые навыки класса: Воин — Акробатика, Анализ, Атлетика, Восприятие, Выживание, История, Запугивание, Проницательность, Уход за животными; Варвар — Атлетика, Выживание, Запугивание, Природа, Восприятие, Уход за животными; Плут — Акробатика, Атлетика, Восприятие, Выступление, Запугивание, Ловкость рук, Обман, Проницательность, Расследование, Скрытность, Убеждение; Волшебник — Анализ, История, Магия, Медицина, Проницательность, Религия; Колдун — История, Запугивание, Магия, Обман, Природа, Расследование, Религия; остальные классы выбери разумно из официальных навыков класса. Выбери ровно нужное число навыков: Бард 3, Плут 4, Следопыт 3, остальные 2.",
+            "Фоновые навыки: Авантюрист — Атлетика и Выживание; Солдат — Атлетика и Запугивание; Преступник — Обман и Скрытность; Учёный — Магия и История; Дворянин — История и Убеждение; Изгнанник — Медицина и Выживание; Странник — Атлетика и Восприятие.",
+            "Не придумывай подклассы, заклинания, предметы, черты или игровые бонусы. feat должен быть пустой строкой. Характеристики и навыки должны соответствовать правилам.",
+            "JSON схема: {name,race,class,background,level,alignment,stats:{strength,dexterity,constitution,intelligence,wisdom,charisma},class_skill_choices:[...],history,personality,appearance,goals}.",
+            "Не делай персонажа сверхсильным. Идея игрока задаёт характер и историю, но не отменяет правила."
+        ].join("\n");
+        const model = env.GEMINI_CHARACTER_MODEL || getGeminiModel(env, null);
+        const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" +
+            encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                systemInstruction: { parts: [{ text: systemText }] },
+                contents: [{ role: "user", parts: [{ text: JSON.stringify({ world: campaignResult.data[0], character_concept: concept }) }] }],
+                generationConfig: { responseMimeType: "application/json", maxOutputTokens: 1800, thinkingConfig: { thinkingLevel: "low" } }
+            }),
+            signal: AbortSignal.timeout(35000)
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            const detail = payload.error && payload.error.message ? payload.error.message : "Google API вернул HTTP " + response.status;
+            return jsonResponse({ success: false, error: "Не удалось сгенерировать лист: " + detail }, response.status === 429 ? 429 : 503);
+        }
+        const raw = payload.candidates && payload.candidates[0] && payload.candidates[0].content &&
+            payload.candidates[0].content.parts ? payload.candidates[0].content.parts.map(part => part.text || "").join("") : "";
+        let suggestion;
+        try { suggestion = JSON.parse(raw); } catch (error) { throw new Error("ИИ вернул лист в неверном формате. Попробуй ещё раз."); }
+
+        const races = ["Человек","Эльф","Полуэльф","Дварф","Полурослик","Тифлинг","Драконорождённый","Полуорк"];
+        const classes = ["Варвар","Бард","Жрец","Друид","Воин","Монах","Паладин","Следопыт","Плут","Волшебник","Чародей","Колдун"];
+        const backgrounds = ["Авантюрист","Солдат","Преступник","Учёный","Дворянин","Изгнанник","Странник"];
+        const stats = suggestion.stats || {};
+        const scores = ["strength","dexterity","constitution","intelligence","wisdom","charisma"].map(key => Number(stats[key])).sort((a,b) => a-b);
+        if (!races.includes(suggestion.race) || !classes.includes(suggestion.class) || !backgrounds.includes(suggestion.background)) {
+            throw new Error("ИИ предложил неподдерживаемую расу, класс или предысторию. Попробуй уточнить концепцию.");
+        }
+        if (scores.join(",") !== "8,10,12,13,14,15") throw new Error("ИИ нарушил стандартный массив характеристик. Нажми генерацию ещё раз.");
+        const skillCounts = { "Бард":3, "Плут":4, "Следопыт":3 };
+        const required = skillCounts[suggestion.class] || 2;
+        const skills = Array.isArray(suggestion.class_skill_choices) ? suggestion.class_skill_choices.slice(0, required) : [];
+        if (skills.length !== required || new Set(skills).size !== required) throw new Error("ИИ выбрал неверное количество навыков. Попробуй ещё раз.");
+        return jsonResponse({
+            success: true,
+            character: {
+                name: String(suggestion.name || "Новый герой").slice(0, 80),
+                race: suggestion.race, class: suggestion.class, background: suggestion.background,
+                level: 1, alignment: String(suggestion.alignment || "Истинно нейтральный"),
+                stats: stats, class_skill_choices: skills,
+                history: String(suggestion.history || "").slice(0, 3000),
+                personality: String(suggestion.personality || "").slice(0, 1500),
+                appearance: String(suggestion.appearance || "").slice(0, 1500),
+                goals: String(suggestion.goals || "").slice(0, 1500)
+            }
+        }, 200);
+    } catch (error) {
+        console.error("Character suggestion error:", error);
+        return jsonResponse({ success: false, error: error.message || "Не удалось предложить персонажа." }, 500);
+    }
+}
 
 async function handleCharacterInitialize(request, env) {
     try {
