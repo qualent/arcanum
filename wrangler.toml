@@ -2,6 +2,7 @@ name = "arcanum"
 compatibility_date = "2026-10-27"
 
 main = "./src/index.js"
+keep_vars = true
 
 [assets]
 directory = "./public"
