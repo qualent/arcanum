@@ -30,6 +30,7 @@ drop policy if exists "game_events_owner_update" on public.game_events;
 drop policy if exists "game_events_owner_delete" on public.game_events;
 
 drop policy if exists "Users can create own messages" on public.game_messages;
+drop policy if exists "Users can delete own messages" on public.game_messages;
 drop policy if exists "Players can only submit player or system messages" on public.game_messages;
 
 create policy "Players can only submit player or system messages"
