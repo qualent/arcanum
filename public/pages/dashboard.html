@@ -187,7 +187,7 @@
 ></script>
 
 
-<script src="../js/config.js"></script>
+<script src="../js/config.js?v=20261111-2"></script>
 
 
 
@@ -204,7 +204,7 @@ function renderCampaigns(campaigns,characters){
  campaigns.forEach((c,i)=>{
   const card=document.createElement("article");card.className="campaign-card";
   const chars=characters.filter(ch=>ch.campaign_id===c.id);
-  const buttons=chars.length?chars.map(ch=>'<button type="button" class="campaign-character-button" data-open-character="'+escapeHtml(ch.id)+'"><span>'+escapeHtml(ch.name||"Безымянный герой")+'</span><small>'+escapeHtml(ch.race||"Раса не указана")+" · "+escapeHtml(ch.class||"Класс не указан")+'</small></button>').join(""):'<p class="campaign-new-description">В этом мире пока нет персонажей.</p>';
+  const buttons=chars.length?chars.map(ch=>'<button type="button" class="campaign-character-button" data-open-character="'+escapeHtml(ch.id)+'" data-open-campaign="'+escapeHtml(c.id)+'"><span>'+escapeHtml(ch.name||"Безымянный герой")+'</span><small>'+escapeHtml(ch.race||"Раса не указана")+" · "+escapeHtml(ch.class||"Класс не указан")+'</small></button>').join(""):'<p class="campaign-new-description">В этом мире пока нет персонажей.</p>';
   card.innerHTML='<div class="campaign-card-image '+(i%2?"campaign-image-two":"campaign-image-one")+'"><div class="campaign-card-overlay"><span class="campaign-status">Сохранённый мир</span></div></div><div class="campaign-card-content"><div class="campaign-card-top"><div><h2>'+escapeHtml(c.name)+'</h2><p class="campaign-type">'+escapeHtml(settingName(c.setting))+'</p></div></div><div class="campaign-character-list">'+buttons+'</div><div class="campaign-card-actions"><button type="button" class="button button-primary" data-create-character="'+escapeHtml(c.id)+'">Новый персонаж +</button><button type="button" class="campaign-delete-button" data-delete-campaign="'+escapeHtml(c.id)+'">Удалить мир</button></div></div>';
   campaignsGrid.appendChild(card);
  });
@@ -219,9 +219,9 @@ async function initializeDashboard(){
  }catch(error){console.error("Ошибка загрузки миров:",error);campaignsGrid.innerHTML='<div class="empty-state">Не удалось загрузить миры: '+escapeHtml(error.message)+'</div>';}
 }
 campaignsGrid.addEventListener("click",async event=>{
- const open=event.target.closest("[data-open-character]");if(open){const id=open.closest(".campaign-card").querySelector("[data-delete-campaign]").dataset.deleteCampaign;openCharacter(id,open.dataset.openCharacter);return;}
+ const open=event.target.closest("[data-open-character]");if(open){openCharacter(open.dataset.openCampaign,open.dataset.openCharacter);return;}
  const create=event.target.closest("[data-create-character]");if(create){createCharacter(create.dataset.createCharacter);return;}
- const del=event.target.closest("[data-delete-campaign]");if(del){const id=del.dataset.deleteCampaign,card=del.closest(".campaign-card"),name=card.querySelector("h2")?.textContent||"этот мир";if(!confirm('Удалить мир "'+name+'" вместе со всеми персонажами, историей, инвентарём и памятью? Это действие нельзя отменить.'))return;del.disabled=true;del.textContent="Удаление...";const {error}=await supabaseClient.from("campaigns").delete().eq("id",id);if(error){alert("Не удалось удалить мир: "+error.message);del.disabled=false;del.textContent="Удалить мир";return;}card.remove();initializeDashboard();}
+ const del=event.target.closest("[data-delete-campaign]");if(del){const id=del.dataset.deleteCampaign,card=del.closest(".campaign-card"),name=card.querySelector("h2")?.textContent||"этот мир";if(!confirm('Удалить мир "'+name+'" вместе со всеми персонажами, историей, инвентарём и памятью? Это действие нельзя отменить.'))return;del.disabled=true;del.textContent="Удаление...";const {data,error}=await supabaseClient.from("campaigns").delete().eq("id",id).select("id").maybeSingle();if(error||!data){alert("Не удалось удалить мир: "+(error?.message||"мир не найден или нет доступа"));del.disabled=false;del.textContent="Удалить мир";return;}if(localStorage.getItem("arcanum_campaign_id")===id){localStorage.removeItem("arcanum_campaign_id");localStorage.removeItem("arcanum_character_id");}card.remove();await initializeDashboard();}
 });
 document.getElementById("logoutButton").addEventListener("click",async()=>{const {error}=await supabaseClient.auth.signOut();if(!error)window.location.href="login.html";});
 initializeDashboard();
