@@ -33,6 +33,14 @@ const elements = {
     checkDc: document.getElementById("checkDc"),
     checkButton: document.getElementById("checkButton"),
     checkResult: document.getElementById("checkResult"),
+    experienceValue: document.getElementById("experienceValue"),
+    goldValue: document.getElementById("goldValue"),
+    resourceAmount: document.getElementById("resourceAmount"),
+    hpAmount: document.getElementById("hpAmount"),
+    addExperienceButton: document.getElementById("addExperienceButton"),
+    addGoldButton: document.getElementById("addGoldButton"),
+    healButton: document.getElementById("healButton"),
+    damageButton: document.getElementById("damageButton"),
     settingsModal: document.getElementById("settingsModal"),
     storyLog: document.getElementById("storyLog"),
     inventoryList: document.getElementById("inventoryList"),
@@ -374,6 +382,8 @@ function renderGameState() {
     setText(elements.locationText, currentGameState.location, "Неизвестно");
     setText(elements.timeText, currentGameState.game_time, "Утро");
     setText(elements.dayText, currentGameState.game_day, "1");
+    setText(elements.experienceValue, Number(currentGameState.experience) || 0, "0");
+    setText(elements.goldValue, Number(currentGameState.gold) || 0, "0");
 }
 
 function renderInventory() {
@@ -589,6 +599,117 @@ async function runAbilityCheck() {
     }
 }
 
+async function updateGameState(changes, journalText) {
+    if (!currentGameState || isSaving) return false;
+
+    isSaving = true;
+    setSaveStatus("Сохранение...");
+    setControlButtonsDisabled(true);
+
+    try {
+        const { data, error } = await supabaseClient
+            .from("game_states")
+            .update({
+                ...changes,
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", currentGameState.id)
+            .eq("user_id", currentUser.id)
+            .select()
+            .single();
+
+        if (error) throw new Error(error.message);
+
+        currentGameState = data;
+        renderHealth();
+        renderGameState();
+
+        if (journalText) {
+            await saveMessage("system", journalText);
+        }
+
+        setSaveStatus("Сохранено");
+        return true;
+    } catch (error) {
+        console.error("Game state update error:", error);
+        setSaveStatus("Ошибка сохранения");
+        setText(elements.systemMessage, "Не удалось сохранить изменение: " + error.message);
+        return false;
+    } finally {
+        isSaving = false;
+        setControlButtonsDisabled(false);
+    }
+}
+
+function setControlButtonsDisabled(disabled) {
+    [
+        elements.healButton,
+        elements.damageButton,
+        elements.addExperienceButton,
+        elements.addGoldButton,
+        elements.actionButton,
+        elements.checkButton
+    ].forEach(button => {
+        if (button) button.disabled = disabled;
+    });
+}
+
+async function changeHealth(operation) {
+    if (!currentGameState || isSaving) return;
+
+    const amount = Number(elements.hpAmount ? elements.hpAmount.value : 0);
+
+    if (!Number.isInteger(amount) || amount < 1 || amount > 9999) {
+        setText(elements.systemMessage, "Укажи количество HP от 1 до 9999.");
+        return;
+    }
+
+    const currentHp = Number(currentGameState.current_hp) || 0;
+    const maxHp = Number(currentGameState.max_hp) || 1;
+    const nextHp = operation === "heal"
+        ? Math.min(maxHp, currentHp + amount)
+        : Math.max(0, currentHp - amount);
+
+    if (nextHp === currentHp) {
+        setText(elements.systemMessage, operation === "heal"
+            ? "Здоровье уже полное."
+            : "Здоровье уже на нуле.");
+        return;
+    }
+
+    const difference = Math.abs(nextHp - currentHp);
+    const text = operation === "heal"
+        ? "Персонаж восстановил " + difference + " HP. Здоровье: " + nextHp + "/" + maxHp + "."
+        : "Персонаж получил " + difference + " урона. Здоровье: " + nextHp + "/" + maxHp + ".";
+
+    await updateGameState({ current_hp: nextHp }, text);
+}
+
+async function changeResource(resource) {
+    if (!currentGameState || isSaving) return;
+
+    const amount = Number(elements.resourceAmount ? elements.resourceAmount.value : 0);
+
+    if (!Number.isInteger(amount) || amount < 1 || amount > 100000) {
+        setText(elements.systemMessage, "Укажи количество от 1 до 100000.");
+        return;
+    }
+
+    const currentValue = Number(currentGameState[resource]) || 0;
+    const nextValue = currentValue + amount;
+
+    if (nextValue > 2147483647) {
+        setText(elements.systemMessage, "Полученное значение слишком велико.");
+        return;
+    }
+
+    const resourceName = resource === "experience" ? "опыта" : "золота";
+    const text = "Персонаж получил " + amount + " " + resourceName +
+        ". Всего: " + nextValue + ".";
+
+    await updateGameState({ [resource]: nextValue }, text);
+}
+
 async function submitAction() {
     const action = elements.actionInput ? elements.actionInput.value.trim() : "";
 
@@ -671,6 +792,22 @@ function bindEvents() {
 
     if (elements.checkButton) {
         elements.checkButton.addEventListener("click", runAbilityCheck);
+    }
+
+    if (elements.healButton) {
+        elements.healButton.addEventListener("click", () => changeHealth("heal"));
+    }
+
+    if (elements.damageButton) {
+        elements.damageButton.addEventListener("click", () => changeHealth("damage"));
+    }
+
+    if (elements.addExperienceButton) {
+        elements.addExperienceButton.addEventListener("click", () => changeResource("experience"));
+    }
+
+    if (elements.addGoldButton) {
+        elements.addGoldButton.addEventListener("click", () => changeResource("gold"));
     }
 
     const settingsButton = document.getElementById("settingsButton");
