@@ -1,0 +1,197 @@
+
+/* =========================================
+   ARCANUM — ШАПКА ГЛАВНОЙ СТРАНИЦЫ
+   Изолированные стили, не затрагивают другие страницы
+========================================= */
+
+#main-site-header {
+    position: relative;
+    z-index: 100;
+    display: block;
+    width: 100%;
+    height: 76px;
+    min-height: 76px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid rgba(201, 169, 106, 0.22);
+    background: rgba(8, 9, 13, 0.96);
+    box-sizing: border-box;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+#main-site-header .header-inner {
+    width: min(1180px, calc(100% - 40px));
+    height: 100%;
+    min-height: 0;
+    margin: 0 auto;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    box-sizing: border-box;
+}
+
+#main-site-header .logo {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    color: #e4c88a;
+    font-family: "Cinzel", serif;
+    font-size: 23px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    line-height: 1;
+    text-decoration: none;
+}
+
+#main-site-header .logo:hover {
+    color: #f5dfad;
+    text-shadow: 0 0 18px rgba(201, 169, 106, 0.25);
+}
+
+#main-site-header .nav {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 34px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#main-site-header .nav a:not(.nav-button) {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    color: #aaa7a0;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+#main-site-header .nav a:not(.nav-button)::after {
+    content: "";
+    position: absolute;
+    bottom: 19px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: #c9a96a;
+    transition: width 0.2s ease;
+}
+
+#main-site-header .nav a:not(.nav-button):hover {
+    color: #e4c88a;
+}
+
+#main-site-header .nav a:not(.nav-button):hover::after {
+    width: 100%;
+}
+
+#main-site-header .nav .nav-button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    min-width: 105px;
+    min-height: 40px;
+    margin: 0;
+    padding: 0 18px;
+    border: 1px solid #c9a96a;
+    border-radius: 5px;
+    background: #c9a96a;
+    color: #08090d;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    box-sizing: border-box;
+    transition: 0.2s ease;
+}
+
+#main-site-header .nav .nav-button:hover {
+    border-color: #e4c88a;
+    background: #e4c88a;
+    color: #08090d;
+    transform: translateY(-1px);
+}
+
+/* Планшеты */
+
+@media (max-width: 850px) {
+    #main-site-header .header-inner {
+        width: calc(100% - 30px);
+    }
+
+    #main-site-header .nav {
+        gap: 18px;
+    }
+
+    #main-site-header .nav a:not(.nav-button) {
+        font-size: 12px;
+    }
+}
+
+/* Телефоны */
+
+@media (max-width: 560px) {
+    #main-site-header {
+        height: auto;
+        min-height: 70px;
+    }
+
+    #main-site-header .header-inner {
+        min-height: 70px;
+        height: auto;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 12px 0;
+        gap: 12px;
+    }
+
+    #main-site-header .logo {
+        font-size: 21px;
+    }
+
+    #main-site-header .nav {
+        height: auto;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px 17px;
+    }
+
+    #main-site-header .nav a:not(.nav-button) {
+        height: 32px;
+        font-size: 11px;
+    }
+
+    #main-site-header .nav a:not(.nav-button)::after {
+        bottom: 0;
+    }
+
+    #main-site-header .nav .nav-button {
+        min-width: 85px;
+        min-height: 32px;
+        padding: 0 12px;
+        font-size: 11px;
+    }
+}
