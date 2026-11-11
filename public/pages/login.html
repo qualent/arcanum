@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -8,270 +9,143 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/auth.css">
 </head>
 
 <body>
 
-<div class="auth-page">
+    <main class="auth-page">
+        <section class="auth-card">
 
-    <div class="auth-card">
+            <div class="auth-logo">ARCANUM</div>
 
-        <div class="auth-logo">
-            ARCANUM
-        </div>
+            <h1>Вход в аккаунт</h1>
+            <p>Продолжи своё приключение</p>
 
-        <div class="auth-subtitle">
-            Вход в аккаунт
-        </div>
+            <form id="loginForm">
 
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required
+                    >
+                </div>
 
-        <form id="loginForm">
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Введите пароль"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
 
-            <div class="form-group">
+                <div id="errorMessage" class="auth-error" hidden></div>
+                <div id="successMessage" class="auth-success" hidden></div>
 
-                <label for="email">
-                    Email
-                </label>
+                <button type="submit" id="loginButton">
+                    Войти в аккаунт
+                </button>
 
-                <input
-                    type="email"
-                    id="email"
-                    placeholder="you@example.com"
-                    required
-                >
+            </form>
 
+            <div class="auth-footer">
+                Нет аккаунта?
+                <a href="register.html">Создать аккаунт</a>
             </div>
 
-
-            <div class="form-group">
-
-                <label for="password">
-                    Пароль
-                </label>
-
-                <input
-                    type="password"
-                    id="password"
-                    placeholder="Введите пароль"
-                    required
-                >
-
+            <div class="auth-footer">
+                <a href="../index.html">Вернуться на главную</a>
             </div>
 
+        </section>
+    </main>
 
-            <div
-                id="errorMessage"
-                style="
-                    display: none;
-                    color: #d86b6b;
-                    font-size: 13px;
-                    margin-bottom: 15px;
-                    line-height: 1.5;
-                "
-            ></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
 
+    <script>
+        const supabaseClient = window.supabase.createClient(
+            CONFIG.SUPABASE_URL,
+            CONFIG.SUPABASE_ANON_KEY
+        );
 
-            <div
-                id="successMessage"
-                style="
-                    display: none;
-                    color: #8fcf9b;
-                    font-size: 13px;
-                    margin-bottom: 15px;
-                    line-height: 1.5;
-                "
-            ></div>
+        const loginForm = document.getElementById("loginForm");
+        const loginButton = document.getElementById("loginButton");
+        const errorMessage = document.getElementById("errorMessage");
+        const successMessage = document.getElementById("successMessage");
 
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.hidden = false;
+            successMessage.hidden = true;
+        }
 
-            <button
-                type="submit"
-                class="button button-primary auth-button"
-                id="loginButton"
-            >
-                Войти
-                <span>→</span>
-            </button>
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.hidden = false;
+            errorMessage.hidden = true;
+        }
 
-        </form>
+        loginForm.addEventListener("submit", async function(event) {
+            event.preventDefault();
 
+            errorMessage.hidden = true;
+            successMessage.hidden = true;
 
-        <div class="auth-footer">
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
 
-            Нет аккаунта?
+            loginButton.disabled = true;
+            loginButton.textContent = "Выполняется вход...";
 
-            <a href="register.html">
-                Создать аккаунт
-            </a>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script src="../js/config.js"></script>
-
-
-<script>
-
-    const supabaseClient = window.supabase.createClient(
-        CONFIG.SUPABASE_URL,
-        CONFIG.SUPABASE_ANON_KEY
-    );
-
-
-    const form =
-        document.getElementById("loginForm");
-
-    const emailInput =
-        document.getElementById("email");
-
-    const passwordInput =
-        document.getElementById("password");
-
-    const errorMessage =
-        document.getElementById("errorMessage");
-
-    const successMessage =
-        document.getElementById("successMessage");
-
-    const loginButton =
-        document.getElementById("loginButton");
-
-
-    function showError(message) {
-
-        errorMessage.textContent = message;
-        errorMessage.style.display = "block";
-
-        successMessage.style.display = "none";
-
-    }
-
-
-    function showSuccess(message) {
-
-        successMessage.textContent = message;
-        successMessage.style.display = "block";
-
-        errorMessage.style.display = "none";
-
-    }
-
-
-    form.addEventListener("submit", async function(event) {
-
-        event.preventDefault();
-
-
-        const email =
-            emailInput.value.trim();
-
-        const password =
-            passwordInput.value;
-
-
-        errorMessage.style.display = "none";
-        successMessage.style.display = "none";
-
-
-        loginButton.disabled = true;
-
-        loginButton.innerHTML =
-            "Вход...";
-
-
-        try {
-
-            const { data, error } =
-                await supabaseClient.auth.signInWithPassword({
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
 
+                if (error) {
+                    throw error;
+                }
 
-            if (error) {
-                throw error;
+                if (!data.session) {
+                    throw new Error("Не удалось создать сессию. Попробуй войти ещё раз.");
+                }
+
+                showSuccess("Вход выполнен! Перенаправляем...");
+
+                window.location.href = "dashboard.html";
+
+            } catch (error) {
+                console.error("Ошибка входа:", error);
+
+                let message = error.message;
+
+                if (message.includes("Invalid login credentials")) {
+                    message = "Неверный email или пароль.";
+                } else if (message.includes("Email not confirmed")) {
+                    message = "Подтверди email через письмо, отправленное при регистрации.";
+                } else if (message.includes("fetch")) {
+                    message = "Не удалось подключиться к серверу. Проверь интернет.";
+                }
+
+                showError(message);
+
+                loginButton.disabled = false;
+                loginButton.textContent = "Войти в аккаунт";
             }
-
-
-            if (!data.session) {
-
-                throw new Error(
-                    "Не удалось создать сессию."
-                );
-
-            }
-
-
-            showSuccess(
-                "Вход выполнен. Открываем Arcanum..."
-            );
-
-
-            setTimeout(() => {
-
-                window.location.href =
-                    "dashboard.html";
-
-            }, 500);
-
-        }
-        catch (error) {
-
-            console.error(error);
-
-
-            let message =
-                "Не удалось войти.";
-
-
-            if (
-                error.message &&
-                error.message.toLowerCase().includes("invalid login credentials")
-            ) {
-
-                message =
-                    "Неверный email или пароль.";
-
-            }
-            else if (
-                error.message &&
-                error.message.toLowerCase().includes("email not confirmed")
-            ) {
-
-                message =
-                    "Сначала подтвердите email через письмо от Supabase.";
-
-            }
-            else if (error.message) {
-
-                message =
-                    error.message;
-
-            }
-
-
-            showError(message);
-
-
-            loginButton.disabled = false;
-
-            loginButton.innerHTML =
-                "Войти <span>→</span>";
-
-        }
-
-    });
-
-</script>
+        });
+    </script>
 
 </body>
 </html>
