@@ -450,28 +450,26 @@ function renderGameState() {
 
 function renderInventory() {
     if (!elements.inventoryList) return;
-
     elements.inventoryList.replaceChildren();
 
-    if (elements.inventoryCount) {
-        const totalItems = currentInventory.reduce(
-            (sum, item) => sum + (Number(item.quantity) || 0),
-            0
-        );
-        elements.inventoryCount.textContent = String(totalItems);
-    }
+    const totalItems = currentInventory.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+    if (elements.inventoryCount) elements.inventoryCount.textContent = String(totalItems);
 
     if (!currentInventory.length) {
         const empty = document.createElement("div");
         empty.className = "empty-state";
-        empty.textContent = "Инвентарь пока пуст.";
+        empty.textContent = "Инвентарь пока пуст. Стартовое снаряжение должно появиться после серверной подготовки персонажа.";
         elements.inventoryList.appendChild(empty);
         return;
     }
 
+    const typeLabels = {
+        weapon: "Оружие", armor: "Доспех", gear: "Снаряжение",
+        ammunition: "Боеприпасы", tool: "Инструмент", focus: "Фокусировка", misc: "Предмет"
+    };
     currentInventory.forEach(item => {
         const row = document.createElement("div");
-        row.className = "inventory-item";
+        row.className = "inventory-item" + (item.equipped ? " inventory-item-equipped" : "");
 
         const details = document.createElement("div");
         details.className = "inventory-item-info";
@@ -482,11 +480,38 @@ function renderInventory() {
         const description = document.createElement("p");
         description.textContent = item.description || "";
 
+        const properties = item.properties && typeof item.properties === "object" ? item.properties : {};
+        const notes = [];
+        if (properties.damage_dice) notes.push("Урон " + properties.damage_dice + (properties.damage_type ? " " + properties.damage_type : ""));
+        if (properties.versatile_damage_dice) notes.push("двумя руками " + properties.versatile_damage_dice);
+        if (properties.armor_class) notes.push("КД " + properties.armor_class);
+        if (properties.armor_class_bonus) notes.push("+" + properties.armor_class_bonus + " к КД");
+        if (properties.finesse) notes.push("Фехтовальное");
+        if (properties.ranged) notes.push("Дальнобойное");
+        if (properties.two_handed) notes.push("Двуручное");
+        if (notes.length) {
+            const propertyLine = document.createElement("p");
+            propertyLine.className = "inventory-item-properties";
+            propertyLine.textContent = notes.join(" · ");
+            details.appendChild(name);
+            details.appendChild(description);
+            details.appendChild(propertyLine);
+        } else {
+            details.append(name, description);
+        }
+
+        const meta = document.createElement("small");
+        const metaParts = [typeLabels[item.item_type] || "Предмет"];
+        if (item.rarity && item.rarity !== "common") metaParts.push(item.rarity);
+        if (item.equipped) metaParts.push("Экипировано");
+        if (Number(item.weight) > 0) metaParts.push(Number(item.weight) + " фнт.");
+        meta.textContent = metaParts.join(" · ");
+        details.appendChild(meta);
+
         const quantity = document.createElement("span");
         quantity.className = "inventory-quantity";
         quantity.textContent = "×" + (Number(item.quantity) || 1);
 
-        details.append(name, description);
         row.append(details, quantity);
         elements.inventoryList.appendChild(row);
     });
