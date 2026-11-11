@@ -433,6 +433,7 @@ function renderCharacterDetails() {
         const features = [
             ["Подраса / наследие", stats.subrace || (stats.dragon_ancestry ? stats.dragon_ancestry : "—")],
             ["Особенности расы", stats.racial_traits],
+            ["Расовые заговоры", Array.isArray(stats.racial_cantrips) && stats.racial_cantrips.length ? stats.racial_cantrips.join(", ") : null],
             ["Особенность подкласса", stats.subclass_feature],
             ["Особенность класса", stats.class_features],
             ["Эффект боевого стиля", stats.fighting_style_description],
@@ -441,7 +442,7 @@ function renderCharacterDetails() {
         ];
         const magic = stats.spellcasting;
         if (magic) {
-            const spells = (magic.cantrips || []).concat(magic.known_spells || [], magic.prepared_spells || [], stats.subclass_bonus_spells || []);
+            const spells = (magic.cantrips || []).concat(magic.known_spells || [], magic.prepared_spells || [], stats.subclass_bonus_spells || [], stats.racial_cantrips || []);
             const abilityNames = {charisma:"Харизма",wisdom:"Мудрость",intelligence:"Интеллект"};
             const magicText = "Основа: " + (abilityNames[magic.ability] || magic.ability) +
                 " · СЛ " + magic.spell_save_dc + " · атака +" + magic.spell_attack_bonus +
