@@ -150,18 +150,25 @@ async function askGemini(env, context, playerAction) {
         for (let attempt = 0; attempt < attempts; attempt++) {
             let response;
             let data = {};
+            let responseText = "";
             try {
                 response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" +
                     encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify(requestBody),
+                    signal: AbortSignal.timeout(45000)
                 });
-                data = await response.json().catch(function () { return {}; });
+                responseText = await response.text();
+                try { data = responseText ? JSON.parse(responseText) : {}; } catch (parseError) { data = {}; }
             } catch (networkError) {
-                lastError = new Error("Не удалось связаться с Gemini: " + networkError.message);
+                const timedOut = networkError && (networkError.name === "TimeoutError" || networkError.name === "AbortError");
+                lastError = new Error(timedOut
+                    ? "Gemini не ответил за 45 секунд (тайм-аут)."
+                    : "Не удалось связаться с Gemini: " + (networkError.message || String(networkError)));
+                lastError.status = 503;
                 if (attempt + 1 < attempts) {
-                    await new Promise(function (resolve) { setTimeout(resolve, 700); });
+                    await new Promise(function (resolve) { setTimeout(resolve, 500); });
                     continue;
                 }
                 break;
@@ -181,10 +188,12 @@ async function askGemini(env, context, playerAction) {
                 }
             }
 
-            const detail = data.error && data.error.message ? data.error.message : "Gemini API error";
+            const detail = data.error && data.error.message
+                ? data.error.message
+                : (responseText ? responseText.slice(0, 1200) : "Пустое тело ответа от Google API");
             const retryable = [429, 500, 502, 503, 504].includes(response.status) ||
-                /high demand|overload|temporarily unavailable|rate.?limit|try again later/i.test(detail);
-            lastError = new Error("Ошибка Gemini (" + model + "): " + detail);
+                /high demand|overload|temporarily unavailable|rate.?limit|try again later|internal error/i.test(detail);
+            lastError = new Error("Ошибка Gemini (" + model + ", HTTP " + response.status + "): " + detail);
             lastError.status = response.status === 429 ? 429 : (retryable ? 503 : 502);
 
             if (!retryable) throw lastError;
