@@ -6,10 +6,10 @@
 
     <title>Arcanum — Создание персонажа</title>
 
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/style.css?v=20261112-1">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../js/config.js?v=20261111-6?v=20261111-2"></script>
+    <script src="../js/config.js?v=20261112-1"></script>
 <style>
 .builder-section{border:1px solid rgba(201,169,106,.25);border-radius:8px;padding:22px;margin:22px 0;background:rgba(201,169,106,.025)}
 .ai-builder textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:6px;background:#0c0e13;color:var(--text);font:inherit;margin:8px 0 12px}.ai-builder button{margin-top:4px}#halfElfChoices[hidden]{display:none}.builder-note{color:var(--muted);font-size:13px;line-height:1.65;margin:8px 0}
@@ -865,7 +865,7 @@ form.addEventListener("submit",async event=>{
   const clsData=classData[selectedClass],raceRules=raceData[selectedRace],bgRules=backgroundData[selectedBackground];
   const selectedSkills=Array.from(document.querySelectorAll('input[name="classSkill"]:checked')).map(x=>x.value);
   const required=clsData?clsData.count:2;if(selectedSkills.length!==required)throw new Error("Выбери ровно "+required+" навыка от класса.");
-  if((selectedRace==="Человек"||selectedRace==="Полуэльф")&&!document.getElementById("extraLanguage").value)throw new Error("Выбери дополнительный язык для этой расы.");
+
   const subraceOptions=subraceData[selectedRace]||[];
   const subraceIndex=document.getElementById("subrace").value;
   const subrace=subraceOptions.length&&subraceIndex!==""?subraceOptions[Number(subraceIndex)]:null;
@@ -874,6 +874,7 @@ form.addEventListener("submit",async event=>{
   if(selectedRace==="Драконорождённый"&&!dragonAncestry)throw new Error("Выбери драконье наследие.");
   const chosenSubraceName=subrace?subrace[0]:null;
   const isVariantHuman=selectedRace==="Человек"&&chosenSubraceName==="Вариантный человек";
+  if((selectedRace==="Полуэльф"||isVariantHuman)&&!document.getElementById("extraLanguage").value)throw new Error("Выбери дополнительный язык для этой расы.");
   let racialBonuses=raceRules?Object.assign({},raceRules.bonus):{};
   if(isVariantHuman)racialBonuses={};
   let racialTraits=isVariantHuman?"Вариантный человек: +1 к двум разным характеристикам, один дополнительный навык, одна черта и один дополнительный язык.":(raceRules?raceRules.traits:"Авторские свойства требуют согласования");
