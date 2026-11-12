@@ -1993,3 +1993,108 @@ body.game-page > .game-layout > .game-sidebar-right {
     font-size: 10px;
     line-height: 1.5;
 }
+
+
+/* =========================================
+   CAMPAIGN FOCUS CHECKBOXES
+========================================= */
+
+.focus-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.focus-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    min-height: 82px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.025);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.focus-option:hover {
+    border-color: rgba(201, 169, 106, 0.65);
+    background: rgba(201, 169, 106, 0.055);
+}
+
+.focus-option input[type="checkbox"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    min-height: 1px;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.focus-check {
+    flex: 0 0 24px;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: 1px solid rgba(201, 169, 106, 0.55);
+    border-radius: 5px;
+    background: #0c0e13;
+    color: transparent;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.focus-option input[type="checkbox"]:checked + .focus-check {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: #11131b;
+}
+
+.focus-option input[type="checkbox"]:focus-visible + .focus-check {
+    outline: 2px solid var(--gold-light);
+    outline-offset: 3px;
+}
+
+.focus-option > span:last-child {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.focus-option strong {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.focus-option small {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+@media (max-width: 600px) {
+    .focus-grid {
+        grid-template-columns: 1fr;
+        gap: 9px;
+    }
+
+    .focus-option {
+        min-height: 72px;
+        padding: 13px;
+    }
+}
