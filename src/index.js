@@ -123,10 +123,61 @@ async function handleCharacterSuggestion(request, env) {
         const classes = ["Варвар","Бард","Жрец","Друид","Воин","Монах","Паладин","Следопыт","Плут","Волшебник","Чародей","Колдун"];
         const backgrounds = ["Авантюрист","Солдат","Преступник","Учёный","Дворянин","Изгнанник","Странник","Послушник","Шарлатан","Народный герой","Гильдейский ремесленник","Отшельник","Мудрец","Моряк","Артист"];
         const alignments = ["Законопослушный добрый","Нейтральный добрый","Хаотичный добрый","Законопослушный нейтральный","Истинно нейтральный","Хаотичный нейтральный","Законопослушный злой","Нейтральный злой","Хаотичный злой"];
+        const normalizeChoice = value => String(value || "").toLocaleLowerCase("ru").replace(/ё/g,"е").replace(/[^a-zа-я0-9]/gi,"");
+        const canonicalChoice = (value, allowed, aliases, fallback) => {
+            const normalized = normalizeChoice(value);
+            const exact = allowed.find(item => normalizeChoice(item) === normalized);
+            if (exact) return exact;
+            const alias = aliases[normalized];
+            if (alias && allowed.includes(alias)) return alias;
+            const contained = allowed.find(item => normalized && (normalized.includes(normalizeChoice(item)) || normalizeChoice(item).includes(normalized)));
+            return contained || fallback;
+        };
+        const conceptText = normalizeChoice(concept);
+        const raceAliases = {
+            "дварф":"Дварф","гном":"Дварф","гномка":"Дварф","дроу":"Эльф","эльфийка":"Эльф",
+            "полуорк":"Полуорк","полуорка":"Полуорк","тифлинг":"Тифлинг","тифлингша":"Тифлинг",
+            "драконорожденный":"Драконорождённый","драконорожденная":"Драконорождённый",
+            "полуэльф":"Полуэльф","полуэльфийка":"Полуэльф","полурослик":"Полурослик","халфлинг":"Полурослик",
+            "человек":"Человек","эльф":"Эльф"
+        };
+        const classAliases = {
+            "боец":"Воин","воитель":"Воин","fighter":"Воин","варлок":"Колдун","warlock":"Колдун",
+            "маг":"Волшебник","wizard":"Волшебник","сорcerer":"Чародей","sorcerer":"Чародей",
+            "рейнджер":"Следопыт","ranger":"Следопыт","разбойник":"Плут","rogue":"Плут",
+            "клирик":"Жрец","cleric":"Жрец","друид":"Друид","druid":"Друид",
+            "паладин":"Паладин","paladin":"Паладин","монах":"Монах","monk":"Монах",
+            "бард":"Бард","bard":"Бард","варвар":"Варвар","barbarian":"Варвар"
+        };
+        const backgroundAliases = {
+            "ученый":"Учёный","ученая":"Учёный","sage":"Мудрец","мудрец":"Мудрец",
+            "солдат":"Солдат","военный":"Солдат","преступник":"Преступник","criminal":"Преступник",
+            "дворянин":"Дворянин","аристократ":"Дворянин","моряк":"Моряк","морячка":"Моряк",
+            "отшельник":"Отшельник","изгнанник":"Изгнанник","артист":"Артист","шарлатан":"Шарлатан"
+        };
+        suggestion.race = canonicalChoice(suggestion.race, races, raceAliases,
+            /дракон/.test(conceptText) ? "Драконорождённый" : /эльф|дроу/.test(conceptText) ? "Эльф" :
+            /орк/.test(conceptText) ? "Полуорк" : /тифлинг|демон/.test(conceptText) ? "Тифлинг" : "Человек");
+        suggestion.class = canonicalChoice(suggestion.class, classes, classAliases,
+            /колдун|договор|покровител|демон|ведьм/.test(conceptText) ? "Колдун" :
+            /маг|волшеб|книг заклин/.test(conceptText) ? "Волшебник" :
+            /друид/.test(conceptText) ? "Друид" : /плут|вор|скрытност/.test(conceptText) ? "Плут" :
+            /следопыт|охотник/.test(conceptText) ? "Следопыт" : /жрец|священ/.test(conceptText) ? "Жрец" :
+            /бард/.test(conceptText) ? "Бард" : /паладин/.test(conceptText) ? "Паладин" :
+            /монах/.test(conceptText) ? "Монах" : /варвар/.test(conceptText) ? "Варвар" :
+            /чародей/.test(conceptText) ? "Чародей" : "Воин");
+        suggestion.background = canonicalChoice(suggestion.background, backgrounds, backgroundAliases,
+            /учен|мудр|исслед|магическ|библиотек/.test(conceptText) ? "Учёный" :
+            /солдат|арм|военн|ветеран/.test(conceptText) ? "Солдат" :
+            /преступ|вор|гильди|улиц/.test(conceptText) ? "Преступник" :
+            /дворян|аристократ|наследник/.test(conceptText) ? "Дворянин" :
+            /моряк|кораб|море|пират/.test(conceptText) ? "Моряк" :
+            /отшельник|изолир|одиноч/.test(conceptText) ? "Отшельник" :
+            /изгнан/.test(conceptText) ? "Изгнанник" : "Авантюрист");
         const stats = suggestion.stats || {};
         const scores = ["strength","dexterity","constitution","intelligence","wisdom","charisma"].map(key => Number(stats[key])).sort((a,b) => a-b);
         if (!races.includes(suggestion.race) || !classes.includes(suggestion.class) || !backgrounds.includes(suggestion.background)) {
-            throw new Error("ИИ предложил неподдерживаемую расу, класс или предысторию. Попробуй уточнить концепцию.");
+            throw new Error("Не удалось привести расу, класс или предысторию к доступным вариантам. Повтори генерацию.");
         }
         if (scores.join(",") !== "8,10,12,13,14,15") throw new Error("ИИ нарушил стандартный массив характеристик. Нажми генерацию ещё раз.");
         const skillCounts = { "Бард":3, "Плут":4, "Следопыт":3 };
