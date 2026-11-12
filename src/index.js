@@ -56,22 +56,59 @@ async function handleCharacterSuggestion(request, env) {
             "JSON схема: {name,race,class,background,level,alignment,stats:{strength,dexterity,constitution,intelligence,wisdom,charisma},class_skill_choices:[...],subrace,dragon_ancestry,racial_ability_choices:[...],racial_skill_choices:[...],extra_language,racial_cantrip,subclass,fighting_style,expertise:[...],cantrips:[...],spells:[...],feat,history,personality,appearance,goals}. Не оставляй обязательные поля пустыми.",
             "Не делай персонажа сверхсильным. Идея игрока задаёт характер и историю, но не отменяет правила."
         ].join("\n");
-        const model = env.GEMINI_CHARACTER_MODEL || getGeminiModel(env, null);
-        const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" +
-            encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                systemInstruction: { parts: [{ text: systemText }] },
-                contents: [{ role: "user", parts: [{ text: JSON.stringify({ world: campaignResult.data[0], character_concept: concept }) }] }],
-                generationConfig: { responseMimeType: "application/json", maxOutputTokens: 5000, temperature: 0.2, thinkingConfig: { thinkingLevel: "low" } }
-            }),
-            signal: AbortSignal.timeout(35000)
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-            const detail = payload.error && payload.error.message ? payload.error.message : "Google API вернул HTTP " + response.status;
-            return jsonResponse({ success: false, error: "Не удалось сгенерировать лист: " + detail }, response.status === 429 ? 429 : 503);
+        const primaryModel = env.GEMINI_CHARACTER_MODEL || getGeminiModel(env, null);
+        const fallbackModel = env.GEMINI_FALLBACK_MODEL || "gemini-3.5-flash-lite";
+        const tertiaryModel = env.GEMINI_TERTIARY_MODEL || "gemini-3.1-flash-lite";
+        const quaternaryModel = env.GEMINI_QUATERNARY_MODEL || "gemini-3.5-flash";
+        const models = Array.from(new Set([primaryModel, fallbackModel, tertiaryModel, quaternaryModel].filter(Boolean)));
+        const requestBody = {
+            systemInstruction: { parts: [{ text: systemText }] },
+            contents: [{ role: "user", parts: [{ text: JSON.stringify({ world: campaignResult.data[0], character_concept: concept }) }] }],
+            generationConfig: { responseMimeType: "application/json", maxOutputTokens: 5000, temperature: 0.2, thinkingConfig: { thinkingLevel: "low" } }
+        };
+        let payload = {};
+        let selectedModel = "";
+        let lastModelError = "";
+        const modelErrors = [];
+        for (let modelIndex = 0; modelIndex < models.length; modelIndex++) {
+            const model = models[modelIndex];
+            let response;
+            try {
+                response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" +
+                    encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestBody),
+                    signal: AbortSignal.timeout(35000)
+                });
+            } catch (networkError) {
+                lastModelError = model + ": " + (networkError && networkError.message ? networkError.message : "сетевая ошибка");
+                modelErrors.push(lastModelError);
+                if (modelIndex + 1 < models.length) continue;
+                break;
+            }
+            const responsePayload = await response.json().catch(() => ({}));
+            if (response.ok) {
+                payload = responsePayload;
+                selectedModel = model;
+                break;
+            }
+            const detail = responsePayload.error && responsePayload.error.message
+                ? responsePayload.error.message
+                : "Google API вернул HTTP " + response.status;
+            lastModelError = model + " (HTTP " + response.status + "): " + detail;
+            modelErrors.push(lastModelError);
+            const retryable = [429, 500, 502, 503, 504].includes(response.status) ||
+                /high demand|overload|temporarily unavailable|rate.?limit|try again later|internal error/i.test(detail);
+            if (!retryable || modelIndex + 1 >= models.length) break;
+            console.warn("Character generation model unavailable; switching fallback:", model);
+        }
+        if (!selectedModel) {
+            const detail = modelErrors.join(" | ") || lastModelError || "Все модели временно недоступны.";
+            return jsonResponse({
+                success: false,
+                error: "Не удалось сгенерировать лист: все модели ИИ сейчас недоступны. " + detail
+            }, 503);
         }
         const raw = payload.candidates && payload.candidates[0] && payload.candidates[0].content &&
             payload.candidates[0].content.parts ? payload.candidates[0].content.parts.map(part => part.text || "").join("") : "";
