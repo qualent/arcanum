@@ -64,7 +64,7 @@ async function handleCharacterSuggestion(request, env) {
             body: JSON.stringify({
                 systemInstruction: { parts: [{ text: systemText }] },
                 contents: [{ role: "user", parts: [{ text: JSON.stringify({ world: campaignResult.data[0], character_concept: concept }) }] }],
-                generationConfig: { responseMimeType: "application/json", maxOutputTokens: 3000, thinkingConfig: { thinkingLevel: "low" } }
+                generationConfig: { responseMimeType: "application/json", maxOutputTokens: 5000, temperature: 0.2, thinkingConfig: { thinkingLevel: "low" } }
             }),
             signal: AbortSignal.timeout(35000)
         });
@@ -76,7 +76,11 @@ async function handleCharacterSuggestion(request, env) {
         const raw = payload.candidates && payload.candidates[0] && payload.candidates[0].content &&
             payload.candidates[0].content.parts ? payload.candidates[0].content.parts.map(part => part.text || "").join("") : "";
         let suggestion;
-        try { suggestion = JSON.parse(raw); } catch (error) { throw new Error("ИИ вернул лист в неверном формате. Попробуй ещё раз."); }
+        if (!raw.trim()) {
+            const reason = payload.candidates && payload.candidates[0] ? payload.candidates[0].finishReason : "нет текста";
+            throw new Error("ИИ не вернул лист персонажа (" + reason + "). Попробуй нажать генерацию ещё раз.");
+        }
+        try { suggestion = JSON.parse(raw); } catch (error) { throw new Error("ИИ вернул неполный или неверный JSON листа персонажа. Попробуй ещё раз."); }
 
         const races = ["Человек","Эльф","Полуэльф","Дварф","Полурослик","Тифлинг","Драконорождённый","Полуорк"];
         const classes = ["Варвар","Бард","Жрец","Друид","Воин","Монах","Паладин","Следопыт","Плут","Волшебник","Чародей","Колдун"];
@@ -142,8 +146,8 @@ async function handleCharacterSuggestion(request, env) {
             }
         }
         const languageOptions = ["Дварфийский","Эльфийский","Великаний","Гномий","Гоблинский","Полуросликов","Орочий","Инфернальный","Драконий","Небесный","Бездны","Подземный"];
-        const extraLanguage = variantHuman || halfElf ? String(suggestion.extra_language || "") : "";
-        if ((variantHuman || halfElf) && !languageOptions.includes(extraLanguage)) throw new Error("ИИ не выбрал допустимый дополнительный язык.");
+        const requestedLanguage = String(suggestion.extra_language || "").trim();
+        const extraLanguage = variantHuman || halfElf ? (languageOptions.includes(requestedLanguage) ? requestedLanguage : languageOptions[0]) : "";
         const featOptions = ["Бдительный","Крепкий","Боевой заклинатель"];
         const feat = variantHuman ? String(suggestion.feat || "") : "";
         if (variantHuman && !featOptions.includes(feat)) throw new Error("Вариантному человеку нужна допустимая черта.");
