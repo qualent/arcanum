@@ -774,9 +774,20 @@ async function suggestCharacter(){
  button.disabled=true;button.textContent="Мастер подбирает лист...";status.textContent="Подбираем расу, класс, навыки, особенности и заклинания по правилам.";
  try{
   const {data:{session}}=await supabaseClient.auth.getSession();if(!session)throw new Error("Сессия истекла. Войди снова.");
-  const response=await fetch("/api/character/suggest",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},body:JSON.stringify({campaign_id:campaignId,concept})});
-  const result=await response.json();if(!response.ok||!result.success)throw new Error(result.error||"Мастер не смог создать лист.");
+  let result=null,lastGenerationError=null;
+  for(let attempt=0;attempt<2;attempt++){
+   const response=await fetch("/api/character/suggest",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},body:JSON.stringify({campaign_id:campaignId,concept})});
+   let payload={};
+   try{payload=await response.json();}catch(error){payload={error:"Сервер вернул некорректный ответ."};}
+   if(response.ok&&payload.success&&payload.character){result=payload;break;}
+   lastGenerationError=new Error(payload.error||"Мастер не смог создать лист.");
+   if(![429,500,503].includes(response.status)||attempt===1)throw lastGenerationError;
+   status.textContent="Мастер не завершил генерацию с первой попытки. Повторяем запрос...";
+   await new Promise(resolve=>setTimeout(resolve,800));
+  }
+  if(!result||!result.character)throw lastGenerationError||new Error("Не удалось получить лист персонажа.");
   const c=result.character;
+  if(!c.stats||!c.race||!c.class||!c.background)throw new Error("ИИ вернул неполный лист. Попробуй повторить генерацию.");
   document.getElementById("characterName").value=c.name||"";
   raceSelect.value=c.race;classSelect.value=c.class;backgroundSelect.value=c.background;
   document.getElementById("level").value="1";document.getElementById("alignment").value=c.alignment||"Истинно нейтральный";
